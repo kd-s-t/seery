@@ -29,9 +29,10 @@ interface MarketCardProps {
   }
   userAddress: string | null
   onPlaceBet: (marketId: number, outcome: number, amount: number) => void
+  isPlacingBet?: boolean
 }
 
-export default function MarketCard({ market, userAddress, onPlaceBet }: MarketCardProps) {
+export default function MarketCard({ market, userAddress, onPlaceBet, isPlacingBet = false }: MarketCardProps) {
   const [selectedOutcome, setSelectedOutcome] = useState(0)
   const [betAmount, setBetAmount] = useState('0.01')
 
@@ -117,8 +118,9 @@ export default function MarketCard({ market, userAddress, onPlaceBet }: MarketCa
                     size="small"
                     startIcon={<SportsEsports />}
                     onClick={handleBet}
+                    disabled={isPlacingBet}
                   >
-                    Bet
+                    {isPlacingBet ? 'Placing...' : 'Bet'}
                   </Button>
                 </Stack>
               </Box>

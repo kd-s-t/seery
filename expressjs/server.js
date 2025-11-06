@@ -415,10 +415,33 @@ app.post('/api/ai/generate-markets', async (req, res) => {
     });
   } catch (error) {
     console.error('Error generating markets:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to generate markets'
-    });
+    
+    // Handle OpenAI quota/rate limit errors
+    const errorMessage = error.message || '';
+    const statusCode = error.status || error.response?.status || 500;
+    
+    let userMessage = 'Failed to generate markets';
+    if (statusCode === 429 || errorMessage.includes('quota') || errorMessage.includes('429')) {
+      userMessage = 'OpenAI API quota exceeded. Please check your OpenAI account billing and usage limits.';
+      res.status(429).json({
+        success: false,
+        error: userMessage,
+        errorCode: 'QUOTA_EXCEEDED',
+        helpUrl: 'https://platform.openai.com/account/billing'
+      });
+    } else if (errorMessage.includes('rate limit')) {
+      userMessage = 'OpenAI API rate limit exceeded. Please try again in a moment.';
+      res.status(429).json({
+        success: false,
+        error: userMessage,
+        errorCode: 'RATE_LIMIT'
+      });
+    } else {
+      res.status(statusCode).json({
+        success: false,
+        error: userMessage
+      });
+    }
   }
 });
 

@@ -20,15 +20,18 @@ services:
     build:
       context: ./nextjs
       dockerfile: Dockerfile
+      target: deps
     ports:
       - "3015:3015"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3016
       - PORT=3015
+      - NODE_ENV=development
     volumes:
       - ./nextjs:/app
       - /app/node_modules
       - /app/.next
+    command: sh -c "npm install && npm run dev"
 
   bnb:
     build:
@@ -48,3 +51,39 @@ services:
     command: tail -f /dev/null  # Keep container running for manual commands
     profiles:
       - tools  # Only start when explicitly requested
+
+  blockscout:
+    image: blockscout/blockscout:latest
+    ports:
+      - "4000:4000"  # Blockscout web interface
+    environment:
+      - ETHEREUM_JSONRPC_HTTP_URL=http://bnb:8545
+      - ETHEREUM_JSONRPC_WS_URL=ws://bnb:8545
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/blockscout
+      - SECRET_KEY_BASE=changeme_in_production_use_openssl_rand_hex_64
+      - ECTO_USE_SSL=false
+      - COIN=BNB
+      - NETWORK=Local
+      - SUBNETWORK=Hardhat
+      - NETWORK_ICON=/images/blockscout_logo.svg
+      - DISABLE_EXCHANGE_RATES=true
+      - DISABLE_INDEXER=true
+    depends_on:
+      - postgres
+      - bnb
+    profiles:
+      - tools
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=blockscout
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:

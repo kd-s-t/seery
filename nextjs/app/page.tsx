@@ -1,93 +1,81 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount, useConnect, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther } from 'viem'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Container,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Box,
-  Grid,
-  Snackbar,
-  Alert,
-  Stack,
-} from '@mui/material'
-import { AccountBalanceWallet, AutoAwesome } from '@mui/icons-material'
-import MarketCard from '@/components/MarketCard'
+import { Box, Container } from '@mui/material'
 import { CONTRACT_ABI } from '@/lib/contract'
+import { useMarkets, useContract, useMetaMask, useWallet, useNetwork } from '@/hooks'
+import { SnackbarState, MarketForm } from '@/types'
+import Header from '@/components/Header'
+import MetaMaskWarning from '@/components/MetaMaskWarning'
+import WalletConnection from '@/components/WalletConnection'
+import MarketCreationForm from '@/components/MarketCreationForm'
+import MarketsList from '@/components/MarketsList'
+import NotificationSnackbar from '@/components/NotificationSnackbar'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
 
 export default function Home() {
-  const { address, isConnected } = useAccount()
-  const { connect, connectors, isPending: isConnecting } = useConnect()
   const { writeContract, data: hash, isPending: isWriting } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   })
 
-  const [markets, setMarkets] = useState<any[]>([])
-  const [contractAddress, setContractAddress] = useState<string | null>(null)
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  // Custom hooks
+  const { address, isConnected, isConnecting, connectError, handleConnect, ensureTestnet } = useWallet()
+  const { markets, reloadMarkets } = useMarkets(isConnected)
+  const { contractAddress } = useContract()
+  const { showWarning, setShowWarning } = useMetaMask()
+  const { isTestnet, switchToTestnet } = useNetwork()
+
+  // Local state
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: '',
     severity: 'success'
   })
-  const [marketForm, setMarketForm] = useState({
+  const [marketForm, setMarketForm] = useState<MarketForm>({
     question: '',
     outcomes: '',
     duration: 72
   })
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
 
-  // Get contract address
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/config`)
-        const config = await response.json()
-        if (config.contractAddress) {
-          setContractAddress(config.contractAddress)
-        }
-      } catch (error) {
-        console.error('Error fetching config:', error)
-      }
-    }
-    fetchConfig()
-  }, [])
-
-  // Show message
+  // Show message helper
   const showMessage = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity })
   }
 
-  // Load markets
-  const loadMarkets = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/markets`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setMarkets(data.markets)
-      }
-    } catch (error: any) {
-      showMessage('Error loading markets: ' + error.message, 'error')
+  // Handle wallet connection
+  const onConnect = () => {
+    if (typeof window !== 'undefined' && !window.ethereum) {
+      showMessage('MetaMask not found. Please install MetaMask extension.', 'error')
+      return
     }
+    handleConnect()
   }
 
-  // Connect wallet handler
-  const handleConnect = () => {
-    const metaMaskConnector = connectors.find(c => c.id === 'metaMask')
-    if (metaMaskConnector) {
-      connect({ connector: metaMaskConnector })
-    } else {
-      showMessage('MetaMask not found. Please install MetaMask.', 'error')
+  // Auto-switch to testnet when connected
+  useEffect(() => {
+    if (isConnected && !isTestnet) {
+      switchToTestnet()
     }
-  }
+  }, [isConnected, isTestnet, switchToTestnet])
+
+  // Handle connection errors
+  useEffect(() => {
+    if (connectError) {
+      const errorMessage = connectError.message || 'Failed to connect wallet'
+      if (errorMessage.includes('rejected') || errorMessage.includes('User rejected')) {
+        showMessage('Connection rejected by user', 'error')
+      } else if (errorMessage.includes('not found') || errorMessage.includes('MetaMask')) {
+        showMessage('MetaMask not found. Please install MetaMask extension.', 'error')
+      } else {
+        showMessage(`Connection error: ${errorMessage}`, 'error')
+      }
+    }
+  }, [connectError])
 
   // Show messages for transaction states
   useEffect(() => {
@@ -111,15 +99,13 @@ export default function Home() {
   useEffect(() => {
     if (isConfirmed) {
       showMessage('Transaction confirmed successfully!', 'success')
-      loadMarkets()
+      reloadMarkets()
       setMarketForm({ question: '', outcomes: '', duration: 72 })
     }
-  }, [isConfirmed])
+  }, [isConfirmed, reloadMarkets])
 
   // Create market
-  const createMarket = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const createMarket = async (form: MarketForm) => {
     if (!isConnected) {
       showMessage('Please connect your wallet first', 'error')
       return
@@ -130,7 +116,7 @@ export default function Home() {
       return
     }
 
-    const outcomes = marketForm.outcomes.split(',').map(s => s.trim())
+    const outcomes = form.outcomes.split(',').map(s => s.trim())
     if (outcomes.length < 2) {
       showMessage('At least 2 outcomes are required', 'error')
       return
@@ -141,7 +127,7 @@ export default function Home() {
         address: contractAddress as `0x${string}`,
         abi: CONTRACT_ABI,
         functionName: 'createMarket',
-        args: [marketForm.question, outcomes, BigInt(marketForm.duration)],
+        args: [form.question, outcomes, BigInt(form.duration)],
       })
     } catch (error: any) {
       if (error.message?.includes('User rejected')) {
@@ -160,7 +146,7 @@ export default function Home() {
     }
 
     if (!amount || amount < 0.001) {
-      showMessage('Minimum bet is 0.001', 'error')
+      showMessage('Minimum bet is 0.001 BNB', 'error')
       return
     }
 
@@ -178,17 +164,30 @@ export default function Home() {
         args: [BigInt(marketId), BigInt(outcome)],
         value: amountWei,
       })
+      showMessage('Please confirm the transaction in MetaMask', 'success')
     } catch (error: any) {
-      if (error.message?.includes('User rejected')) {
-        showMessage('Transaction rejected by user', 'error')
+      const errorMessage = error.message || 'Unknown error'
+      let userMessage = 'Failed to place bet'
+      
+      if (errorMessage.includes('User rejected') || errorMessage.includes('rejected')) {
+        userMessage = 'Transaction rejected. Please try again when ready.'
+      } else if (errorMessage.includes('insufficient funds') || errorMessage.includes('balance')) {
+        userMessage = 'Insufficient balance. Please ensure you have enough BNB in your wallet.'
+      } else if (errorMessage.includes('network')) {
+        userMessage = 'Network error. Please check your connection and try again.'
       } else {
-        showMessage('Error: ' + (error.message || 'Unknown error'), 'error')
+        userMessage = `Error placing bet: ${errorMessage}`
       }
+      
+      showMessage(userMessage, 'error')
     }
   }
 
   // AI Generate market
   const generateAIMarket = async () => {
+    if (isGeneratingAI) return // Prevent multiple simultaneous requests
+    
+    setIsGeneratingAI(true)
     try {
       const response = await fetch(`${API_URL}/api/ai/generate-markets`, {
         method: 'POST',
@@ -197,193 +196,85 @@ export default function Home() {
       })
 
       const data = await response.json()
-      if (data.success && data.markets.length > 0) {
+      
+      if (!data.success) {
+        // Handle API errors (like quota exceeded)
+        let errorMsg = data.error || 'Failed to generate market'
+        if (data.errorCode === 'QUOTA_EXCEEDED') {
+          errorMsg = 'OpenAI API quota exceeded. Please check your billing at https://platform.openai.com/account/billing'
+        } else if (data.errorCode === 'RATE_LIMIT') {
+          errorMsg = 'OpenAI API rate limit exceeded. Please try again in a moment.'
+        }
+        showMessage(errorMsg, 'error')
+        return
+      }
+      
+      if (data.success && data.markets && data.markets.length > 0) {
         const market = data.markets[0]
         setMarketForm({
           question: market.question,
           outcomes: market.outcomes.join(', '),
           duration: market.durationHours || 72
         })
-        showMessage('AI generated market suggestion!', 'success')
+        showMessage('AI generated market suggestion! Fill in the details and create your market.', 'success')
+      } else {
+        showMessage('No markets were generated. Please try again.', 'error')
       }
     } catch (error: any) {
-      showMessage('Error generating market: ' + error.message, 'error')
+      const errorMessage = error.message || 'Unknown error'
+      let userMessage = 'Failed to generate market'
+      
+      if (errorMessage.includes('fetch')) {
+        userMessage = 'Unable to connect to the server. Please check your connection and try again.'
+      } else if (errorMessage.includes('network')) {
+        userMessage = 'Network error. Please check your internet connection.'
+      } else {
+        userMessage = `Error: ${errorMessage}`
+      }
+      
+      showMessage(userMessage, 'error')
+    } finally {
+      setIsGeneratingAI(false)
     }
   }
-
-  // Load markets on mount and when connected
-  useEffect(() => {
-    loadMarkets()
-  }, [])
-
-  useEffect(() => {
-    if (isConnected) {
-      loadMarkets()
-    }
-  }, [isConnected])
 
   return (
     <Box sx={{ minHeight: '100vh', py: 4 }}>
       <Container maxWidth="lg">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h3" component="h1" gutterBottom>
-                🔮 Seer
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                AI-Assisted Market Creation & Resolution
-              </Typography>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <MetaMaskWarning
+          show={showWarning && !isConnected}
+          onClose={() => setShowWarning(false)}
+        />
+        
+        <Header />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Wallet:
-                  </Typography>
-                  <Typography variant="body1" fontWeight="bold">
-                    {address ? `${address.substring(0, 6)}...${address.substring(38)}` : 'Not connected'}
-                  </Typography>
-                </Box>
-                <Button
-                  variant="contained"
-                  startIcon={<AccountBalanceWallet />}
-                  onClick={handleConnect}
-                  disabled={isConnected || isConnecting}
-                >
-                  {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Connect Wallet'}
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <WalletConnection
+          address={address}
+          isConnected={isConnected}
+          isConnecting={isConnecting}
+          onConnect={onConnect}
+        />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Create New Market
-              </Typography>
-              <Box component="form" onSubmit={createMarket} sx={{ mt: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Question"
-                  value={marketForm.question}
-                  onChange={(e) => setMarketForm({...marketForm, question: e.target.value})}
-                  placeholder="Will Bitcoin reach $100k by end of 2024?"
-                  required
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  fullWidth
-                  label="Outcomes (comma-separated)"
-                  value={marketForm.outcomes}
-                  onChange={(e) => setMarketForm({...marketForm, outcomes: e.target.value})}
-                  placeholder="Yes, No"
-                  required
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Duration (hours)"
-                  value={marketForm.duration}
-                  onChange={(e) => setMarketForm({...marketForm, duration: parseInt(e.target.value)})}
-                  inputProps={{ min: 1, max: 168 }}
-                  required
-                  sx={{ mb: 2 }}
-                />
-                <Stack direction="row" spacing={2}>
-                  <Button 
-                    type="submit" 
-                    variant="contained"
-                    disabled={isWriting || isConfirming}
-                  >
-                    {isWriting || isConfirming ? 'Processing...' : 'Create Market'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<AutoAwesome />}
-                    onClick={generateAIMarket}
-                  >
-                    Generate with AI
-                  </Button>
-                </Stack>
-              </Box>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <MarketCreationForm
+          onSubmit={createMarket}
+          onGenerateAI={generateAIMarket}
+          isSubmitting={isWriting || isConfirming}
+          isGeneratingAI={isGeneratingAI}
+          form={marketForm}
+          onFormChange={setMarketForm}
+        />
 
-        <Typography variant="h4" align="center" sx={{ mb: 3, color: 'white' }}>
-          Active Markets
-        </Typography>
+        <MarketsList
+          markets={markets}
+          userAddress={address}
+          onPlaceBet={placeBet}
+          isPlacingBet={isWriting || isConfirming}
+        />
 
-        <Grid container spacing={3}>
-          <AnimatePresence>
-            {markets.length === 0 ? (
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography align="center" color="text.secondary">
-                      Loading markets...
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ) : (
-              markets.map((market, index) => (
-                <Grid item xs={12} sm={6} md={4} key={market.market_id}>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <MarketCard
-                      market={market}
-                      userAddress={address || null}
-                      onPlaceBet={placeBet}
-                    />
-                  </motion.div>
-                </Grid>
-              ))
-            )}
-          </AnimatePresence>
-        </Grid>
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={5000}
+        <NotificationSnackbar
+          snackbar={snackbar}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+        />
       </Container>
     </Box>
   )
