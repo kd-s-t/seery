@@ -51,13 +51,26 @@ Use cases for Seer include event prediction markets, news-based trading, sports 
 	<img src="https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white" />
 </div>
 
-## Monorepo Structure
+## Project Structure
 
 ```
 seer/
-├── nextjs/          # React SPA
-├── expressjs/        # Node.js API + AI service
-└── bnb/             # Solidity contracts + Hardhat
+├── nextjs/
+│   ├── app/              # Next.js App Router pages
+│   ├── components/       # React components
+│   ├── public/           # Static assets
+│   └── package.json
+├── expressjs/
+│   ├── server.js         # Express API server
+│   ├── ai-service.js    # OpenAI integration
+│   ├── blockchain.js    # BNB Chain integration
+│   ├── docs/            # Documentation
+│   └── package.json
+└── bnb/
+    ├── contracts/       # Solidity contracts
+    ├── scripts/         # Deployment scripts
+    ├── test/           # Contract tests
+    └── package.json
 ```
 
 ## Project Overview
@@ -90,66 +103,31 @@ git clone https://github.com/kd-s-t/seer.git
 cd seer
 ```
 
-**2. Install all dependencies:**
+**2. Install dependencies for each service:**
+
 ```bash
 # Backend
-cd expressjs
-npm install
+cd expressjs && npm install && cd ..
 
 # Frontend
-cd ../nextjs
-npm install
+cd nextjs && npm install && cd ..
 
 # Smart Contracts
-cd ../bnb
-npm install
+cd bnb && npm install && cd ..
 ```
 
-**3. Set up environment variables:**
+**3. Set up and start services:**
 
-Backend `.env` (in `expressjs/` folder):
-```env
-OPENAI_API_KEY=your-openai-api-key-here
-PORT=3016
-NETWORK=testnet
-BNB_TESTNET_RPC=https://data-seed-prebsc-1-s1.binance.org:8545
-BNB_MAINNET_RPC=https://bsc-dataseed.binance.org/
-CONTRACT_ADDRESS=0x...  # Deploy contract first (see below)
-PRIVATE_KEY=your-private-key  # For automated transactions (optional)
-OPENAI_MODEL=gpt-3.5-turbo  # or gpt-4-turbo for better results
-```
+- **Backend**: See [expressjs/README.md](expressjs/README.md) for detailed setup instructions
+- **Frontend**: See [nextjs/README.md](nextjs/README.md) for detailed setup instructions
+- **Smart Contracts**: See [bnb/README.md](bnb/README.md) for deployment instructions
 
-Frontend `.env.local` (in `nextjs/` folder):
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3016
-```
-
-**4. Deploy Smart Contract:**
-```bash
-cd bnb
-npm run compile
-npm run deploy
-```
-
-Copy the deployed contract address to your expressjs `.env` file.
-
-**5. Start Services:**
-
-Terminal 1 - Backend:
-```bash
-cd expressjs
-npm start
-# or for development with auto-reload:
-npm run dev
-```
-The backend runs on `http://localhost:3016`
-
-Terminal 2 - Frontend:
-```bash
-cd nextjs
-npm run dev
-```
-The frontend runs on `http://localhost:3015` and automatically opens in your browser
+**Quick start:**
+1. Deploy smart contract (see `bnb/README.md`)
+2. Configure backend environment variables (see `expressjs/README.md`)
+3. Start backend: `cd expressjs && npm run dev`
+4. Configure frontend environment variables (see `nextjs/README.md`)
+5. Start frontend: `cd nextjs && npm run dev`
 
 ## Usage
 
@@ -184,24 +162,7 @@ Markets can be resolved:
 
 ## API Endpoints
 
-### Markets
-- `GET /api/markets` - List all markets
-- `GET /api/markets/:id` - Get market details
-- `POST /api/markets` - Create new market
-- `POST /api/markets/:id/bet` - Place a bet
-- `POST /api/markets/:id/resolve` - Resolve a market
-- `GET /api/markets/:id/bets` - Get all bets for a market
-
-### AI Features
-- `POST /api/ai/generate-markets` - Generate markets from news
-- `POST /api/ai/analyze-news` - Analyze news and suggest markets
-- `GET /api/markets/:id/ai-resolution` - Get AI resolution suggestion
-
-### User Data
-- `GET /api/users/:address/bets` - Get user's betting history
-
-### Config
-- `GET /api/config` - Get frontend configuration (contract address, network)
+See [expressjs/README.md](expressjs/README.md) for complete API documentation.
 
 ## Testing
 
@@ -237,28 +198,6 @@ npm test
 - **Storage**: Fully on-chain (BNB Chain smart contracts)
 - **Wallet**: MetaMask integration
 
-## Project Structure
-
-```
-seer/
-├── nextjs/
-│   ├── app/              # Next.js App Router pages
-│   ├── components/       # React components
-│   ├── public/           # Static assets
-│   └── package.json
-├── expressjs/
-│   ├── server.js         # Express API server
-│   ├── ai-service.js    # OpenAI integration
-│   ├── blockchain.js    # BNB Chain integration
-│   ├── docs/            # Documentation
-│   └── package.json
-└── bnb/
-    ├── contracts/       # Solidity contracts
-    ├── scripts/         # Deployment scripts
-    ├── test/           # Contract tests
-    └── package.json
-```
-
 ## Docker
 
 Run the entire stack with Docker:
@@ -287,10 +226,6 @@ This starts both frontend and backend services.
 - [x] **Tests**: Basic test suite included
 - [x] **BNB Chain**: All contracts deployable to BNB Chain
 
-### Project Description (150 words)
-
-**Seer** is a decentralized prediction platform on BNB Chain that uses AI to create markets from news and resolve them faster than traditional oracles. Unlike UMA's 24-48h optimistic oracle, our AI-assisted resolution provides near-instant results while maintaining accuracy through evidence-based analysis. The platform automatically generates tradeable markets from current events, allows users to bet on outcomes, and uses AI to suggest resolutions based on verifiable facts. All bets and payouts are settled on-chain with a 2% platform fee. The modern web interface makes prediction markets accessible to non-technical users, addressing the UX gap in current DeFi prediction markets. Revenue is generated through platform fees, creating a sustainable business model.
-
 ### Team Info (150 words)
 
 [Add your team information here]
@@ -304,24 +239,6 @@ This starts both frontend and backend services.
 - [ ] Social features (following traders, market discussions)
 - [ ] Multi-chain support
 - [ ] NFT rewards for top traders
-
-## Documentation
-
-See `expressjs/docs/` for:
-- Hackathon requirements
-- Tech stack details
-- Testing guide
-- Submission checklist
-
-## License
-
-ISC
-
-## Contributing
-
-This is a hackathon project. Contributions welcome!
-
----
 
 **Built for Seedify Predictions Market Hackathon**
 
