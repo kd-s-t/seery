@@ -1,0 +1,24 @@
+# AWS Configuration
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Instance Configuration
+instance_type      = "t2.micro"  # Free tier eligible
+key_name           = "seer-free-tier"  # Your EC2 Key Pair name
+allocate_elastic_ip = false      # Set to true for static IP (costs ~$0.005/hour if not attached)
+
+# SSH Access (IMPORTANT: Restrict to your IP in production!)
+ssh_allowed_cidrs = ["0.0.0.0/0"]  # WARNING: Change this to your IP, e.g., ["1.2.3.4/32"]
+
+# Application Configuration
+openai_api_key   = "sk-your-openai-api-key-here"
+network          = "testnet"  # or "mainnet"
+bnb_testnet_rpc  = "https://data-seed-prebsc-1-s1.binance.org:8545"
+bnb_mainnet_rpc  = "https://bsc-dataseed.binance.org/"
+contract_address = "0x..."  # Your deployed PredictionMarket contract address
+
+# Repository Configuration (optional)
+# Leave empty to skip automatic deployment
+repo_url    = ""  # e.g., "https://github.com/your-username/seer.git"
+repo_branch = "main"
+
