@@ -1,0 +1,25 @@
+# AWS Configuration
+aws_region  = "us-east-1"
+environment = "production"
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# Application Configuration
+openai_api_key   = "sk-your-openai-api-key-here"
+network          = "testnet"  # or "mainnet"
+bnb_testnet_rpc  = "https://data-seed-prebsc-1-s1.binance.org:8545"
+bnb_mainnet_rpc  = "https://bsc-dataseed.binance.org/"
+contract_address = "0x..."  # Your deployed PredictionMarket contract address
+
+# Domain Configuration (optional)
+# Leave empty if you don't have a domain
+domain_name     = ""  # e.g., "seer.example.com"
+certificate_arn = ""  # ARN of ACM certificate (leave empty if no domain)
+
+# Container Resources
+expressjs_cpu    = 512   # 0.5 vCPU
+expressjs_memory = 1024  # 1 GB
+nextjs_cpu       = 1024  # 1 vCPU
+nextjs_memory    = 2048  # 2 GB
+

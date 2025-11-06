@@ -1,0 +1,32 @@
+{
+  "name": "seer-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3015",
+    "build": "next build",
+    "start": "next start -p 3015",
+    "lint": "next lint",
+    "prepare": "husky || true"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^5.16.7",
+    "@mui/material": "^5.16.7",
+    "ethers": "^6.15.0",
+    "framer-motion": "^11.5.4",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.1.0",
+    "husky": "^9.1.7",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,32 +1,34 @@
 version: '3.8'
 
 services:
-  backend:
+  expressjs:
     build:
-      context: ./backend
+      context: ./expressjs
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3016:3016"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - PORT=3000
+      - PORT=3016
       - NETWORK=${NETWORK:-testnet}
       - BNB_TESTNET_RPC=${BNB_TESTNET_RPC}
       - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
     volumes:
-      - ./backend:/app
+      - ./expressjs:/app
     depends_on:
-      - frontend
+      - nextjs
 
-  frontend:
+  nextjs:
     build:
-      context: ./frontend
+      context: ./nextjs
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3015:3015"
     environment:
-      - REACT_APP_API_URL=http://localhost:3000
+      - NEXT_PUBLIC_API_URL=http://localhost:3016
+      - PORT=3015
     volumes:
-      - ./frontend:/app
+      - ./nextjs:/app
       - /app/node_modules
+      - /app/.next
 
