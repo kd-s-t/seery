@@ -1,0 +1,19 @@
+{
+  "name": "seer-smartcontracts",
+  "version": "1.0.0",
+  "description": "Seer prediction market smart contracts",
+  "scripts": {
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network bnbTestnet",
+    "node": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.4",
+    "chai": "^4.3.10",
+    "dotenv": "^16.3.1"
+  }
+}
+

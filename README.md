@@ -1,70 +1,115 @@
-# Getting Started with Create React App
+# 🔮 Seer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+AI-powered prediction market platform built for the Seedify Predictions Market Hackathon.
 
-## Available Scripts
+## 📦 Monorepo Structure
 
-In the project directory, you can run:
+```
+seer/
+├── frontend/          # React SPA
+├── backend/           # Node.js API + AI service
+└── smartcontracts/   # Solidity contracts + Hardhat
+```
 
-### `npm start`
+## 🚀 Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Prerequisites
+- Node.js 16+
+- MetaMask browser extension
+- BNB Chain testnet BNB
+- OpenAI API key
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Installation
 
-### `npm test`
+**1. Install all dependencies:**
+```bash
+# Backend
+cd backend
+npm install
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Frontend
+cd ../frontend
+npm install
 
-### `npm run build`
+# Smart Contracts
+cd ../smartcontracts
+npm install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**2. Set up environment:**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Backend `.env`:
+```env
+OPENAI_API_KEY=sk-your-key-here
+PORT=3000
+NETWORK=testnet
+BNB_TESTNET_RPC=https://data-seed-prebsc-1-s1.binance.org:8545
+CONTRACT_ADDRESS=0x...
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Frontend `.env`:
+```env
+REACT_APP_API_URL=http://localhost:3000
+```
 
-### `npm run eject`
+**3. Deploy Smart Contract:**
+```bash
+cd smartcontracts
+npm run compile
+npm run deploy
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+**4. Start Services:**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Terminal 1 - Backend:
+```bash
+cd backend
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Terminal 2 - Frontend:
+```bash
+cd frontend
+npm start
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🏗️ Project Structure
 
-## Learn More
+- **Frontend**: React 19 + ethers.js + MetaMask
+- **Backend**: Express.js + OpenAI API + Blockchain integration
+- **Smart Contracts**: Solidity 0.8.20 + Hardhat
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📖 Documentation
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+See `backend/docs/` for:
+- Hackathon requirements
+- Tech stack details
+- Testing guide
+- Submission checklist
 
-### Code Splitting
+## 🐳 Docker (Optional)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+docker-compose up
+```
 
-### Analyzing the Bundle Size
+## 🧪 Testing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+# Smart contracts
+cd smartcontracts
+npm test
 
-### Making a Progressive Web App
+# Backend
+cd backend
+npm test
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 📄 License
 
-### Advanced Configuration
+ISC
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+**Built for Seedify Predictions Market Hackathon**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
