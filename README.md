@@ -8,7 +8,7 @@
 	<img src="./seer logo.png" width="200px" alt="Seer Logo" />
 </div>
 
-# 🔮 Seer
+# Seer
 
 Seer is an AI-powered prediction market platform on BNB Chain that uses AI to create markets from news and resolve them faster than traditional oracles. Unlike UMA's 24-48h optimistic oracle, our AI-assisted resolution provides near-instant results while maintaining accuracy through evidence-based analysis.
 
@@ -29,29 +29,31 @@ Use cases for Seer include event prediction markets, news-based trading, sports 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" /> 
+	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Material--UI-007FFF?style=for-the-badge&logo=mui&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Framer%20Motion-EF008F?style=for-the-badge&logo=framer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/Hardhat-FFF100?style=for-the-badge&logo=hardhat&logoColor=black" /> 
-	<img src="https://img.shields.io/badge/ethers.js-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=openai&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=openai&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/MetaMask-FF7139?style=for-the-badge&logo=metamask&logoColor=white" /> 
 </div>
+
 <div align="center"> 
 	<img src="https://img.shields.io/badge/BNB_Chain-F3BA2F?style=for-the-badge&logo=binance&logoColor=black" />
 	<img src="https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white" />
+	<img src="https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/Hardhat-FFF100?style=for-the-badge&logo=hardhat&logoColor=black" /> 
+	<img src="https://img.shields.io/badge/ethers.js-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Web3-3C3C3D?style=for-the-badge&logo=web3dotjs&logoColor=white" />
 </div>
+
 <div align="center"> 
 	<img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white" />
 </div>
 
-## 📦 Monorepo Structure
+## Monorepo Structure
 
 ```
 seer/
@@ -60,11 +62,11 @@ seer/
 └── bnb/             # Solidity contracts + Hardhat
 ```
 
-## 🎯 Project Overview
+## Project Overview
 
 **Seer** is a decentralized prediction market platform that leverages AI intelligence with blockchain technology to create, manage, and resolve prediction markets faster than traditional oracle-based systems.
 
-## 🏆 Hackathon Alignment
+## Hackathon Alignment
 
 This project addresses several YZi Labs Preferred Project opportunities:
 
@@ -73,7 +75,7 @@ This project addresses several YZi Labs Preferred Project opportunities:
 3. **Better UX**: Modern web interface makes prediction markets feel like normal apps
 4. **Revenue Focus**: Platform fees create sustainable business model
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -151,7 +153,7 @@ npm run dev
 ```
 The frontend runs on `http://localhost:3015` and automatically opens in your browser
 
-## 📖 Usage
+## Usage
 
 ### Creating Markets
 
@@ -182,7 +184,7 @@ Markets can be resolved:
 - **AI-Assisted**: Use AI to suggest the winning outcome
 - **Automatically**: After end time (if configured)
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Markets
 - `GET /api/markets` - List all markets
@@ -203,7 +205,7 @@ Markets can be resolved:
 ### Config
 - `GET /api/config` - Get frontend configuration (contract address, network)
 
-## 🧪 Testing
+## Testing
 
 ### Smart Contract Tests (Hardhat)
 
@@ -228,7 +230,7 @@ cd expressjs
 npm test
 ```
 
-## 🏗️ Technical Stack
+## Technical Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Material-UI v5, Framer Motion, ethers.js, MetaMask
 - **Backend**: Node.js, Express.js, OpenAI API
@@ -237,7 +239,7 @@ npm test
 - **Storage**: Fully on-chain (BNB Chain smart contracts)
 - **Wallet**: MetaMask integration
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 seer/
@@ -259,7 +261,7 @@ seer/
     └── package.json
 ```
 
-## 🐳 Docker
+## Docker
 
 Run the entire stack with Docker:
 
@@ -269,13 +271,13 @@ docker-compose up
 
 This starts both frontend and backend services.
 
-## 💰 Revenue Model
+## Revenue Model
 
 - **Platform Fee**: 2% of all winning bet payouts
 - **Market Creation**: Free (can add fees in future)
 - **AI Features**: Powered by OpenAI API (costs covered by platform fees)
 
-## 🎯 Submission Requirements
+## Submission Requirements
 
 ### ✅ Completed
 
@@ -287,15 +289,15 @@ This starts both frontend and backend services.
 - [x] **Tests**: Basic test suite included
 - [x] **BNB Chain**: All contracts deployable to BNB Chain
 
-### 📝 Project Description (150 words)
+### Project Description (150 words)
 
 **Seer** is a decentralized prediction platform on BNB Chain that uses AI to create markets from news and resolve them faster than traditional oracles. Unlike UMA's 24-48h optimistic oracle, our AI-assisted resolution provides near-instant results while maintaining accuracy through evidence-based analysis. The platform automatically generates tradeable markets from current events, allows users to bet on outcomes, and uses AI to suggest resolutions based on verifiable facts. All bets and payouts are settled on-chain with a 2% platform fee. The modern web interface makes prediction markets accessible to non-technical users, addressing the UX gap in current DeFi prediction markets. Revenue is generated through platform fees, creating a sustainable business model.
 
-### 👥 Team Info (150 words)
+### Team Info (150 words)
 
 [Add your team information here]
 
-## 🚀 Future Enhancements
+## Future Enhancements
 
 - [ ] Account abstraction for gasless transactions
 - [ ] Mobile app
@@ -305,7 +307,7 @@ This starts both frontend and backend services.
 - [ ] Multi-chain support
 - [ ] NFT rewards for top traders
 
-## 📖 Documentation
+## Documentation
 
 See `expressjs/docs/` for:
 - Hackathon requirements
@@ -313,14 +315,27 @@ See `expressjs/docs/` for:
 - Testing guide
 - Submission checklist
 
-## 📄 License
+## License
 
 ISC
 
-## 🤝 Contributing
+## Contributing
 
 This is a hackathon project. Contributions welcome!
 
 ---
 
 **Built for Seedify Predictions Market Hackathon**
+
+---
+
+## Authors
+
+- [@kenn](https://www.linkedin.com/in/kdst/)
+- [@don](https://www.linkedin.com/in/carl-john-don-sebial-882430187/)
+- [@peter](https://www.linkedin.com/in/petertibon/)
+
+## Social Media
+
+- **LinkedIn**: [SplitSafe Escrow](https://www.linkedin.com/company/splitsafe-escrow/?viewAsMember=true)
+- **Facebook**: [SplitSafe](https://www.facebook.com/profile.php?id=61581697425694)
