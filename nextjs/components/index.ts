@@ -6,4 +6,5 @@ export { default as MarketsList } from './MarketsList'
 export { default as MarketCard } from './MarketCard'
 export { default as NotificationSnackbar } from './NotificationSnackbar'
 export { default as FaucetHelper } from './FaucetHelper'
+export { default as CryptoTable } from './CryptoTable'
 

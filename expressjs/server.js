@@ -3,7 +3,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 const blockchain = require('./blockchain');
-const aiService = require('./ai-service');
+const openai = require('./lib/openai');
+const coingecko = require('./lib/coingecko/prices');
 
 const app = express();
 const PORT = process.env.PORT || 3016;
@@ -30,7 +31,14 @@ app.get('/api/markets', async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
     
-    const markets = await blockchain.getAllMarketsFromChain(limit, offset);
+    // Set a timeout for the request (30 seconds max)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout - blockchain calls taking too long')), 30000);
+    });
+    
+    const marketsPromise = blockchain.getAllMarketsFromChain(limit, offset);
+    
+    const markets = await Promise.race([marketsPromise, timeoutPromise]);
     
     res.json({
       success: true,
@@ -40,6 +48,18 @@ app.get('/api/markets', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching markets:', error);
+    
+    // If timeout, return empty array instead of error (better UX)
+    if (error.message.includes('timeout')) {
+      return res.json({
+        success: true,
+        markets: [],
+        count: 0,
+        timestamp: new Date().toISOString(),
+        warning: 'Markets are loading slowly. Please try again in a moment.'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch markets'
@@ -247,7 +267,7 @@ app.post('/api/markets/:id/resolve', async (req, res) => {
     if (useAI) {
       try {
         const outcomes = await blockchain.getMarketOutcomesFromChain(marketId);
-        aiResolution = await aiService.suggestMarketResolution(
+        aiResolution = await openai.suggestMarketResolution(
           marketId,
           marketData.question,
           outcomes || []
@@ -402,7 +422,18 @@ app.post('/api/ai/generate-markets', async (req, res) => {
   try {
     const { topic, count } = req.body;
     
-    const markets = await aiService.generateMarketsFromNews(
+    // Check if OpenAI is configured
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI features are disabled. OPENAI_API_KEY not configured.',
+        errorCode: 'AI_DISABLED',
+        helpUrl: 'https://platform.openai.com/api-keys',
+        message: 'To enable AI features, add OPENAI_API_KEY to your .env file. The app works without AI - you can create markets manually.'
+      });
+    }
+    
+    const markets = await openai.generateMarketsFromNews(
       topic || 'cryptocurrency',
       count || 3
     );
@@ -421,13 +452,29 @@ app.post('/api/ai/generate-markets', async (req, res) => {
     const statusCode = error.status || error.response?.status || 500;
     
     let userMessage = 'Failed to generate markets';
-    if (statusCode === 429 || errorMessage.includes('quota') || errorMessage.includes('429')) {
+    if (errorMessage.includes('not configured') || errorMessage.includes('disabled')) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI features are disabled. OPENAI_API_KEY not configured.',
+        errorCode: 'AI_DISABLED',
+        helpUrl: 'https://platform.openai.com/api-keys'
+      });
+    }
+    
+    if (statusCode === 429 || errorMessage.includes('quota') || errorMessage.includes('429') || errorMessage.includes('exceeded your current quota')) {
       userMessage = 'OpenAI API quota exceeded. Please check your OpenAI account billing and usage limits.';
       res.status(429).json({
         success: false,
         error: userMessage,
         errorCode: 'QUOTA_EXCEEDED',
-        helpUrl: 'https://platform.openai.com/account/billing'
+        helpUrl: 'https://platform.openai.com/account/billing',
+        details: 'This usually means: 1) No payment method added, 2) Spending limit reached, or 3) Rate limit exceeded. Check your billing at https://platform.openai.com/account/billing',
+        solutions: [
+          'Add a payment method at https://platform.openai.com/account/billing',
+          'Increase your spending limit at https://platform.openai.com/account/billing/limits',
+          'Wait a few minutes and try again (if rate limited)',
+          'Check your usage at https://platform.openai.com/usage'
+        ]
       });
     } else if (errorMessage.includes('rate limit')) {
       userMessage = 'OpenAI API rate limit exceeded. Please try again in a moment.';
@@ -453,7 +500,7 @@ app.post('/api/ai/analyze-news', async (req, res) => {
   try {
     const { topic, articleCount } = req.body;
     
-    const result = await aiService.analyzeNewsForMarkets(
+    const result = await openai.analyzeNewsForMarkets(
       topic || 'bitcoin',
       articleCount || 5
     );
@@ -492,7 +539,7 @@ app.get('/api/markets/:id/ai-resolution', async (req, res) => {
     const outcomes = await blockchain.getMarketOutcomesFromChain(marketId);
     
     // Generate new AI resolution
-    const aiResolution = await aiService.suggestMarketResolution(
+    const aiResolution = await openai.suggestMarketResolution(
       marketId,
       marketData.question,
       outcomes || []
@@ -508,6 +555,67 @@ app.get('/api/markets/:id/ai-resolution', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to get AI resolution'
+    });
+  }
+});
+
+// ==================== CRYPTO PRICES & AI SUGGESTIONS ====================
+
+/**
+ * GET /api/crypto/prices
+ * Get current crypto prices with AI suggestions
+ */
+app.get('/api/crypto/prices', async (req, res) => {
+  try {
+    const symbols = req.query.symbols ? req.query.symbols.split(',') : ['bitcoin', 'ethereum', 'binancecoin', 'solana', 'cardano', 'polkadot', 'chainlink', 'avalanche-2', 'polygon', 'litecoin'];
+    
+    const priceData = await coingecko.fetchCryptoPrices(symbols);
+    
+    if (!process.env.OPENAI_API_KEY) {
+      return res.json({
+        success: true,
+        cryptos: priceData.map(crypto => ({
+          ...crypto,
+          suggestion: null,
+          suggestionPercent: null,
+          reasoning: 'AI features disabled. OPENAI_API_KEY not configured.'
+        })),
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    const cryptosWithSuggestions = await Promise.all(
+      priceData.map(async (crypto) => {
+        try {
+          const suggestion = await openai.generatePriceSuggestion(crypto);
+          return {
+            ...crypto,
+            suggestion: suggestion.direction,
+            suggestionPercent: suggestion.percentChange,
+            reasoning: suggestion.reasoning
+          };
+        } catch (error) {
+          console.error(`Error generating suggestion for ${crypto.symbol}:`, error);
+          return {
+            ...crypto,
+            suggestion: null,
+            suggestionPercent: null,
+            reasoning: 'Failed to generate suggestion'
+          };
+        }
+      })
+    );
+    
+    res.json({
+      success: true,
+      cryptos: cryptosWithSuggestions,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching crypto prices:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch crypto prices'
     });
   }
 });

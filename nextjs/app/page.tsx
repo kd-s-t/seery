@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther } from 'viem'
-import { Box, Container } from '@mui/material'
-import { CONTRACT_ABI } from '@/lib/contract'
+import { Box, Container, Typography } from '@mui/material'
+import { CONTRACT_ABI } from '@/lib/blockchain'
 import { useMarkets, useContract, useMetaMask, useWallet, useNetwork } from '@/hooks'
 import { SnackbarState, MarketForm } from '@/types'
 import Header from '@/components/Header'
@@ -13,6 +13,7 @@ import WalletConnection from '@/components/WalletConnection'
 import MarketCreationForm from '@/components/MarketCreationForm'
 import MarketsList from '@/components/MarketsList'
 import NotificationSnackbar from '@/components/NotificationSnackbar'
+import CryptoTable from '@/components/CryptoTable'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
 
@@ -24,8 +25,8 @@ export default function Home() {
 
   // Custom hooks
   const { address, isConnected, isConnecting, connectError, handleConnect, ensureTestnet } = useWallet()
-  const { markets, reloadMarkets } = useMarkets(isConnected)
-  const { contractAddress } = useContract()
+  const { markets, loading: marketsLoading, reloadMarkets } = useMarkets(isConnected)
+  const { contractAddress, loading: contractLoading } = useContract()
   const { showWarning, setShowWarning } = useMetaMask()
   const { isTestnet, switchToTestnet } = useNetwork()
 
@@ -112,7 +113,7 @@ export default function Home() {
     }
 
     if (!contractAddress) {
-      showMessage('Contract not deployed. Please deploy contract first.', 'error')
+      showMessage('Contract not deployed. Deploy: cd bnb && npm run deploy, then add CONTRACT_ADDRESS to expressjs/.env', 'error')
       return
     }
 
@@ -151,7 +152,7 @@ export default function Home() {
     }
 
     if (!contractAddress) {
-      showMessage('Contract not deployed. Please deploy contract first.', 'error')
+      showMessage('Contract not deployed. Deploy: cd bnb && npm run deploy, then add CONTRACT_ADDRESS to expressjs/.env', 'error')
       return
     }
 
@@ -201,9 +202,14 @@ export default function Home() {
         // Handle API errors (like quota exceeded)
         let errorMsg = data.error || 'Failed to generate market'
         if (data.errorCode === 'QUOTA_EXCEEDED') {
-          errorMsg = 'OpenAI API quota exceeded. Please check your billing at https://platform.openai.com/account/billing'
+          errorMsg = 'OpenAI API quota exceeded. ' + (data.details || 'Please check your billing at https://platform.openai.com/account/billing')
+          if (data.solutions && data.solutions.length > 0) {
+            console.error('OpenAI Quota Solutions:', data.solutions)
+          }
         } else if (data.errorCode === 'RATE_LIMIT') {
           errorMsg = 'OpenAI API rate limit exceeded. Please try again in a moment.'
+        } else if (data.errorCode === 'AI_DISABLED') {
+          errorMsg = 'AI features are disabled. OPENAI_API_KEY not configured. The app works without AI - you can create markets manually or use the "Random Question" button.'
         }
         showMessage(errorMsg, 'error')
         return
@@ -248,12 +254,39 @@ export default function Home() {
         
         <Header />
 
+        {!contractLoading && !contractAddress && (
+          <Box sx={{ mb: 3, p: 2, bgcolor: 'error.light', color: 'error.contrastText', borderRadius: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              ⚠️ Contract Not Deployed
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              To use Seer, you need to deploy the smart contract first.
+            </Typography>
+            <Typography variant="body2" component="pre" sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 1, fontSize: '0.85rem', overflow: 'auto' }}>
+{`1. Deploy contract:
+   cd bnb
+   npm run deploy
+
+2. Add to expressjs/.env:
+   CONTRACT_ADDRESS=0x... (from step 1)
+
+3. Restart backend:
+   cd expressjs
+   npm start
+
+See DEPLOY_CONTRACT.md for details.`}
+            </Typography>
+          </Box>
+        )}
+
         <WalletConnection
           address={address}
           isConnected={isConnected}
           isConnecting={isConnecting}
           onConnect={onConnect}
         />
+
+        <CryptoTable />
 
         <MarketCreationForm
           onSubmit={createMarket}
@@ -266,6 +299,7 @@ export default function Home() {
 
         <MarketsList
           markets={markets}
+          loading={marketsLoading}
           userAddress={address}
           onPlaceBet={placeBet}
           isPlacingBet={isWriting || isConfirming}

@@ -7,6 +7,7 @@ import { Market } from '@/types'
 
 interface MarketsListProps {
   markets: Market[]
+  loading?: boolean
   userAddress: string | undefined
   onPlaceBet: (marketId: number, outcome: number, amount: number) => void
   isPlacingBet?: boolean
@@ -14,6 +15,7 @@ interface MarketsListProps {
 
 export default function MarketsList({
   markets,
+  loading = false,
   userAddress,
   onPlaceBet,
   isPlacingBet = false,
@@ -31,7 +33,7 @@ export default function MarketsList({
               <Card>
                 <CardContent>
                   <Typography align="center" color="text.secondary">
-                    Loading markets...
+                    {loading ? 'Loading markets from blockchain...' : 'No markets found. Create one to get started!'}
                   </Typography>
                 </CardContent>
               </Card>

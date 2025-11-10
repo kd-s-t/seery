@@ -1,5 +1,5 @@
 const db = require('../database');
-const aiService = require('../ai-service');
+const openai = require('../lib/openai');
 
 // Test database operations
 function testDatabase() {
@@ -82,7 +82,7 @@ async function testAIService() {
   try {
     // Test market generation
     console.log('Testing market generation...');
-    const markets = await aiService.generateMarketsFromNews('bitcoin', 2);
+    const markets = await openai.generateMarketsFromNews('bitcoin', 2);
     if (markets && Array.isArray(markets) && markets.length > 0) {
       console.log('✅ Market generation works');
       console.log(`   Generated ${markets.length} markets`);
@@ -92,7 +92,7 @@ async function testAIService() {
     
     // Test resolution suggestion
     console.log('\nTesting resolution suggestion...');
-    const resolution = await aiService.suggestMarketResolution(
+    const resolution = await openai.suggestMarketResolution(
       1,
       'Will Bitcoin reach $100k by end of 2024?',
       ['Yes', 'No']

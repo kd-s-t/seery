@@ -35,9 +35,10 @@ variable "allocate_elastic_ip" {
 
 # Application Configuration
 variable "openai_api_key" {
-  description = "OpenAI API key"
+  description = "OpenAI API key (optional - leave empty to disable AI features)"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "network" {

@@ -241,46 +241,62 @@ async function getAllMarketsFromChain(limit = 50, offset = 0) {
       return [];
     }
     
-    const markets = [];
     const startId = Math.max(1, offset + 1);
     const endId = Math.min(count, startId + limit);
     
+    // Fetch all markets in parallel for better performance
+    const marketPromises = [];
     for (let i = startId; i <= endId; i++) {
-      try {
-        const marketData = await getMarketFromChain(i);
-        if (marketData) {
-          const outcomes = await getMarketOutcomesFromChain(i);
-          const outcomePools = {};
-          
-          if (outcomes) {
-            for (let j = 0; j < outcomes.length; j++) {
-              const pool = await getOutcomePoolFromChain(i, j);
-              outcomePools[j] = {
-                total: parseFloat(pool),
-                chain: pool
-              };
+      marketPromises.push(
+        (async () => {
+          try {
+            const marketData = await getMarketFromChain(i);
+            if (!marketData) return null;
+            
+            const outcomes = await getMarketOutcomesFromChain(i);
+            const outcomePools = {};
+            
+            // Fetch all outcome pools in parallel
+            if (outcomes && outcomes.length > 0) {
+              const poolPromises = outcomes.map((_, j) =>
+                getOutcomePoolFromChain(i, j).then(pool => ({
+                  index: j,
+                  pool: parseFloat(pool),
+                  chain: pool
+                })).catch(() => ({ index: j, pool: 0, chain: '0' }))
+              );
+              
+              const pools = await Promise.all(poolPromises);
+              pools.forEach(({ index, pool, chain }) => {
+                outcomePools[index] = { total: pool, chain };
+              });
             }
+            
+            return {
+              market_id: i,
+              question: marketData.question,
+              outcomes: outcomes || [],
+              creator: marketData.creator,
+              endTime: parseInt(marketData.endTime),
+              resolved: marketData.resolved,
+              winningOutcome: marketData.resolved ? parseInt(marketData.winningOutcome) : null,
+              totalPool: marketData.totalPool,
+              outcomePools
+            };
+          } catch (error) {
+            // Market might not exist, skip it
+            console.log(`Market ${i} not found, skipping`);
+            return null;
           }
-          
-          markets.push({
-            market_id: i,
-            question: marketData.question,
-            outcomes: outcomes || [],
-            creator: marketData.creator,
-            endTime: parseInt(marketData.endTime),
-            resolved: marketData.resolved,
-            winningOutcome: marketData.resolved ? parseInt(marketData.winningOutcome) : null,
-            totalPool: marketData.totalPool,
-            outcomePools
-          });
-        }
-      } catch (error) {
-        // Market might not exist, skip it
-        console.log(`Market ${i} not found, skipping`);
-      }
+        })()
+      );
     }
     
-    return markets;
+    // Wait for all markets to load in parallel
+    const results = await Promise.all(marketPromises);
+    
+    // Filter out null results (markets that don't exist)
+    return results.filter(market => market !== null);
   } catch (error) {
     console.error('Error getting all markets:', error);
     return [];

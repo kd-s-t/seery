@@ -88,13 +88,23 @@ services:
 EOF
 
 # Create .env file with environment variables
-cat > .env <<EOF
+if [ -n "${openai_api_key}" ]; then
+  cat > .env <<EOF
 OPENAI_API_KEY=${openai_api_key}
 NETWORK=${network}
 BNB_TESTNET_RPC=${bnb_testnet_rpc}
 BNB_MAINNET_RPC=${bnb_mainnet_rpc}
 CONTRACT_ADDRESS=${contract_address}
 EOF
+else
+  cat > .env <<EOF
+# OPENAI_API_KEY not set - AI features disabled (app works without it)
+NETWORK=${network}
+BNB_TESTNET_RPC=${bnb_testnet_rpc}
+BNB_MAINNET_RPC=${bnb_mainnet_rpc}
+CONTRACT_ADDRESS=${contract_address}
+EOF
+fi
 
 # Set proper permissions
 chown -R ec2-user:ec2-user /home/ec2-user/seer

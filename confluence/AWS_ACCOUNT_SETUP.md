@@ -2,22 +2,21 @@
 
 ## Account Information
 
-- **AWS Account ID**: `456783087661`
+- **AWS Account ID**: `YOUR_ACCOUNT_ID` (replace with your actual account ID)
 - **AWS Region**: `us-east-1` (default)
-- **IAM User**: `terraform-access`
+- **IAM User**: `terraform-access` (or your IAM user name)
 
-This is the same AWS account used for the SplitSafe project.
+**Note:** Replace placeholders with your actual AWS account information.
 
 ## Configuration Alignment
 
-The Seer Terraform configuration has been aligned with the SplitSafe setup:
+The Seer Terraform configuration follows standard AWS naming conventions:
 
 ### SSM Parameter Store Paths
 
-- **SplitSafe**: `/splitsafe/${environment}/*`
 - **Seer**: `/seer/${environment}/*`
 
-Both follow the pattern: `/project-name/${environment}/*`
+Follows the pattern: `/project-name/${environment}/*`
 
 ### Resource Naming
 
@@ -46,9 +45,9 @@ aws sts get-caller-identity
 Expected output:
 ```json
 {
-    "UserId": "AIDAWUWTEZAW3D7QIYYB6",
-    "Account": "456783087661",
-    "Arn": "arn:aws:iam::456783087661:user/terraform-access"
+    "UserId": "AIDAXXXXXXXXXXXXXXXXX",
+    "Account": "123456789012",
+    "Arn": "arn:aws:iam::123456789012:user/terraform-access"
 }
 ```
 
@@ -96,15 +95,15 @@ Resources created:
 
 Estimated monthly cost: ~$140-165/month (excluding data transfer)
 
-## Shared Resources
+## Resource Isolation
 
-Currently, Seer and SplitSafe use separate:
+Seer resources are isolated:
 - VPCs
 - ECS Clusters
 - ECR Repositories
 - Security Groups
 
-They share:
+All resources use:
 - AWS Account
 - IAM User
 - Region (us-east-1)
@@ -129,6 +128,7 @@ If resources already exist:
 
 To verify SSM parameters:
 ```bash
+# Replace with your actual account ID
 aws ssm get-parameter --name "/seer/production/openai_api_key" --with-decryption
 ```
 

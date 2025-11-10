@@ -1,4 +1,3 @@
-// Contract ABI for wagmi/viem
 export const CONTRACT_ABI = [
   {
     name: 'createMarket',

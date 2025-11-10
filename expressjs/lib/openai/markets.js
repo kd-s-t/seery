@@ -1,22 +1,7 @@
-const OpenAI = require('openai');
-require('dotenv').config();
+const { getOpenAIClient } = require('./client');
 
-// Initialize OpenAI only if API key is provided
-let openai = null;
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-} else {
-  console.warn('⚠️  OPENAI_API_KEY not set. AI features will be disabled.');
-  console.warn('💡 To enable AI features, add OPENAI_API_KEY to your .env file');
-  console.warn('💡 Free tier options: Use gpt-3.5-turbo (cheapest) or leave empty for manual resolution');
-}
-
-/**
- * Generate prediction markets from news articles
- */
 async function generateMarketsFromNews(topic = 'cryptocurrency', count = 3) {
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new Error('OpenAI API key not configured. AI features are disabled.');
   }
@@ -73,83 +58,13 @@ Focus on:
   }
 }
 
-/**
- * Use AI to suggest resolution for a market
- * This provides faster resolution than traditional oracles
- */
-async function suggestMarketResolution(marketId, question, outcomes, context = '') {
-  if (!openai) {
-    throw new Error('OpenAI API key not configured. AI features are disabled.');
-  }
-  
-  try {
-    const prompt = `You are an AI oracle for a prediction market. Analyze the following market and suggest the winning outcome.
-
-Market Question: ${question}
-Possible Outcomes: ${outcomes.join(', ')}
-
-${context ? `Additional Context: ${context}` : ''}
-
-Based on current information, news, and verifiable facts, determine which outcome should win.
-
-Return JSON with this structure:
-{
-  "suggestedOutcome": 0,
-  "confidence": 0.85,
-  "reasoning": "Detailed explanation of why this outcome should win based on verifiable facts",
-  "evidence": ["Fact 1", "Fact 2", "Fact 3"],
-  "verificationMethod": "How this can be verified objectively"
-}
-
-Confidence should be 0-1, where:
-- 0.9-1.0: Very high confidence, outcome is clearly verifiable
-- 0.7-0.89: High confidence, outcome is likely correct
-- 0.5-0.69: Moderate confidence, some uncertainty
-- Below 0.5: Low confidence, may need more information
-
-Only suggest an outcome if you have reasonable confidence (>= 0.6) and can provide verifiable evidence.`;
-
-    const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an AI oracle that provides objective, evidence-based resolutions for prediction markets. Always base your decisions on verifiable facts.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3, // Lower temperature for more consistent, factual responses
-      max_tokens: 1500,
-    });
-
-    const content = completion.choices[0].message.content.trim();
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const resolution = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
-    
-    return {
-      marketId,
-      ...resolution,
-      timestamp: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error('Error suggesting market resolution:', error);
-    throw error;
-  }
-}
-
-/**
- * Analyze news to create market suggestions
- */
 async function analyzeNewsForMarkets(topic = 'bitcoin', articleCount = 5) {
+  const openai = getOpenAIClient();
   if (!openai) {
     throw new Error('OpenAI API key not configured. AI features are disabled.');
   }
   
   try {
-    // First, get news articles (using existing news fetching logic)
     const newsPrompt = `Find the latest ${articleCount} news articles about ${topic}. 
     Provide a JSON array with:
     [
@@ -181,7 +96,6 @@ async function analyzeNewsForMarkets(topic = 'bitcoin', articleCount = 5) {
     const newsJsonMatch = newsContent.match(/\[[\s\S]*\]/);
     const news = newsJsonMatch ? JSON.parse(newsJsonMatch[0]) : JSON.parse(newsContent);
 
-    // Then generate markets from the news
     const marketsPrompt = `Based on these news articles, generate 3-5 prediction market questions:
 
 ${JSON.stringify(news, null, 2)}
@@ -235,7 +149,6 @@ Return JSON array:
 
 module.exports = {
   generateMarketsFromNews,
-  suggestMarketResolution,
   analyzeNewsForMarkets
 };
 

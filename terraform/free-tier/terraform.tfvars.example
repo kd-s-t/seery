@@ -11,7 +11,10 @@ allocate_elastic_ip = false      # Set to true for static IP (costs ~$0.005/hour
 ssh_allowed_cidrs = ["0.0.0.0/0"]  # WARNING: Change this to your IP, e.g., ["1.2.3.4/32"]
 
 # Application Configuration
-openai_api_key   = "sk-your-openai-api-key-here"
+# OpenAI API key (optional - leave empty to disable AI features)
+# Without it, the app works but AI features are disabled
+# With gpt-3.5-turbo, costs ~$1-2/month for light usage
+openai_api_key   = ""  # Optional: "sk-your-openai-api-key-here" or leave empty
 network          = "testnet"  # or "mainnet"
 bnb_testnet_rpc  = "https://data-seed-prebsc-1-s1.binance.org:8545"
 bnb_mainnet_rpc  = "https://bsc-dataseed.binance.org/"
