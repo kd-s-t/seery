@@ -10,6 +10,9 @@ export function useContract() {
     const fetchConfig = async () => {
       try {
         const response = await fetch(`${API_URL}/api/config`)
+        if (!response.ok) {
+          throw new Error(`Backend returned ${response.status}`)
+        }
         const config = await response.json()
         if (config.contractAddress) {
           setContractAddress(config.contractAddress)

@@ -12,6 +12,7 @@ export interface CryptoPrice {
 export interface CryptoPricesResponse {
   success: boolean
   cryptos: CryptoPrice[]
+  tags?: string[]
   timestamp: string
   error?: string
 }

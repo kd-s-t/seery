@@ -1,26 +1,233 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Card, CardContent, Typography } from '@mui/material'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { AppBar, Toolbar, Typography, Button, Chip, Stack, Alert, Box, ToggleButtonGroup, ToggleButton } from '@mui/material'
+import { AccountBalanceWallet, SwapHoriz, Logout, TrendingUp } from '@mui/icons-material'
+import { useNetwork } from '@/hooks/useNetwork'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
-export default function Header() {
+interface HeaderProps {
+  address: string | undefined
+  isConnected: boolean
+  isConnecting: boolean
+  onConnect: () => void
+  onDisconnect: () => void
+}
+
+export default function Header({
+  address,
+  isConnected,
+  isConnecting,
+  onConnect,
+  onDisconnect,
+}: HeaderProps) {
+  const router = useRouter()
+  const { networkName, isTestnet, isSwitching, switchToTestnet } = useNetwork()
+  const { currency, setCurrency } = useCurrency()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleLogoClick = () => {
+    router.push('/')
+  }
+
+  const handleMarketClick = () => {
+    const marketSection = document.getElementById('market-section')
+    if (marketSection) {
+      marketSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const displayAddress = mounted && address 
+    ? `${address.substring(0, 6)}...${address.substring(38)}` 
+    : 'Not connected'
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h3" component="h1" gutterBottom>
+    <>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          mb: 3
+        }}
+      >
+        <Toolbar>
+          <Typography 
+            variant="h6" 
+            component="div" 
+            onClick={handleLogoClick}
+            sx={{ 
+              flexGrow: 1, 
+              fontWeight: 600,
+              cursor: 'pointer',
+              userSelect: 'none',
+              '&:hover': {
+                opacity: 0.8
+              }
+            }}
+          >
             Seer
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            AI-Assisted Market Creation & Resolution
-          </Typography>
-        </CardContent>
-      </Card>
-    </motion.div>
+          
+          <Stack 
+            direction="row" 
+            spacing={1.5} 
+            alignItems="center" 
+            sx={{ 
+              mr: { xs: 0, sm: 2 },
+              flexWrap: { xs: 'wrap', sm: 'nowrap' },
+              justifyContent: { xs: 'flex-end', sm: 'flex-start' }
+            }}
+          >
+            {mounted && isConnected && (
+              <Button
+                color="inherit"
+                variant="text"
+                size="small"
+                startIcon={<TrendingUp />}
+                onClick={handleMarketClick}
+                sx={{ 
+                  minWidth: { xs: 80, sm: 100 },
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                Market
+              </Button>
+            )}
+            {mounted && isConnected && (
+              <ToggleButtonGroup
+                value={currency}
+                exclusive
+                onChange={(_, newCurrency) => {
+                  if (newCurrency !== null) {
+                    setCurrency(newCurrency)
+                  }
+                }}
+                size="small"
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    '&.Mui-selected': {
+                      color: 'white',
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                    },
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="usd">USD</ToggleButton>
+                <ToggleButton value="php">PHP</ToggleButton>
+              </ToggleButtonGroup>
+            )}
+            {mounted && isConnected && (
+              <Box 
+                sx={{ 
+                  display: { xs: 'none', sm: 'flex' },
+                  flexDirection: 'column',
+                  alignItems: 'flex-end'
+                }}
+              >
+                <Typography variant="caption" sx={{ lineHeight: 1.2, fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>
+                  {displayAddress}
+                </Typography>
+                <Chip
+                  label={networkName}
+                  color={isTestnet ? 'success' : 'default'}
+                  size="small"
+                  sx={{ height: 18, fontSize: '0.65rem', mt: 0.3, bgcolor: 'rgba(255, 255, 255, 0.2)' }}
+                />
+              </Box>
+            )}
+            {mounted && isConnected ? (
+              <Button
+                color="inherit"
+                variant="outlined"
+                size="small"
+                startIcon={<Logout />}
+                onClick={onDisconnect}
+                sx={{ 
+                  minWidth: { xs: 80, sm: 100 },
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                Disconnect
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AccountBalanceWallet />}
+                onClick={onConnect}
+                disabled={mounted && isConnecting}
+                sx={{ 
+                  minWidth: { xs: 80, sm: 100 },
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  bgcolor: 'white',
+                  color: '#667eea',
+                  fontWeight: 600,
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                  },
+                  '&:disabled': {
+                    bgcolor: 'rgba(255, 255, 255, 0.5)',
+                    color: 'rgba(102, 126, 234, 0.6)',
+                  },
+                }}
+              >
+                {mounted && isConnecting ? 'Connecting...' : 'Connect'}
+              </Button>
+            )}
+          </Stack>
+        </Toolbar>
+      </AppBar>
+      
+      {mounted && isConnected && !isTestnet && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={switchToTestnet}
+              disabled={isSwitching}
+              startIcon={<SwapHoriz />}
+              sx={{ 
+                fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                minWidth: { xs: 'auto', sm: 120 }
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {isSwitching ? 'Switching...' : 'Switch to Testnet'}
+              </Box>
+              <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                {isSwitching ? '...' : 'Switch'}
+              </Box>
+            </Button>
+          }
+        >
+          Wrong Network! Please switch to BNB Testnet.
+        </Alert>
+      )}
+    </>
   )
 }
 

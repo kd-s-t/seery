@@ -1,6 +1,12 @@
 const { getOpenAIClient } = require('./client');
+const cache = require('./cache');
 
 async function suggestMarketResolution(marketId, question, outcomes, context = '') {
+  const cached = cache.get('suggestMarketResolution', marketId, question);
+  if (cached) {
+    return cached;
+  }
+  
   const openai = getOpenAIClient();
   if (!openai) {
     throw new Error('OpenAI API key not configured. AI features are disabled.');
@@ -53,11 +59,14 @@ Only suggest an outcome if you have reasonable confidence (>= 0.6) and can provi
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const resolution = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
     
-    return {
+    const result = {
       marketId,
       ...resolution,
       timestamp: new Date().toISOString()
     };
+    
+    cache.set('suggestMarketResolution', result, marketId, question);
+    return result;
   } catch (error) {
     console.error('Error suggesting market resolution:', error);
     throw error;

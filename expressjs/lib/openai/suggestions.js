@@ -1,6 +1,12 @@
 const { getOpenAIClient } = require('./client');
+const cache = require('./cache');
 
 async function generatePriceSuggestion(crypto) {
+  const cached = cache.get('generatePriceSuggestion', crypto.symbol, crypto.price);
+  if (cached) {
+    return cached;
+  }
+  
   const openai = getOpenAIClient();
   
   if (!openai) {
@@ -51,11 +57,14 @@ Be realistic. Percent changes should typically be between -15% and +15% for 24-4
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const suggestion = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
     
-    return {
+    const result = {
       direction: suggestion.direction || 'neutral',
       percentChange: parseFloat(suggestion.percentChange) || 0,
       reasoning: suggestion.reasoning || 'Analysis in progress'
     };
+    
+    cache.set('generatePriceSuggestion', result, crypto.symbol, crypto.price);
+    return result;
   } catch (error) {
     console.error('Error generating price suggestion:', error);
     throw error;

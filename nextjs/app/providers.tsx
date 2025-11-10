@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { wagmiConfig } from '@/lib/wagmi'
+import { CurrencyProvider } from '@/contexts/CurrencyContext'
 import theme from './theme'
 
 const queryClient = new QueryClient()
@@ -14,8 +15,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {children}
+          <CurrencyProvider>
+            <CssBaseline />
+            {children}
+          </CurrencyProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>

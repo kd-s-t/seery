@@ -1,0 +1,122 @@
+export interface CryptoLibraryItem {
+  id: string
+  name: string
+  symbol: string
+  marketCap: number
+}
+
+export const CRYPTO_LIBRARY: CryptoLibraryItem[] = [
+  { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', marketCap: 1000000000000 },
+  { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', marketCap: 400000000000 },
+  { id: 'binancecoin', name: 'BNB', symbol: 'BNB', marketCap: 100000000000 },
+  { id: 'solana', name: 'Solana', symbol: 'SOL', marketCap: 80000000000 },
+  { id: 'cardano', name: 'Cardano', symbol: 'ADA', marketCap: 20000000000 },
+  { id: 'polkadot', name: 'Polkadot', symbol: 'DOT', marketCap: 15000000000 },
+  { id: 'chainlink', name: 'Chainlink', symbol: 'LINK', marketCap: 12000000000 },
+  { id: 'avalanche-2', name: 'Avalanche', symbol: 'AVAX', marketCap: 10000000000 },
+  { id: 'polygon', name: 'Polygon', symbol: 'MATIC', marketCap: 8000000000 },
+  { id: 'litecoin', name: 'Litecoin', symbol: 'LTC', marketCap: 6000000000 },
+  { id: 'ripple', name: 'XRP', symbol: 'XRP', marketCap: 5000000000 },
+  { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', marketCap: 4000000000 },
+  { id: 'shiba-inu', name: 'Shiba Inu', symbol: 'SHIB', marketCap: 3500000000 },
+  { id: 'tron', name: 'TRON', symbol: 'TRX', marketCap: 3000000000 },
+  { id: 'uniswap', name: 'Uniswap', symbol: 'UNI', marketCap: 2800000000 },
+  { id: 'stellar', name: 'Stellar', symbol: 'XLM', marketCap: 2500000000 },
+  { id: 'tether', name: 'Tether', symbol: 'USDT', marketCap: 90000000000 },
+  { id: 'usd-coin', name: 'USD Coin', symbol: 'USDC', marketCap: 30000000000 },
+  { id: 'bitcoin-cash', name: 'Bitcoin Cash', symbol: 'BCH', marketCap: 7000000 },
+  { id: 'bitcoin-sv', name: 'Bitcoin SV', symbol: 'BSV', marketCap: 6000000 },
+  { id: 'cosmos', name: 'Cosmos', symbol: 'ATOM', marketCap: 2200000000 },
+  { id: 'ethereum-classic', name: 'Ethereum Classic', symbol: 'ETC', marketCap: 2000000000 },
+  { id: 'monero', name: 'Monero', symbol: 'XMR', marketCap: 1800000000 },
+  { id: 'algorand', name: 'Algorand', symbol: 'ALGO', marketCap: 1600000000 },
+  { id: 'filecoin', name: 'Filecoin', symbol: 'FIL', marketCap: 1400000000 },
+  { id: 'vechain', name: 'VeChain', symbol: 'VET', marketCap: 1200000000 },
+  { id: 'the-graph', name: 'The Graph', symbol: 'GRT', marketCap: 1000000000 },
+  { id: 'aave', name: 'Aave', symbol: 'AAVE', marketCap: 900000000 },
+  { id: 'maker', name: 'Maker', symbol: 'MKR', marketCap: 800000000 },
+  { id: 'compound', name: 'Compound', symbol: 'COMP', marketCap: 700000000 },
+  { id: 'dash', name: 'Dash', symbol: 'DASH', marketCap: 600000000 },
+  { id: 'zcash', name: 'Zcash', symbol: 'ZEC', marketCap: 550000000 },
+  { id: 'tezos', name: 'Tezos', symbol: 'XTZ', marketCap: 500000000 },
+  { id: 'eos', name: 'EOS', symbol: 'EOS', marketCap: 450000000 },
+  { id: 'iota', name: 'IOTA', symbol: 'MIOTA', marketCap: 400000000 },
+  { id: 'neo', name: 'NEO', symbol: 'NEO', marketCap: 350000000 },
+  { id: 'waves', name: 'Waves', symbol: 'WAVES', marketCap: 300000000 },
+  { id: 'decentraland', name: 'Decentraland', symbol: 'MANA', marketCap: 280000000 },
+  { id: 'the-sandbox', name: 'The Sandbox', symbol: 'SAND', marketCap: 250000000 },
+  { id: 'axie-infinity', name: 'Axie Infinity', symbol: 'AXS', marketCap: 220000000 },
+  { id: 'gala', name: 'Gala', symbol: 'GALA', marketCap: 200000000 },
+  { id: 'enjin-coin', name: 'Enjin Coin', symbol: 'ENJ', marketCap: 180000000 },
+  { id: 'chiliz', name: 'Chiliz', symbol: 'CHZ', marketCap: 160000000 },
+  { id: 'flow', name: 'Flow', symbol: 'FLOW', marketCap: 140000000 },
+  { id: 'near', name: 'NEAR Protocol', symbol: 'NEAR', marketCap: 120000000 },
+  { id: 'fantom', name: 'Fantom', symbol: 'FTM', marketCap: 100000000 },
+  { id: 'harmony', name: 'Harmony', symbol: 'ONE', marketCap: 90000000 },
+  { id: 'celo', name: 'Celo', symbol: 'CELO', marketCap: 80000000 },
+  { id: 'hedera-hashgraph', name: 'Hedera', symbol: 'HBAR', marketCap: 70000000 },
+  { id: 'theta-token', name: 'Theta Network', symbol: 'THETA', marketCap: 60000000 },
+  { id: 'basic-attention-token', name: 'Basic Attention Token', symbol: 'BAT', marketCap: 50000000 },
+  { id: '0x', name: '0x', symbol: 'ZRX', marketCap: 45000000 },
+  { id: 'curve-dao-token', name: 'Curve DAO Token', symbol: 'CRV', marketCap: 40000000 },
+  { id: 'yearn-finance', name: 'Yearn.finance', symbol: 'YFI', marketCap: 35000000 },
+  { id: 'sushi', name: 'SushiSwap', symbol: 'SUSHI', marketCap: 30000000 },
+  { id: '1inch', name: '1inch Network', symbol: '1INCH', marketCap: 25000000 },
+  { id: 'pancakeswap-token', name: 'PancakeSwap', symbol: 'CAKE', marketCap: 20000000 },
+  { id: 'terra-luna', name: 'Terra Luna', symbol: 'LUNA', marketCap: 15000000 },
+  { id: 'aptos', name: 'Aptos', symbol: 'APT', marketCap: 12000000 },
+  { id: 'sui', name: 'Sui', symbol: 'SUI', marketCap: 10000000 },
+  { id: 'optimism', name: 'Optimism', symbol: 'OP', marketCap: 8000000 },
+  { id: 'arbitrum', name: 'Arbitrum', symbol: 'ARB', marketCap: 6000000 },
+  { id: 'immutable-x', name: 'Immutable X', symbol: 'IMX', marketCap: 5000000 },
+  { id: 'loopring', name: 'Loopring', symbol: 'LRC', marketCap: 4000000 },
+  { id: 'zilliqa', name: 'Zilliqa', symbol: 'ZIL', marketCap: 3500000 },
+  { id: 'icon', name: 'ICON', symbol: 'ICX', marketCap: 3000000 },
+  { id: 'ontology', name: 'Ontology', symbol: 'ONT', marketCap: 2800000 },
+  { id: 'qtum', name: 'Qtum', symbol: 'QTUM', marketCap: 2500000 },
+  { id: 'omisego', name: 'OMG Network', symbol: 'OMG', marketCap: 2200000 },
+  { id: 'zcoin', name: 'Firo', symbol: 'FIRO', marketCap: 2000000 },
+  { id: 'ravencoin', name: 'Ravencoin', symbol: 'RVN', marketCap: 1800000 },
+  { id: 'siacoin', name: 'Siacoin', symbol: 'SC', marketCap: 1600000 },
+  { id: 'digibyte', name: 'DigiByte', symbol: 'DGB', marketCap: 1400000 },
+  { id: 'verge', name: 'Verge', symbol: 'XVG', marketCap: 1200000 },
+  { id: 'reddcoin', name: 'Reddcoin', symbol: 'RDD', marketCap: 1000000 },
+  { id: 'pivx', name: 'PIVX', symbol: 'PIVX', marketCap: 900000 },
+  { id: 'nano', name: 'Nano', symbol: 'XNO', marketCap: 800000 },
+  { id: 'dai', name: 'Dai', symbol: 'DAI', marketCap: 5000000000 },
+  { id: 'true-usd', name: 'TrueUSD', symbol: 'TUSD', marketCap: 2000000000 },
+  { id: 'binance-usd', name: 'Binance USD', symbol: 'BUSD', marketCap: 4000000000 },
+  { id: 'wrapped-bitcoin', name: 'Wrapped Bitcoin', symbol: 'WBTC', marketCap: 15000000000 },
+  { id: 'weth', name: 'Wrapped Ethereum', symbol: 'WETH', marketCap: 8000000000 },
+  { id: 'crypto-com-chain', name: 'Cronos', symbol: 'CRO', marketCap: 3000000000 },
+  { id: 'okb', name: 'OKB', symbol: 'OKB', marketCap: 2500000000 },
+  { id: 'huobi-token', name: 'Huobi Token', symbol: 'HT', marketCap: 2000000000 },
+  { id: 'ftx-token', name: 'FTX Token', symbol: 'FTT', marketCap: 1500000000 },
+  { id: 'kucoin-shares', name: 'KuCoin Token', symbol: 'KCS', marketCap: 1000000000 },
+  { id: 'leo-token', name: 'LEO Token', symbol: 'LEO', marketCap: 800000000 },
+  { id: 'celo-dollar', name: 'Celo Dollar', symbol: 'CUSD', marketCap: 600000000 },
+  { id: 'paxos-standard', name: 'Pax Dollar', symbol: 'USDP', marketCap: 500000000 },
+  { id: 'gemini-dollar', name: 'Gemini Dollar', symbol: 'GUSD', marketCap: 400000000 },
+  { id: 'husd', name: 'HUSD', symbol: 'HUSD', marketCap: 300000000 },
+  { id: 'usdd', name: 'USDD', symbol: 'USDD', marketCap: 200000000 },
+  { id: 'frax', name: 'Frax', symbol: 'FRAX', marketCap: 1000000000 },
+  { id: 'liquity-usd', name: 'Liquity USD', symbol: 'LUSD', marketCap: 500000000 },
+  { id: 'magic-internet-money', name: 'Magic Internet Money', symbol: 'MIM', marketCap: 300000000 },
+]
+
+export function getCryptoLibrary(): CryptoLibraryItem[] {
+  const seen = new Set<string>()
+  const unique = CRYPTO_LIBRARY.filter(item => {
+    if (seen.has(item.id)) {
+      return false
+    }
+    seen.add(item.id)
+    return true
+  })
+  return unique.sort((a, b) => b.marketCap - a.marketCap)
+}
+
+export function getTop10Cryptos(): CryptoLibraryItem[] {
+  return getCryptoLibrary().slice(0, 10)
+}
+

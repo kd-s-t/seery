@@ -13,8 +13,6 @@ const CONTRACT_ABI = [
   "function createMarket(string question, string[] outcomes, uint256 durationHours) returns (uint256)",
   "function placeBet(uint256 marketId, uint256 outcome) payable",
   "function resolveMarket(uint256 marketId, uint256 winningOutcome)",
-  "function claimWinnings(uint256 marketId)",
-  "function withdraw()",
   "function getMarket(uint256 marketId) view returns (address creator, string question, uint256 endTime, bool resolved, uint256 winningOutcome, uint256 totalPool)",
   "function getOutcomePool(uint256 marketId, uint256 outcome) view returns (uint256)",
   "function getUserBet(uint256 marketId, address user, uint256 outcome) view returns (uint256)",

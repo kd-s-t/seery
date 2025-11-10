@@ -1,6 +1,12 @@
 const { getOpenAIClient } = require('./client');
+const cache = require('./cache');
 
 async function generateMarketsFromNews(topic = 'cryptocurrency', count = 3) {
+  const cached = cache.get('generateMarketsFromNews', topic, count);
+  if (cached) {
+    return cached;
+  }
+  
   const openai = getOpenAIClient();
   if (!openai) {
     throw new Error('OpenAI API key not configured. AI features are disabled.');
@@ -51,6 +57,7 @@ Focus on:
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     const markets = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
     
+    cache.set('generateMarketsFromNews', markets, topic, count);
     return markets;
   } catch (error) {
     console.error('Error generating markets from news:', error);
@@ -59,6 +66,11 @@ Focus on:
 }
 
 async function analyzeNewsForMarkets(topic = 'bitcoin', articleCount = 5) {
+  const cached = cache.get('analyzeNewsForMarkets', topic, articleCount);
+  if (cached) {
+    return cached;
+  }
+  
   const openai = getOpenAIClient();
   if (!openai) {
     throw new Error('OpenAI API key not configured. AI features are disabled.');
@@ -70,11 +82,20 @@ async function analyzeNewsForMarkets(topic = 'bitcoin', articleCount = 5) {
     [
       {
         "title": "Article title",
-        "summary": "Brief summary",
-        "date": "Date",
-        "source": "Source"
+        "summary": "Brief 2-3 sentence summary of the article",
+        "source": "Source name (e.g., CoinDesk, Reuters, etc.)",
+        "url": "URL if available, otherwise null",
+        "date": "Publication date if available, otherwise approximate date",
+        "sentiment": "positive/negative/neutral"
       }
-    ]`;
+    ]
+    
+    Requirements:
+    - Focus on recent news from the last 2 weeks
+    - Include actual events, price movements, and significant developments
+    - Provide real URLs when possible
+    - Ensure all summaries are factual and informative
+    - Sort articles by relevance and recency`;
 
     const newsCompletion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
@@ -137,10 +158,13 @@ Return JSON array:
     const marketsJsonMatch = marketsContent.match(/\[[\s\S]*\]/);
     const markets = marketsJsonMatch ? JSON.parse(marketsJsonMatch[0]) : JSON.parse(marketsContent);
 
-    return {
+    const result = {
       news,
       markets
     };
+    
+    cache.set('analyzeNewsForMarkets', result, topic, articleCount);
+    return result;
   } catch (error) {
     console.error('Error analyzing news for markets:', error);
     throw error;

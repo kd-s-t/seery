@@ -7,4 +7,6 @@ export { default as MarketCard } from './MarketCard'
 export { default as NotificationSnackbar } from './NotificationSnackbar'
 export { default as FaucetHelper } from './FaucetHelper'
 export { default as CryptoTable } from './CryptoTable'
+export { default as TrendingNews } from './TrendingNews'
+export { default as Homepage } from './Homepage'
 

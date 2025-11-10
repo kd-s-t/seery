@@ -1,4 +1,4 @@
-import { useConnect, useAccount, useChainId, useSwitchChain } from 'wagmi'
+import { useConnect, useAccount, useChainId, useSwitchChain, useDisconnect } from 'wagmi'
 import { bscTestnet } from 'wagmi/chains'
 
 export function useWallet() {
@@ -6,6 +6,7 @@ export function useWallet() {
   const chainId = useChainId()
   const { connect, connectors, isPending: isConnecting, error: connectError } = useConnect()
   const { switchChain } = useSwitchChain()
+  const { disconnect } = useDisconnect()
 
   const handleConnect = async () => {
     // Check if MetaMask is installed
@@ -34,12 +35,17 @@ export function useWallet() {
     }
   }
 
+  const handleDisconnect = () => {
+    disconnect()
+  }
+
   return {
     address,
     isConnected,
     isConnecting,
     connectError,
     handleConnect,
+    handleDisconnect,
     ensureTestnet,
     chainId,
   }

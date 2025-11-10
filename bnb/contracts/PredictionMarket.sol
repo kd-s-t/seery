@@ -22,15 +22,12 @@ contract PredictionMarket {
 
     uint256 public marketCount;
     mapping(uint256 => Market) public markets;
-    mapping(address => uint256) public balances;
     
-    uint256 public constant PLATFORM_FEE = 2; // 2% platform fee
     uint256 public constant MIN_BET = 0.001 ether; // Minimum bet amount
     
     event MarketCreated(uint256 indexed marketId, address indexed creator, string question);
     event BetPlaced(uint256 indexed marketId, address indexed better, uint256 outcome, uint256 amount);
     event MarketResolved(uint256 indexed marketId, uint256 winningOutcome);
-    event Withdrawal(address indexed user, uint256 amount);
 
     /**
      * @dev Create a new prediction market
@@ -95,43 +92,6 @@ contract PredictionMarket {
         emit MarketResolved(marketId, winningOutcome);
     }
 
-    /**
-     * @dev Claim winnings from a resolved market
-     */
-    function claimWinnings(uint256 marketId) external {
-        Market storage market = markets[marketId];
-        require(market.resolved, "Market not resolved");
-        
-        uint256 betAmount = market.bets[msg.sender][market.winningOutcome];
-        require(betAmount > 0, "No winning bets");
-        
-        // Calculate share of pool
-        uint256 totalWinningPool = market.outcomePools[market.winningOutcome];
-        uint256 userShare = (market.totalPool * betAmount) / totalWinningPool;
-        
-        // Deduct platform fee
-        uint256 fee = (userShare * PLATFORM_FEE) / 100;
-        uint256 payout = userShare - fee;
-        
-        // Clear user's bet
-        market.bets[msg.sender][market.winningOutcome] = 0;
-        
-        balances[msg.sender] += payout;
-        balances[address(this)] += fee;
-    }
-
-    /**
-     * @dev Withdraw accumulated balance
-     */
-    function withdraw() external {
-        uint256 amount = balances[msg.sender];
-        require(amount > 0, "No balance to withdraw");
-        
-        balances[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
-        
-        emit Withdrawal(msg.sender, amount);
-    }
 
     /**
      * @dev Get market details
