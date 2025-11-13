@@ -16,7 +16,7 @@ export default function Home() {
   
   // Custom hooks
   const { address, isConnected, isConnecting, connectError, handleConnect, handleDisconnect, ensureTestnet } = useWallet()
-  const { contractAddress, loading: contractLoading } = useContract()
+  const { predictionStakingAddress, loading: contractLoading } = useContract()
   const { showWarning, setShowWarning } = useMetaMask()
   const { isTestnet, switchToTestnet } = useNetwork()
 
@@ -51,12 +51,7 @@ export default function Home() {
     }
   }, [isConnected, router])
 
-  // Auto-switch to testnet when connected
-  useEffect(() => {
-    if (isConnected && !isTestnet) {
-      switchToTestnet()
-    }
-  }, [isConnected, isTestnet, switchToTestnet])
+  // Allow localhost or testnet - don't auto-switch
 
   // Handle connection errors
   useEffect(() => {
@@ -89,22 +84,20 @@ export default function Home() {
           onDisconnect={handleDisconnect}
         />
 
-        {!contractLoading && !contractAddress && (
+        {!contractLoading && !predictionStakingAddress && (
           <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.light', color: 'warning.contrastText', borderRadius: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Backend Not Connected
+              Contract Address Not Configured
             </Typography>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Cannot fetch contract address from backend. Make sure the backend is running.
+              Prediction staking contract address is not configured.
             </Typography>
             <Typography variant="body2" component="pre" sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 1, fontSize: '0.85rem', overflow: 'auto' }}>
-{`1. Start backend:
-   cd expressjs
-   npm start
+{`1. Set NEXT_PUBLIC_PREDICTION_STAKING_ADDRESS in nextjs/.env.local:
+   NEXT_PUBLIC_PREDICTION_STAKING_ADDRESS=0x... (your deployed contract address)
 
-2. Ensure expressjs/.env has:
-   CONTRACT_ADDRESS=0x... (your deployed contract address)
-   PORT=3016
+2. Restart the Next.js dev server:
+   npm run dev
 
 3. Refresh this page`}
             </Typography>

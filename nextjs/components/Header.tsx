@@ -5,8 +5,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { AppBar, Toolbar, Typography, Button, Chip, Stack, Alert, Box, ToggleButtonGroup, ToggleButton, Menu, MenuItem, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material'
 import { AccountBalanceWallet, SwapHoriz, Logout, TrendingUp, Article, AccountBalance, ContentCopy, QrCode, CheckCircle, Close } from '@mui/icons-material'
-import { useBalance } from 'wagmi'
+import { useBalance, usePublicClient } from 'wagmi'
 import { useNetwork } from '@/hooks/useNetwork'
+import { localhost } from '@/lib/wagmi'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { useNavigation } from '@/contexts/NavigationContext'
 import { getCryptoPrices } from '@/lib/coingecko/prices'
@@ -28,7 +29,7 @@ export default function Header({
 }: HeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { networkName, isTestnet, isSwitching, switchToTestnet, chainId } = useNetwork()
+  const { networkName, isTestnet, isLocalhost, isSwitching, switchToTestnet, chainId } = useNetwork()
   const { currency, setCurrency, convertPrice, formatPrice, getCurrencySymbol } = useCurrency()
   const { setLoading } = useNavigation()
   const [mounted, setMounted] = useState(false)
@@ -36,19 +37,61 @@ export default function Header({
   const [qrOpen, setQrOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [bnbPrice, setBnbPrice] = useState<number | null>(null)
+  const [localhostBalance, setLocalhostBalance] = useState<string | null>(null)
+  const publicClient = usePublicClient({ chainId: localhost.id })
   
-  const { data: balance } = useBalance({
+  const { data: balance, refetch: refetchBalance } = useBalance({
     address: address as `0x${string}` | undefined,
-    chainId: chainId,
+    chainId: chainId === localhost.id ? localhost.id : chainId,
+    query: {
+      enabled: !!address && !!chainId && chainId !== localhost.id,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
+      staleTime: 0,
+      gcTime: 0,
+    },
   })
   
+  useEffect(() => {
+    const fetchLocalhostBalance = async () => {
+      if (address && publicClient) {
+        try {
+          const bal = await publicClient.getBalance({
+            address: address as `0x${string}`,
+          })
+          const formatted = (Number(bal) / 1e18).toFixed(18)
+          setLocalhostBalance(formatted)
+          console.log('Localhost balance fetched:', formatted)
+        } catch (error) {
+          console.error('Failed to fetch localhost balance:', error)
+        }
+      }
+    }
+    
+    fetchLocalhostBalance()
+    const interval = setInterval(fetchLocalhostBalance, 5000)
+    return () => clearInterval(interval)
+  }, [address, publicClient])
+  
+  const displayBalance = useMemo(() => {
+    if (localhostBalance && address) {
+      return {
+        formatted: localhostBalance,
+        value: BigInt(Math.floor(parseFloat(localhostBalance) * 1e18)),
+        decimals: 18,
+        symbol: 'ETH',
+      }
+    }
+    return balance
+  }, [localhostBalance, balance, address])
+  
   const formattedBalance = useMemo(() => {
-    if (balance && bnbPrice) {
-      const usdValue = parseFloat(balance.formatted) * bnbPrice
+    if (displayBalance && bnbPrice) {
+      const usdValue = parseFloat(displayBalance.formatted) * bnbPrice
       return formatPrice(usdValue)
     }
     return null
-  }, [balance, bnbPrice, currency, formatPrice])
+  }, [displayBalance, bnbPrice, currency, formatPrice])
   
   const isNewsActive = pathname === '/news'
   const isMarketActive = pathname === '/market'
@@ -378,13 +421,13 @@ export default function Header({
                         Balance
                       </Typography>
                       <Typography variant="caption" sx={{ fontWeight: 600, color: '#000000', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {formattedBalance && balance ? (
+                        {formattedBalance && displayBalance ? (
                           <>
-                            <span>{parseFloat(balance.formatted).toFixed(4)} BNB</span>
+                            <span>{parseFloat(displayBalance.formatted).toFixed(4)} {displayBalance.symbol || 'BNB'}</span>
                             <span>({formattedBalance})</span>
                           </>
                         ) : (
-                          <span>{balance ? `${parseFloat(balance.formatted).toFixed(4)} BNB` : '0.0000 BNB'}</span>
+                          <span>{displayBalance ? `${parseFloat(displayBalance.formatted).toFixed(4)} ${displayBalance.symbol || 'BNB'}` : '0.0000 BNB'}</span>
                         )}
                       </Typography>
                     </Box>
@@ -485,7 +528,7 @@ export default function Header({
         </Toolbar>
       </AppBar>
       
-      {mounted && isConnected && !isTestnet && (
+      {mounted && isConnected && !isTestnet && !isLocalhost && (
         <Alert 
           severity="error" 
           sx={{ mb: 2 }}

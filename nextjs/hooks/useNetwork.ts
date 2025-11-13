@@ -1,5 +1,6 @@
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
 import { bscTestnet } from 'wagmi/chains'
+import { localhost } from '@/lib/wagmi'
 
 export function useNetwork() {
   const chainId = useChainId()
@@ -7,8 +8,14 @@ export function useNetwork() {
   const { isConnected } = useAccount()
 
   const isTestnet = chainId === bscTestnet.id
-  const isMainnet = false // TESTNET ONLY - No mainnet support
-  const networkName = isTestnet ? 'BNB Testnet' : 'Wrong Network - Switch to BNB Testnet'
+  const isLocalhost = chainId === localhost.id
+  const isMainnet = false
+  
+  const networkName = isLocalhost 
+    ? 'Hardhat Localhost' 
+    : isTestnet 
+    ? 'BNB Testnet' 
+    : `Chain ${chainId}`
 
   const switchToTestnet = () => {
     if (isConnected && !isTestnet) {
@@ -20,6 +27,7 @@ export function useNetwork() {
     chainId,
     networkName,
     isTestnet,
+    isLocalhost,
     isMainnet,
     isSwitching,
     switchToTestnet,

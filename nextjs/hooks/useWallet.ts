@@ -1,5 +1,6 @@
 import { useConnect, useAccount, useChainId, useSwitchChain, useDisconnect } from 'wagmi'
 import { bscTestnet } from 'wagmi/chains'
+import { localhost } from '@/lib/wagmi'
 
 export function useWallet() {
   const { address, isConnected } = useAccount()
@@ -23,16 +24,14 @@ export function useWallet() {
     if (metaMaskConnector) {
       connect({ 
         connector: metaMaskConnector,
-        chainId: bscTestnet.id // Force BNB Testnet
+        // Don't force chain - let user choose or use current chain
       })
     }
   }
 
-  // Auto-switch to testnet if connected to wrong network
+  // Allow localhost or testnet - don't auto-switch
   const ensureTestnet = () => {
-    if (isConnected && chainId !== bscTestnet.id) {
-      switchChain({ chainId: bscTestnet.id })
-    }
+    // Disabled - allow localhost or testnet
   }
 
   const handleDisconnect = () => {

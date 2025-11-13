@@ -39,11 +39,7 @@ export default function MarketPage() {
     handleConnect()
   }
 
-  useEffect(() => {
-    if (isConnected && !isTestnet) {
-      switchToTestnet()
-    }
-  }, [isConnected, isTestnet, switchToTestnet])
+  // Use whatever network MetaMask is on - don't auto-switch
 
   useEffect(() => {
     if (mounted && !isConnected && !isConnecting) {

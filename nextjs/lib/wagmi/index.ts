@@ -3,7 +3,7 @@ import { bscTestnet } from 'wagmi/chains'
 import { metaMask } from 'wagmi/connectors'
 import { defineChain } from 'viem'
 
-const localhost = defineChain({
+export const localhost = defineChain({
   id: 31337,
   name: 'Hardhat Localhost',
   nativeCurrency: {
@@ -26,7 +26,7 @@ export const wagmiConfig = createConfig({
     metaMask(),
   ],
   transports: {
-    [localhost.id]: http(),
+    [localhost.id]: http('http://localhost:8545'),
     [bscTestnet.id]: http(),
   },
 })
