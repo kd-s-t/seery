@@ -84,7 +84,7 @@ export default function FaucetHelper() {
             <Alert severity="warning" sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'inherit', mt: 1 }}>
               <Typography variant="body2">
                 <strong>Note:</strong> Most testnet faucets require mainnet balance to use. 
-                To get testnet BNB, you'll need to either:
+                To get testnet BNB, you&apos;ll need to either:
                 <br />
                 • Get some BNB on mainnet first (buy from an exchange)
                 <br />

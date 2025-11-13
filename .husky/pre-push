@@ -1,0 +1,28 @@
+echo "🔍 Running pre-push checks..."
+
+# Run linting for Next.js
+if [ -d "nextjs" ]; then
+  echo "📦 Linting Next.js..."
+  cd nextjs
+  npm run lint || {
+    echo "❌ Next.js linting failed"
+    exit 1
+  }
+  cd ..
+fi
+
+# Run linting for Express.js (if it has a lint script)
+if [ -d "expressjs" ]; then
+  echo "📦 Checking Express.js..."
+  cd expressjs
+  if npm run | grep -q "lint"; then
+    npm run lint || {
+      echo "❌ Express.js linting failed"
+      exit 1
+    }
+  fi
+  cd ..
+fi
+
+echo "✅ All pre-push checks passed!"
+

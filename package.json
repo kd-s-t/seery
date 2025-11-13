@@ -1,0 +1,24 @@
+{
+  "name": "seery-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Seery - AI-powered prediction market platform on BNB Chain",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm run lint --workspaces",
+    "lint:nextjs": "cd nextjs && npm run lint",
+    "lint:expressjs": "cd expressjs && npm run lint || true"
+  },
+  "workspaces": [
+    "nextjs",
+    "expressjs",
+    "bnb"
+  ],
+  "devDependencies": {
+    "husky": "^9.1.7"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}

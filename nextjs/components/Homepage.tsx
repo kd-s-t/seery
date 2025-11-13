@@ -109,7 +109,7 @@ export default function Homepage() {
           News feed temporarily unavailable
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          We're having trouble loading the latest crypto news. Please try again later.
+          We&apos;re having trouble loading the latest crypto news. Please try again later.
         </Typography>
       </Box>
     )

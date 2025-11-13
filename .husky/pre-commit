@@ -1,0 +1,14 @@
+echo "🔍 Running pre-commit checks..."
+
+# Run linting for Next.js
+if [ -d "nextjs" ]; then
+  echo "📦 Linting Next.js..."
+  cd nextjs
+  npm run lint -- --fix || {
+    echo "❌ Next.js linting failed"
+    exit 1
+  }
+  cd ..
+fi
+
+echo "✅ Pre-commit checks passed!"
