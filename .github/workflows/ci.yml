@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
       
       - name: Install dependencies
         working-directory: ./expressjs
@@ -45,7 +44,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
       
       - name: Install dependencies
         working-directory: ./nextjs
@@ -73,7 +71,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
       
       - name: Install dependencies
         working-directory: ./bnb
