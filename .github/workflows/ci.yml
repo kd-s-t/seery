@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: '22'
       
+      - name: Update npm to latest
+        run: npm install -g npm@latest
+      
       - name: Install build tools for native modules
         run: |
           sudo apt-get update
@@ -50,6 +53,9 @@ jobs:
         with:
           node-version: '22'
       
+      - name: Update npm to latest
+        run: npm install -g npm@latest
+      
       - name: Install dependencies
         working-directory: ./nextjs
         run: npm install
@@ -76,6 +82,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      
+      - name: Update npm to latest
+        run: npm install -g npm@latest
       
       - name: Install dependencies
         working-directory: ./bnb

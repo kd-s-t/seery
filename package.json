@@ -4,7 +4,7 @@
   "private": true,
   "description": "Seery - AI-powered prediction market platform on BNB Chain",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "lint": "npm run lint --workspaces",
     "lint:nextjs": "cd nextjs && npm run lint",
     "lint:expressjs": "cd expressjs && npm run lint || true"
