@@ -8,16 +8,17 @@
 	<img src="./seerylogov3.png" width="200px" alt="Seery Logo" />
 </div>
 
-**Seery** is a decentralized prediction platform on BNB Chain that uses AI to create markets from news and resolve them faster than traditional oracles. Unlike UMA's 24-48h optimistic oracle, our AI-assisted resolution provides near-instant results while maintaining accuracy through evidence-based analysis. The platform automatically generates tradeable markets from current events, allows users to bet on outcomes, and uses AI to suggest resolutions based on verifiable facts. All bets and payouts are settled on-chain with a 2% platform fee. The modern web interface makes prediction markets accessible to non-technical users, addressing the UX gap in current DeFi prediction markets. Revenue is generated through platform fees, creating a sustainable business model.
+**Seery** is a decentralized crypto price prediction platform on BNB Chain that uses AI to generate price predictions for cryptocurrencies. Users can stake BNB on whether prices will go up or down within a specified time period. All staking data, predictions, and payouts are stored on-chain. The platform features a modern web interface with real-time market data, news integration, and comprehensive user analytics.
 
 **Features:**
 - **BNB Chain**: Mainnet and testnet support for all transactions
-- **AI-Powered Resolution**: Resolves markets in minutes instead of days using OpenAI
-- **On-Chain Prediction Tracking**: AI price predictions are automatically recorded on-chain for accuracy tracking and verification
-- **Real-Time Updates**: Live market data and pool sizes
-- **Fully On-Chain**: All market data stored on blockchain (no database)
-
-Use cases for Seery include event prediction markets, news-based trading, sports betting, political predictions, crypto price predictions, and any scenario requiring fast, AI-assisted market resolution with on-chain settlement.
+- **AI-Powered Predictions**: OpenAI generates price predictions for cryptocurrencies with direction and percentage change
+- **On-Chain Staking**: All stakes are stored on blockchain smart contracts
+- **Real-Time Market Data**: Live cryptocurrency prices from CoinGecko API
+- **News Integration**: Crypto news feed from TheNewsAPI
+- **User Profile**: Track wins, losses, net profit, and win rate
+- **Admin Analytics**: Dashboard showing ongoing stakes, resolved stakes, unique stakers, and accuracy metrics
+- **Modular Architecture**: Organized codebase with domain-specific modules
 
 ---  
 
@@ -53,28 +54,30 @@ Use cases for Seery include event prediction markets, news-based trading, sports
 seer/
 ├── nextjs/
 │   ├── app/              # Next.js App Router pages
-│   ├── components/       # React components
-│   ├── public/           # Static assets
-│   └── package.json
+│   ├── components/       # Shared React components
+│   ├── modules/          # Domain-specific modules
+│   │   ├── news/         # News feed module
+│   │   ├── market/       # Market predictions module
+│   │   ├── staking/      # Staking module
+│   │   ├── profile/      # User profile module
+│   │   └── analytics/    # Admin analytics module
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Libraries and utilities
+│   └── public/           # Static assets
 ├── expressjs/
 │   ├── server.js         # Express API server
-│   ├── ai-service.js    # OpenAI integration
-│   ├── blockchain.js    # BNB Chain integration
-│   ├── docs/            # Documentation
+│   ├── controllers/      # API controllers
+│   ├── routes/           # API routes
+│   ├── lib/              # Libraries (blockchain, AI, news, etc.)
 │   └── package.json
 └── bnb/
-    ├── contracts/       # Solidity contracts
-    ├── scripts/         # Deployment scripts
-    ├── test/           # Contract tests
+    ├── contracts/        # Solidity contracts
+    │   ├── main.sol      # Main contract
+    │   ├── stakes/       # Staking contracts
+    │   └── libraries/    # Contract libraries
+    ├── scripts/          # Deployment scripts
     └── package.json
 ```
-
-This project addresses several YZi Labs Preferred Project opportunities:
-
-1. **AI-Assisted Oracles**: Faster resolution than UMA's 24-48h optimistic oracle
-2. **Subjective Predictions**: AI can resolve subjective or multi-stage predictions
-3. **Better UX**: Modern web interface makes prediction markets feel like normal apps
-4. **Revenue Focus**: Platform fees create sustainable business model
 
 ## Quick Start
 
@@ -113,82 +116,99 @@ This starts both frontend and backend services.
 
 ## Usage
 
-### Creating Markets
+### Viewing News
 
-1. **Manual Creation:**
-   - Connect your MetaMask wallet
-   - Enter a question (e.g., "Will Bitcoin reach $100k by end of 2024?")
-   - Add outcomes (comma-separated, e.g., "Yes, No")
-   - Set duration (1-168 hours)
-   - Click "Create Market"
+1. Navigate to the **News** page
+2. Browse crypto news articles from TheNewsAPI
+3. News is automatically filtered for cryptocurrency-related content
 
-2. **AI-Generated Markets:**
-   - Click "🤖 Generate with AI" button
-   - AI will suggest markets based on current news
-   - Review and create the suggested market
+### Market Predictions
 
-### Placing Bets
+1. Connect your MetaMask wallet (BNB Chain testnet or mainnet)
+2. Navigate to the **Market** page
+3. View real-time cryptocurrency prices and AI-generated predictions
+4. Click the refresh button to generate new AI predictions
+5. Each prediction shows:
+   - Current price vs predicted price
+   - Direction (up/down) and percentage change
+   - Expiration time
+   - Total stakes for up/down directions
 
-1. Browse active markets
-2. Select an outcome
-3. Enter bet amount (minimum 0.001 BNB)
-4. Click "Bet"
-5. Confirm transaction in MetaMask
+### Staking on Predictions
 
-### Resolving Markets
+1. Navigate to the **Staking** page
+2. Browse available stakeable predictions
+3. Select a prediction and click "Stake"
+4. Choose direction (Up or Down)
+5. Enter stake amount (minimum 0.001 BNB)
+6. Confirm transaction in MetaMask
+7. Your stake is recorded on-chain
 
-Markets can be resolved:
-- **Manually**: By the market creator after the end time
-- **AI-Assisted**: Use AI to suggest the winning outcome
-- **Automatically**: After end time (if configured)
+### Viewing Profile
 
-## Revenue Model
+1. Navigate to the **Profile** page (requires wallet connection)
+2. View your statistics:
+   - Wins and losses
+   - Net profit/loss
+   - Win rate percentage
+   - Total staked amount
+3. View detailed history of all your stakes
 
-- **Platform Fee**: 2% of all winning bet payouts
-- **Market Creation**: Free (can add fees in future)
-- **AI Features**: Powered by OpenAI API (costs covered by platform fees)
+### Admin Analytics
+
+1. Connect as admin wallet (configured in backend)
+2. Navigate to the **Analytics** page
+3. View platform-wide metrics:
+   - Ongoing stakes count
+   - Resolved stakes count
+   - Unique stakers
+   - Correct predictions
+   - Total amount staked
+   - Accuracy rate
 
 ---  
 
-## Submission Requirements
+## Implementation Details
 
-### ✅ Completed
+### Smart Contracts
 
-- [x] **Public Code Repo**: All code is in this repository
-- [x] **Working Prototype**: 
-  - [x] User interaction (React web interface with wallet connection)
-  - [x] AI integration (market generation and resolution)
-  - [x] Blockchain integration (BNB Chain smart contracts - fully on-chain)
-- [x] **Tests**: Basic test suite included
-- [x] **BNB Chain**: All contracts deployable to BNB Chain
+- **Stakes.sol**: Handles on-chain staking for crypto price predictions
+- **main.sol**: Main contract for prediction management
+- **Library.sol**: Shared library functions
 
-## On-Chain Prediction Accuracy Tracking
+### Frontend Architecture
 
-Every time the market-prediction API is called (when refresh is pressed in the frontend), AI price predictions are automatically recorded on-chain using the `PredictionTracker` smart contract. This creates an immutable record of:
+The Next.js frontend is organized into modular components:
 
-- Current price at prediction time
-- Predicted price (based on direction and percent change)
-- Prediction timestamp
-- Direction (up/down) and percent change
-- Crypto asset ID
+- **modules/news**: News feed with crypto news aggregation
+- **modules/market**: Market page with crypto prices and AI predictions
+- **modules/staking**: Staking interface for predictions
+- **modules/profile**: User profile with statistics and stake history
+- **modules/analytics**: Admin dashboard with platform metrics
 
-Predictions can be verified later using Chainlink price feeds to calculate accuracy and build trust in AI performance. See [BNB_CHAIN_UTILIZATION.md](confluence/BNB_CHAIN_UTILIZATION.md) for more details.
+Each module follows a consistent structure:
+- `components/`: React components
+- `types.ts`: TypeScript interfaces
+- `const.ts`: Constants
+- `hooks.ts`: Custom React hooks
+- `utils.ts`: Utility functions
+- `index.ts`: Public exports
 
-**Setup:**
-1. Deploy the `PredictionTracker` contract (see `bnb/contracts/PredictionTracker.sol`)
-2. Set `PREDICTION_TRACKER_ADDRESS` in your `.env` file
-3. Set `PRIVATE_KEY` for automated on-chain recording
+### Backend API
 
-## Future Enhancements
+- **Express.js** server with RESTful API endpoints
+- **OpenAI** integration for price predictions
+- **BNB Chain** integration using ethers.js
+- **CoinGecko** API for real-time crypto prices
+- **TheNewsAPI** for crypto news aggregation
 
-- [ ] Account abstraction for gasless transactions
-- [ ] Mobile app
-- [ ] Advanced AI models for better predictions
-- [ ] Liquidity pools for market making
-- [ ] Social features (following traders, market discussions)
-- [ ] Multi-chain support
-- [ ] NFT rewards for top traders
-- [ ] Automatic prediction verification using Chainlink oracles
+### On-Chain Storage
+
+All staking data is stored on BNB Chain:
+- User stakes (amount, direction, prediction ID)
+- Prediction data (crypto ID, current price, predicted price, expiration)
+- Staker information (wallet address, stake amounts, timestamps)
+- Resolution status and rewards
 
 **Built for Seedify Predictions Market Hackathon**
 

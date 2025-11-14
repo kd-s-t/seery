@@ -45,16 +45,17 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <Box>
-      <Header
-        address={address}
-        isConnected={isConnected}
-        isConnecting={false}
-        onConnect={() => {}}
-        onDisconnect={() => {}}
-      />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4, fontWeight: 600 }}>
+    <Box sx={{ minHeight: '100vh', py: 4, bgcolor: 'background.default' }}>
+      <Container maxWidth="lg">
+        <Header
+          address={address}
+          isConnected={isConnected}
+          isConnecting={false}
+          onConnect={() => {}}
+          onDisconnect={() => {}}
+        />
+
+        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mt: 4, mb: 2 }}>
           Analytics Dashboard
         </Typography>
 
