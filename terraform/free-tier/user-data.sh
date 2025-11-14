@@ -44,6 +44,10 @@ echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
 # Login to ECR
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
+# Get instance public IP for backend domain
+INSTANCE_IP=$$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+BACKEND_DOMAIN="http://$$INSTANCE_IP/api"
+
 # Clone repository (if repo_url is provided)
 if [ -n "${repo_url}" ]; then
   cd /home/ec2-user
@@ -60,7 +64,7 @@ ECR_REGISTRY="$${AWS_ACCOUNT_ID}.dkr.ecr.$${AWS_REGION}.amazonaws.com"
 EXPRESSJS_IMAGE="$${ECR_REGISTRY}/production-seer-expressjs:latest"
 NEXTJS_IMAGE="$${ECR_REGISTRY}/production-seer-nextjs:latest"
 
-# Create docker-compose.yml for production
+# Create docker-compose.yml for production (overwrite any existing one)
 cat > docker-compose.yml <<EOF
 version: '3.8'
 
@@ -91,8 +95,8 @@ services:
     ports:
       - "3015:3015"
     environment:
-      - NEXT_PUBLIC_SEERY_BACKEND_DOMAIN=https://theseery.com/api
-      - SEERY_BACKEND_DOMAIN=https://theseery.com/api
+      - NEXT_PUBLIC_SEERY_BACKEND_DOMAIN=$$BACKEND_DOMAIN
+      - SEERY_BACKEND_DOMAIN=$$BACKEND_DOMAIN
       - PORT=3015
       - NODE_ENV=production
     container_name: seery-testnet-fe
