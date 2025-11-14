@@ -41,27 +41,67 @@ variable "openai_api_key" {
   default     = ""
 }
 
-variable "network" {
+variable "blockchain_network" {
   description = "BNB Chain network (testnet or mainnet)"
   type        = string
   default     = "testnet"
 }
 
-variable "bnb_testnet_rpc" {
-  description = "BNB Chain testnet RPC URL"
+variable "blockchain_rpc" {
+  description = "BNB Chain RPC URL (use testnet or mainnet RPC)"
   type        = string
   default     = "https://data-seed-prebsc-1-s1.binance.org:8545"
 }
 
-variable "bnb_mainnet_rpc" {
-  description = "BNB Chain mainnet RPC URL"
-  type        = string
-  default     = "https://bsc-dataseed.binance.org/"
-}
-
-variable "contract_address" {
+variable "blockchain_contract_address" {
   description = "Deployed PredictionMarket contract address"
   type        = string
+  default     = ""
+}
+
+variable "blockchain_private_key" {
+  description = "Private key for automated blockchain transactions (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "blockchain_wallet_address" {
+  description = "Wallet address for blockchain transactions (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "openai_model" {
+  description = "OpenAI model to use (e.g., gpt-3.5-turbo, gpt-4-turbo)"
+  type        = string
+  default     = "gpt-3.5-turbo"
+}
+
+variable "binance_api_key" {
+  description = "Binance API key (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "binance_secret_key" {
+  description = "Binance secret key (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "binance_testnet" {
+  description = "Use Binance testnet (true/false)"
+  type        = bool
+  default     = true
+}
+
+variable "thenews_api_key" {
+  description = "TheNewsAPI key for news feed"
+  type        = string
+  sensitive   = true
   default     = ""
 }
 

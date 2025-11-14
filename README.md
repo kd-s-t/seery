@@ -176,6 +176,9 @@ This starts both frontend and backend services.
 - **main.sol**: Main contract for prediction management
 - **Library.sol**: Shared library functions
 
+**Deployed Contract Address (BNB Testnet):**
+- `0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6`
+
 ### Frontend Architecture
 
 The Next.js frontend is organized into modular components:

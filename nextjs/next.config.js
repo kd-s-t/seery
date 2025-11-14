@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   env: {
-    SEERY_BACKEND_DOMAIN: process.env.SEERY_BACKEND_DOMAIN,
+    NEXT_PUBLIC_SEERY_BACKEND_DOMAIN: process.env.NEXT_PUBLIC_SEERY_BACKEND_DOMAIN || process.env.SEERY_BACKEND_DOMAIN,
     NEXT_PUBLIC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
   },
   webpack: (config, { isServer }) => {
