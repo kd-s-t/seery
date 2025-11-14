@@ -61,6 +61,12 @@ resource "aws_iam_role_policy_attachment" "ec2_ecr_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+# Attach SSM managed instance core policy for GitHub Actions deployment
+resource "aws_iam_role_policy_attachment" "ec2_ssm_policy" {
+  role       = aws_iam_role.ec2_ecr_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # Instance profile
 resource "aws_iam_instance_profile" "ec2_ecr_profile" {
   name = "${var.environment}-seer-ec2-ecr-profile"
