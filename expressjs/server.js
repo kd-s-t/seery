@@ -5,8 +5,23 @@ require('dotenv').config();
 const app = express();
 const PORT = 3016;
 
+const allowedOrigins = [
+  process.env.SEERY_FRONTEND_DOMAIN,
+  'http://localhost:3015',
+  'https://theseery.com',
+  'http://theseery.com',
+  'https://www.theseery.com',
+  'http://www.theseery.com'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.SEERY_FRONTEND_DOMAIN,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some(allowed => origin && origin.includes(allowed.replace(/^https?:\/\//, '')))) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
