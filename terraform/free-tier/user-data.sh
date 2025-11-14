@@ -55,10 +55,10 @@ else
   cd /home/ec2-user/seer
 fi
 
-# ECR image URLs
-ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-EXPRESSJS_IMAGE="${ECR_REGISTRY}/production-seer-expressjs:latest"
-NEXTJS_IMAGE="${ECR_REGISTRY}/production-seer-nextjs:latest"
+# ECR image URLs (using $$ to escape $ for Terraform template)
+ECR_REGISTRY="$${AWS_ACCOUNT_ID}.dkr.ecr.$${AWS_REGION}.amazonaws.com"
+EXPRESSJS_IMAGE="$${ECR_REGISTRY}/production-seer-expressjs:latest"
+NEXTJS_IMAGE="$${ECR_REGISTRY}/production-seer-nextjs:latest"
 
 # Create docker-compose.yml for production
 cat > docker-compose.yml <<EOF
@@ -66,28 +66,28 @@ version: '3.8'
 
 services:
   expressjs:
-    image: ${EXPRESSJS_IMAGE}
+    image: $${EXPRESSJS_IMAGE}
     container_name: seery-testnet-be
     ports:
       - "3016:3016"
     environment:
       - PORT=3016
       - SEERY_FRONTEND_DOMAIN=http://localhost:3015
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${openai_model}
-      - BLOCKCHAIN_NETWORK=${NETWORK}
-      - BLOCKCHAIN_RPC=${BLOCKCHAIN_RPC}
-      - BLOCKCHAIN_CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
-      - BLOCKCHAIN_WALLET_ADDRESS=${blockchain_wallet_address}
-      - BLOCKCHAIN_PRIVATE_KEY=${BLOCKCHAIN_PRIVATE_KEY}
-      - BINANCE_API_KEY=${binance_api_key}
-      - BINANCE_SECRET_KEY=${binance_secret_key}
-      - BINANCE_TESTNET=${binance_testnet}
-      - THENEWS_API_KEY=${thenews_api_key}
+      - OPENAI_API_KEY=$${OPENAI_API_KEY}
+      - OPENAI_MODEL=$${openai_model}
+      - BLOCKCHAIN_NETWORK=$${NETWORK}
+      - BLOCKCHAIN_RPC=$${BLOCKCHAIN_RPC}
+      - BLOCKCHAIN_CONTRACT_ADDRESS=$${CONTRACT_ADDRESS}
+      - BLOCKCHAIN_WALLET_ADDRESS=$${blockchain_wallet_address}
+      - BLOCKCHAIN_PRIVATE_KEY=$${BLOCKCHAIN_PRIVATE_KEY}
+      - BINANCE_API_KEY=$${binance_api_key}
+      - BINANCE_SECRET_KEY=$${binance_secret_key}
+      - BINANCE_TESTNET=$${binance_testnet}
+      - THENEWS_API_KEY=$${thenews_api_key}
     restart: unless-stopped
 
   nextjs:
-    image: ${NEXTJS_IMAGE}
+    image: $${NEXTJS_IMAGE}
     ports:
       - "3015:3015"
     environment:
