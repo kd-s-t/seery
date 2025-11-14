@@ -155,27 +155,27 @@ resource "aws_instance" "seer" {
 
   # User data script to bootstrap the instance
   user_data = templatefile("${path.module}/user-data.sh", {
-    AWS_ACCOUNT_ID         = data.aws_caller_identity.current.account_id
-    AWS_REGION             = data.aws_region.current.name
-    OPENAI_API_KEY         = var.openai_api_key
-    NETWORK                = var.blockchain_network
-    BLOCKCHAIN_RPC         = var.blockchain_rpc
-    CONTRACT_ADDRESS       = var.blockchain_contract_address
-    BLOCKCHAIN_PRIVATE_KEY = var.blockchain_private_key
+    AWS_ACCOUNT_ID            = data.aws_caller_identity.current.account_id
+    AWS_REGION                = data.aws_region.current.name
+    OPENAI_API_KEY            = var.openai_api_key
+    NETWORK                   = var.blockchain_network
+    BLOCKCHAIN_RPC            = var.blockchain_rpc
+    CONTRACT_ADDRESS          = var.blockchain_contract_address
+    BLOCKCHAIN_PRIVATE_KEY    = var.blockchain_private_key
     BLOCKCHAIN_WALLET_ADDRESS = var.blockchain_wallet_address != "" ? var.blockchain_wallet_address : var.blockchain_contract_address
-    openai_api_key         = var.openai_api_key
-    network                = var.blockchain_network
-    blockchain_rpc          = var.blockchain_rpc
-    contract_address       = var.blockchain_contract_address
-    blockchain_private_key  = var.blockchain_private_key
+    openai_api_key            = var.openai_api_key
+    network                   = var.blockchain_network
+    blockchain_rpc            = var.blockchain_rpc
+    contract_address          = var.blockchain_contract_address
+    blockchain_private_key    = var.blockchain_private_key
     blockchain_wallet_address = var.blockchain_wallet_address != "" ? var.blockchain_wallet_address : var.blockchain_contract_address
-    openai_model            = var.openai_model
-    binance_api_key         = var.binance_api_key
-    binance_secret_key      = var.binance_secret_key
-    binance_testnet         = var.binance_testnet ? "true" : "false"
-    thenews_api_key         = var.thenews_api_key
-    repo_url                = var.repo_url != "" ? var.repo_url : ""
-    repo_branch             = var.repo_branch
+    openai_model              = var.openai_model
+    binance_api_key           = var.binance_api_key
+    binance_secret_key        = var.binance_secret_key
+    binance_testnet           = var.binance_testnet ? "true" : "false"
+    thenews_api_key           = var.thenews_api_key
+    repo_url                  = var.repo_url != "" ? var.repo_url : ""
+    repo_branch               = var.repo_branch
   })
 
   # Enable detailed monitoring (optional, costs extra)
