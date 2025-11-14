@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
+import { buyCrypto as seeryBuyCrypto, sellCrypto as seerySellCrypto, getAccountInfo as seeryGetAccountInfo, getPrice as seeryGetPrice } from '@/lib/seery'
 
 export interface BuyOrderParams {
   symbol: string
@@ -18,17 +18,9 @@ export interface SellOrderParams {
 
 export async function buyCrypto(params: BuyOrderParams) {
   try {
-    const response = await fetch(`${API_URL}/api/trading/buy`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    })
-
-    const data = await response.json()
+    const data = await seeryBuyCrypto(params)
     
-    if (!response.ok) {
+    if (!data.success) {
       throw new Error(data.error || 'Failed to place buy order')
     }
 
@@ -40,17 +32,9 @@ export async function buyCrypto(params: BuyOrderParams) {
 
 export async function sellCrypto(params: SellOrderParams) {
   try {
-    const response = await fetch(`${API_URL}/api/trading/sell`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    })
-
-    const data = await response.json()
+    const data = await seerySellCrypto(params)
     
-    if (!response.ok) {
+    if (!data.success) {
       throw new Error(data.error || 'Failed to place sell order')
     }
 
@@ -62,10 +46,9 @@ export async function sellCrypto(params: SellOrderParams) {
 
 export async function getAccountInfo() {
   try {
-    const response = await fetch(`${API_URL}/api/trading/account`)
-    const data = await response.json()
+    const data = await seeryGetAccountInfo()
     
-    if (!response.ok) {
+    if (!data.success) {
       throw new Error(data.error || 'Failed to fetch account info')
     }
 
@@ -77,10 +60,9 @@ export async function getAccountInfo() {
 
 export async function getPrice(symbol: string) {
   try {
-    const response = await fetch(`${API_URL}/api/trading/price?symbol=${encodeURIComponent(symbol)}`)
-    const data = await response.json()
+    const data = await seeryGetPrice(symbol)
     
-    if (!response.ok) {
+    if (!data.success) {
       throw new Error(data.error || 'Failed to fetch price')
     }
 

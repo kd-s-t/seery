@@ -18,7 +18,7 @@ export const localhost = defineChain({
   },
 })
 
-const chains = [localhost, bscTestnet] as const
+const chains = [bscTestnet, localhost] as const
 
 export const wagmiConfig = createConfig({
   chains,
@@ -26,8 +26,19 @@ export const wagmiConfig = createConfig({
     metaMask(),
   ],
   transports: {
-    [localhost.id]: http('http://localhost:8545'),
     [bscTestnet.id]: http(),
+    [localhost.id]: http('http://localhost:8545', {
+      retryCount: 3,
+      timeout: 60000,
+      fetchOptions: {
+        signal: AbortSignal.timeout(60000),
+      },
+    }),
+  },
+  batch: {
+    multicall: {
+      wait: 50,
+    },
   },
 })
 

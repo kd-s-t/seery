@@ -22,11 +22,12 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material'
-import { TrendingUp, TrendingDown, AccessTime, AccountBalance, Close } from '@mui/icons-material'
+import { TrendingUp, TrendingDown, AccessTime, AttachMoney, Close, CurrencyBitcoin } from '@mui/icons-material'
 import { useWallet, useContract } from '@/hooks'
 import { useStaking, useStakeablePredictions } from '@/hooks'
 import { useAccount } from 'wagmi'
 import { formatEther } from 'viem'
+import { getCryptoImageUrl } from '@/lib/coingecko/images'
 import Header from '@/components/Header'
 import NotificationSnackbar from '@/components/NotificationSnackbar'
 import { SnackbarState } from '@/types'
@@ -38,7 +39,7 @@ export default function StakingPage() {
   const { predictionStakingAddress, loading: contractLoading } = useContract()
   const { address: wagmiAddress } = useAccount()
   const { predictions, loading: predictionsLoading, error: predictionsError, refetch: refetchPredictions } = useStakeablePredictions()
-  const { stake, claimRewards, isPending, isConfirming, isConfirmed, error: stakeError, receipt } = useStaking()
+  const { stakeOnCrypto, isPending, isConfirming, isConfirmed, error: stakeError, receipt, hash } = useStaking()
   
   const [selectedPrediction, setSelectedPrediction] = useState<any>(null)
   const [stakeModalOpen, setStakeModalOpen] = useState(false)
@@ -63,37 +64,58 @@ export default function StakingPage() {
   }, [isConnected, router])
 
   useEffect(() => {
-    if (isConfirmed && selectedPrediction) {
-      console.log('Stake transaction confirmed! Verifying stake on-chain...')
-      console.log('Transaction receipt:', receipt)
-      console.log('Staked on predictionId:', selectedPrediction.predictionId)
+    if (isConfirmed || receipt) {
+      console.log('Response: Stake transaction confirmed')
       
-      setSnackbar({
-        open: true,
-        message: 'Transaction confirmed!',
-        severity: 'success'
-      })
-      setStakeModalOpen(false)
-      const stakedPredictionId = selectedPrediction.predictionId
-      setSelectedPrediction(null)
-      setStakeAmount('0.01')
-      setStakeDirection('up')
-      
-      setTimeout(async () => {
-        console.log('Calling refetchPredictions after stake confirmation')
-        refetchPredictions()
-      }, 3000)
+      if (selectedPrediction) {
+        setSnackbar({
+          open: true,
+          message: 'Transaction confirmed!',
+          severity: 'success'
+        })
+        setStakeModalOpen(false)
+        const stakedPredictionId = selectedPrediction.predictionId
+        setSelectedPrediction(null)
+        setStakeAmount('0.01')
+        setStakeDirection('up')
+        
+        setTimeout(async () => {
+          refetchPredictions()
+        }, 3000)
+      }
     }
   }, [isConfirmed, receipt, selectedPrediction, address, predictionStakingAddress, refetchPredictions])
 
   useEffect(() => {
+    if (isPending || isConfirming) {
+      const timeout = setTimeout(() => {
+        if (isPending || isConfirming) {
+          setStakeFieldError('Transaction is taking longer than expected. Please check your wallet or try again.')
+          setSnackbar({
+            open: true,
+            message: 'Transaction timeout. Please check your wallet.',
+            severity: 'error'
+          })
+        }
+      }, 120000)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [isPending, isConfirming])
+
+  useEffect(() => {
     if (stakeError) {
-      setStakeFieldError(stakeError.message || 'Failed to stake')
+      const errorMsg = stakeError.message || 'Failed to stake'
+      setStakeFieldError(errorMsg)
       setSnackbar({
         open: true,
-        message: stakeError.message || 'Failed to stake',
+        message: errorMsg,
         severity: 'error'
       })
+      setStakeModalOpen(false)
+      setSelectedPrediction(null)
+      setStakeAmount('0.01')
+      setStakeDirection('up')
     }
   }, [stakeError])
 
@@ -111,8 +133,8 @@ export default function StakingPage() {
     const now = Date.now()
     const claimable = predictions.filter((prediction: any) => {
       const expiresAt = parseInt(prediction.expiresAt) * 1000
-      const hasStake = parseFloat(formatEther(BigInt(prediction.userStakeUp || '0'))) > 0 || 
-                       parseFloat(formatEther(BigInt(prediction.userStakeDown || '0'))) > 0
+      const hasStake = parseFloat(prediction.userStakeUp || '0') > 0 || 
+                       parseFloat(prediction.userStakeDown || '0') > 0
       const isExpired = expiresAt > 0 && expiresAt < now
       const isVerified = prediction.verified === true
       
@@ -144,16 +166,19 @@ export default function StakingPage() {
 
     setStakeFieldError(null)
     
-    console.log('🔴 STAKE BUTTON CLICKED:', {
-      predictionId: selectedPrediction.predictionId,
-      amount: stakeAmount,
-      direction: stakeDirection,
-      cryptoId: selectedPrediction.cryptoId,
-      address: address
-    })
     
     try {
-      await stake(BigInt(selectedPrediction.predictionId), stakeAmount, stakeDirection === 'up')
+      const percentChange = parseFloat(selectedPrediction.percentChange || '0')
+      await stakeOnCrypto(
+        selectedPrediction.cryptoId,
+        selectedPrediction.currentPrice,
+        selectedPrediction.predictedPrice,
+        selectedPrediction.direction,
+        percentChange,
+        stakeAmount,
+        stakeDirection === 'up',
+        selectedPrediction.libraryId || null
+      )
     } catch (error: any) {
       const errorMsg = error?.message || error?.info?.error?.message || 'Failed to stake'
       setStakeFieldError(errorMsg)
@@ -166,15 +191,11 @@ export default function StakingPage() {
   }
 
   const handleClaimRewards = async (predictionId: string) => {
-    try {
-      claimRewards(BigInt(predictionId))
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.message || 'Failed to claim rewards',
-        severity: 'error'
-      })
-    }
+    setSnackbar({
+      open: true,
+      message: 'Claim rewards functionality not available',
+      severity: 'success'
+    })
   }
 
   const formatPrice = (priceWei: string) => {
@@ -188,38 +209,39 @@ export default function StakingPage() {
   const formatPercent = (percent: string) => {
     try {
       const num = parseFloat(percent)
-      return (num / 100).toFixed(2)
+      // percentChange is already in percentage form (e.g., 10.5 = 10.5%), not scaled
+      return num.toFixed(2)
     } catch {
       return '0.00'
     }
   }
 
   // Calculate predicted price from current price and percentChange
-  // percentChange is stored scaled by 100 (e.g., 830 = 8.30%), so divide by 10000 to get decimal (0.083)
-  const calculatePredictedPrice = (currentPriceWei: string, percentChange: string, direction: string) => {
+  // percentChange is already in percentage form (e.g., 10.5 = 10.5%), so divide by 100 to get decimal (0.105)
+  const calculatePredictedPrice = (currentPrice: string, percentChange: string, direction: string) => {
     try {
-      const currentPrice = parseFloat(formatEther(BigInt(currentPriceWei)))
-      const percentDecimal = parseFloat(percentChange) / 10000 // percentChange is scaled by 100, so divide by 10000 to get decimal
+      const currentPriceNum = parseFloat(currentPrice)
+      const percentDecimal = parseFloat(percentChange) / 100 // percentChange is already a percentage, so divide by 100 to get decimal
       const multiplier = direction === 'up' ? (1 + percentDecimal) : (1 - percentDecimal)
-      const calculatedPredicted = currentPrice * multiplier
+      const calculatedPredicted = currentPriceNum * multiplier
       return calculatedPredicted.toFixed(6) // Use more precision for small prices
     } catch {
-      return formatPrice(currentPriceWei) // Fallback to current price
+      return currentPrice // Fallback to current price
     }
   }
 
   // Calculate actual direction based on calculated predicted price
   // The stored predictedPrice may be incorrect, so we calculate it from currentPrice and percentChange
-  const getActualDirection = (currentPriceWei: string, percentChange: string, storedDirection: string) => {
+  const getActualDirection = (currentPrice: string, percentChange: string, storedDirection: string) => {
     try {
-      const currentPrice = parseFloat(formatEther(BigInt(currentPriceWei)))
-      const percentDecimal = parseFloat(percentChange) / 10000 // percentChange is scaled by 100, so divide by 10000 to get decimal
+      const currentPriceNum = parseFloat(currentPrice)
+      const percentDecimal = parseFloat(percentChange) / 100 // percentChange is already a percentage, so divide by 100 to get decimal
       
       // Calculate predicted price based on stored direction
-      const calculatedPredicted = currentPrice * (storedDirection === 'up' ? (1 + percentDecimal) : (1 - percentDecimal))
+      const calculatedPredicted = currentPriceNum * (storedDirection === 'up' ? (1 + percentDecimal) : (1 - percentDecimal))
       
       // Direction is determined by whether calculated predicted price is higher or lower than current
-      return calculatedPredicted > currentPrice ? 'up' : 'down'
+      return calculatedPredicted > currentPriceNum ? 'up' : 'down'
     } catch {
       return storedDirection // Fallback to stored direction
     }
@@ -303,9 +325,9 @@ export default function StakingPage() {
             )}
 
             <Stack spacing={2}>
-              {predictions.map((prediction: any) => (
+              {predictions.map((prediction: any, index: number) => (
                 <Card
-                  key={prediction.predictionId}
+                  key={prediction.cryptoId || `prediction-${index}`}
                   sx={{
                     cursor: 'pointer',
                     border: selectedPrediction?.predictionId === prediction.predictionId ? 2 : 1,
@@ -320,14 +342,36 @@ export default function StakingPage() {
                     <Stack spacing={2}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                         <Box>
-                          <Typography variant="h6" fontWeight="bold">
-                            {prediction.cryptoId}
-                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {(() => {
+                              const imageUrl = getCryptoImageUrl(prediction.cryptoId)
+                                return (
+                                  <Box
+                                    component="img"
+                                    src={imageUrl}
+                                    alt={prediction.cryptoId}
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                    }}
+                                    sx={{
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: '50%',
+                                      objectFit: 'cover',
+                                      flexShrink: 0
+                                    }}
+                                  />
+                                )
+                            })()}
+                            <Typography variant="h6" fontWeight="bold">
+                              {prediction.cryptoId}
+                            </Typography>
+                          </Box>
                           <Tooltip title="Current market price vs the predicted price after the prediction period ends">
                             <Typography variant="body2" color="text.secondary" sx={{ cursor: 'help' }}>
                               {(() => {
                                 const calculatedPredicted = calculatePredictedPrice(prediction.currentPrice, prediction.percentChange, prediction.direction)
-                                return `Current: $${formatPrice(prediction.currentPrice)} → Predicted: $${calculatedPredicted}`
+                                return `Current: $${parseFloat(prediction.currentPrice).toFixed(2)} → Predicted: $${calculatedPredicted}`
                               })()}
                             </Typography>
                           </Tooltip>
@@ -352,7 +396,7 @@ export default function StakingPage() {
                           <Tooltip title="Total amount staked by all users betting the price will go UP. If the price goes up, these stakers win rewards from the DOWN pool.">
                             <Chip
                               icon={<TrendingUp />}
-                              label={`↑ ${parseFloat(formatEther(BigInt(prediction.totalStakedUp || '0'))).toFixed(4)} BNB`}
+                              label={`↑ ${parseFloat(prediction.totalStakedUp || '0').toFixed(4)} BNB`}
                               size="small"
                               variant="outlined"
                               color="success"
@@ -361,7 +405,7 @@ export default function StakingPage() {
                           <Tooltip title="Total amount staked by all users betting the price will go DOWN. If the price goes down, these stakers win rewards from the UP pool.">
                             <Chip
                               icon={<TrendingDown />}
-                              label={`↓ ${parseFloat(formatEther(BigInt(prediction.totalStakedDown || '0'))).toFixed(4)} BNB`}
+                              label={`↓ ${parseFloat(prediction.totalStakedDown || '0').toFixed(4)} BNB`}
                               size="small"
                               variant="outlined"
                               color="error"
@@ -376,13 +420,13 @@ export default function StakingPage() {
                             />
                           </Tooltip>
                           {(() => {
-                            const stakeUp = parseFloat(formatEther(BigInt(prediction.userStakeUp || '0')))
-                            const stakeDown = parseFloat(formatEther(BigInt(prediction.userStakeDown || '0')))
+                            const stakeUp = parseFloat(prediction.userStakeUp || '0')
+                            const stakeDown = parseFloat(prediction.userStakeDown || '0')
                             if (stakeUp > 0 || stakeDown > 0) {
                               return (
                                 <Tooltip title="Your personal stake amounts. The first number is your stake for UP, the second is for DOWN.">
                                   <Chip
-                                    icon={<AccountBalance />}
+                                    icon={<AttachMoney />}
                                     label={`Your stake: ↑${stakeUp.toFixed(4)} ↓${stakeDown.toFixed(4)}`}
                                     size="small"
                                     color="primary"
@@ -405,7 +449,7 @@ export default function StakingPage() {
                             setStakeFieldError(null);
                           }}
                         >
-                          {parseFloat(formatEther(BigInt(prediction.userStakeUp || '0'))) > 0 || parseFloat(formatEther(BigInt(prediction.userStakeDown || '0'))) > 0 ? 'Stake More' : 'Stake'}
+                          {parseFloat(prediction.userStakeUp || '0') > 0 || parseFloat(prediction.userStakeDown || '0') > 0 ? 'Stake More' : 'Stake'}
                         </Button>
                       </Box>
                     </Stack>
@@ -423,13 +467,13 @@ export default function StakingPage() {
                     Claimable Rewards
                   </Typography>
                   <Stack spacing={1}>
-                    {claimablePredictions.map((prediction: any) => (
-                      <Box key={prediction.predictionId} sx={{ py: 1, borderBottom: 1, borderColor: 'divider' }}>
+                    {claimablePredictions.map((prediction: any, claimIndex: number) => (
+                      <Box key={prediction.stakeId || prediction.cryptoId || `claimable-${claimIndex}`} sx={{ py: 1, borderBottom: 1, borderColor: 'divider' }}>
                         <Typography variant="body2">
                           Prediction #{prediction.predictionId}: {prediction.cryptoId}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Your stake: ↑{parseFloat(formatEther(BigInt(prediction.userStakeUp || '0'))).toFixed(4)} ↓{parseFloat(formatEther(BigInt(prediction.userStakeDown || '0'))).toFixed(4)} BNB
+                          Your stake: ↑{parseFloat(prediction.userStakeUp || '0').toFixed(4)} ↓{parseFloat(prediction.userStakeDown || '0').toFixed(4)} BNB
                         </Typography>
                         <Button
                           size="small"
@@ -451,12 +495,41 @@ export default function StakingPage() {
 
         </Grid>
 
-        <Dialog open={stakeModalOpen} onClose={() => setStakeModalOpen(false)} maxWidth="sm" fullWidth>
+        <Dialog 
+          open={stakeModalOpen} 
+          onClose={() => setStakeModalOpen(false)} 
+          maxWidth="sm" 
+          fullWidth
+          disableEnforceFocus={false}
+          disableAutoFocus={false}
+        >
           <DialogTitle>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">
-                {selectedPrediction ? `Stake on ${selectedPrediction.cryptoId}` : 'Stake on Prediction'}
-                  </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {selectedPrediction && (() => {
+                  const imageUrl = getCryptoImageUrl(selectedPrediction.cryptoId)
+                    return (
+                      <Box
+                        component="img"
+                        src={imageUrl}
+                        alt={selectedPrediction.cryptoId}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          flexShrink: 0
+                        }}
+                      />
+                    )
+                })()}
+                <Typography variant="h6">
+                  {selectedPrediction ? `Stake on ${selectedPrediction.cryptoId}` : 'Stake on Prediction'}
+                </Typography>
+              </Box>
               <IconButton onClick={() => setStakeModalOpen(false)} size="small">
                 <Close />
               </IconButton>
@@ -467,15 +540,15 @@ export default function StakingPage() {
               <Stack spacing={2} sx={{ mt: 1 }}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
-                    Current: ${formatPrice(selectedPrediction.currentPrice)} → Predicted: ${calculatePredictedPrice(selectedPrediction.currentPrice, selectedPrediction.percentChange, selectedPrediction.direction)}
+                    Current: ${parseFloat(selectedPrediction.currentPrice).toFixed(2)} → Predicted: ${calculatePredictedPrice(selectedPrediction.currentPrice, selectedPrediction.percentChange, selectedPrediction.direction)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                     Prediction: {selectedPrediction.direction === 'up' ? '↑' : '↓'} {formatPercent(selectedPrediction.percentChange)}%
                         </Typography>
                 </Box>
-                {(parseFloat(formatEther(BigInt(selectedPrediction.userStakeUp || '0'))) > 0 || parseFloat(formatEther(BigInt(selectedPrediction.userStakeDown || '0'))) > 0) && (
+                {(parseFloat(selectedPrediction.userStakeUp || '0') > 0 || parseFloat(selectedPrediction.userStakeDown || '0') > 0) && (
                   <Alert severity="info">
-                    Your current stake: ↑{parseFloat(formatEther(BigInt(selectedPrediction.userStakeUp || '0'))).toFixed(4)} BNB ↓{parseFloat(formatEther(BigInt(selectedPrediction.userStakeDown || '0'))).toFixed(4)} BNB
+                    Your current stake: ↑{parseFloat(selectedPrediction.userStakeUp || '0').toFixed(4)} BNB ↓{parseFloat(selectedPrediction.userStakeDown || '0').toFixed(4)} BNB
                   </Alert>
                 )}
                 <Box>
@@ -525,8 +598,17 @@ export default function StakingPage() {
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setStakeModalOpen(false)}>
-              Cancel
+            <Button 
+              onClick={() => {
+                setStakeModalOpen(false)
+                setStakeFieldError(null)
+                setSelectedPrediction(null)
+                setStakeAmount('0.01')
+                setStakeDirection('up')
+              }}
+              disabled={isPending && !isConfirming}
+            >
+              {isPending && !isConfirming ? 'Waiting for wallet...' : 'Cancel'}
             </Button>
             <Button
               variant="contained"

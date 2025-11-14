@@ -18,6 +18,7 @@ export interface CryptoPrice {
   image?: string
   predictionId?: number | null
   predictionTxHash?: string | null
+  libraryId?: string | number | null
 }
 
 export interface CryptoPricesResponse {
@@ -25,6 +26,8 @@ export interface CryptoPricesResponse {
   cryptos: CryptoPrice[]
   tags?: string[]
   timestamp: string
+  libraryId?: string | number | null
+  txHash?: string | null
   error?: string
 }
 

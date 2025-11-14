@@ -5,7 +5,7 @@ import { Grid, Card, CardContent, Typography, Box, CircularProgress, IconButton 
 import { Refresh } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
+import { getTrendingNews } from '@/lib/seery'
 
 interface NewsItem {
   title: string
@@ -40,23 +40,48 @@ export default function Homepage() {
     setMounted(true)
   }, [])
 
-  const fetchNews = async () => {
+  const fetchNews = async (forceRefresh = false) => {
+    const cacheKey = 'news_trending_cache'
+    
+    if (forceRefresh) {
+      localStorage.removeItem(cacheKey)
+    }
+    
+    if (!forceRefresh) {
+      const cachedData = localStorage.getItem(cacheKey)
+      if (cachedData) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedData)
+          const cacheAge = Date.now() - timestamp
+          const CACHE_TTL = 86400000
+          
+          if (cacheAge < CACHE_TTL) {
+            setNews(data)
+            setLastRefreshed(new Date(timestamp))
+            setLoading(false)
+            setRefreshing(false)
+            return
+          }
+        } catch (e) {
+        }
+      }
+    }
+    
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${API_URL}/api/news/trending`)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
+      const data = await getTrendingNews()
       
       if (data.success && data.news && Array.isArray(data.news) && data.news.length > 0) {
+        console.log('List of news:', data.news.length, 'items')
         setNews(data.news)
         setLastRefreshed(new Date())
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: data.news,
+          timestamp: Date.now()
+        }))
       } else {
-        setError(data.message || 'No news available')
+        setError('No news available')
         setNews([])
       }
     } catch (err: any) {
@@ -76,7 +101,7 @@ export default function Homepage() {
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await fetchNews()
+    await fetchNews(true)
   }
 
   const formatRefreshDate = (date: Date) => {

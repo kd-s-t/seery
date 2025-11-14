@@ -1,9 +1,9 @@
 const getConfig = (req, res) => {
   res.json({
     success: true,
-    contractAddress: process.env.CONTRACT_ADDRESS || null,
+    walletAddress: process.env.BLOCKCHAIN_WALLET_ADDRESS || process.env.CONTRACT_ADDRESS || null,
     predictionStakingAddress: process.env.PREDICTION_STAKING_ADDRESS || null,
-    network: process.env.NETWORK || 'testnet',
+    network: process.env.BLOCKCHAIN_NETWORK || process.env.NETWORK || 'testnet',
     timestamp: new Date().toISOString()
   });
 };

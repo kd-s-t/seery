@@ -19,6 +19,10 @@ export default function NewsPage() {
     severity: 'success'
   })
 
+  useEffect(() => {
+    console.log('Page load: News')
+  }, [])
+
   const showMessage = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity })
   }

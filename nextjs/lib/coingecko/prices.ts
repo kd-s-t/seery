@@ -1,51 +1,47 @@
 import type { CryptoPricesResponse } from './types'
+import { getMarketPrediction, searchCrypto as seerySearchCrypto, getCryptoLibrary as seeryGetCryptoLibrary } from '@/lib/seery'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
-
-export async function getCryptoPrices(symbols?: string[], tags?: string[], currency?: string, forceRefresh?: boolean): Promise<CryptoPricesResponse> {
+export async function getCryptoPriceDirect(coinId: string, currency: string = 'usd'): Promise<number | null> {
   try {
-    const params = new URLSearchParams()
-    if (symbols && symbols.length > 0) {
-      params.append('symbols', symbols.join(','))
-    }
-    if (tags && tags.length > 0) {
-      params.append('tags', tags.join(','))
-    }
-    if (currency) {
-      params.append('currency', currency)
-    }
-    if (forceRefresh) {
-      params.append('_t', Date.now().toString())
-      params.append('_refresh', '1')
-    }
-    const queryString = params.toString()
-    const url = `${API_URL}/api/market-prediction${queryString ? `?${queryString}` : ''}`
-    
-    if (forceRefresh) {
-      console.log('Frontend: Force refresh - calling API:', url)
-    }
-    
-    const response = await fetch(url, {
-      cache: 'no-store',
-      method: 'GET',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${currency}`,
+      { 
+        headers: {
+          'Accept': 'application/json'
+        },
+        cache: 'no-store'
       }
-    })
+    )
+    
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After')
+      const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000
+      throw new Error(`Rate limited. Wait ${waitTime / 1000} seconds.`)
+    }
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      return {
-        success: false,
-        cryptos: [],
-        timestamp: new Date().toISOString(),
-        error: errorData.error || `Backend error: ${response.status} ${response.statusText}`
-      }
+      return null
     }
     
     const data = await response.json()
+    const price = data[coinId]?.[currency]
+    
+    return price || null
+  } catch (error: any) {
+    if (error.message?.includes('Rate limited')) {
+      throw error
+    }
+    return null
+  }
+}
+
+export async function getCryptoPrices(symbols?: string[], tags?: string[], currency?: string, forceRefresh?: boolean): Promise<CryptoPricesResponse> {
+  try {
+    if (forceRefresh) {
+      console.log('Frontend: Force refresh - calling API')
+    }
+    
+    const data = await getMarketPrediction(symbols, tags, currency, forceRefresh)
     return data
   } catch (error: any) {
     return {
@@ -59,8 +55,7 @@ export async function getCryptoPrices(symbols?: string[], tags?: string[], curre
 
 export async function searchCrypto(query: string) {
   try {
-    const response = await fetch(`${API_URL}/api/crypto/search?query=${encodeURIComponent(query)}`)
-    const data = await response.json()
+    const data = await seerySearchCrypto(query)
     return data
   } catch (error: any) {
     return {
@@ -80,8 +75,7 @@ export interface CryptoLibraryItem {
 
 export async function getCryptoLibrary(): Promise<{ success: boolean; library: CryptoLibraryItem[]; count: number }> {
   try {
-    const response = await fetch(`${API_URL}/api/crypto/library`)
-    const data = await response.json()
+    const data = await seeryGetCryptoLibrary()
     return data
   } catch (error: any) {
     return {

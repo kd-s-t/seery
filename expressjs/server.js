@@ -6,7 +6,7 @@ const app = express();
 const PORT = 3016;
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3015',
+  origin: process.env.SEERY_FRONTEND_DOMAIN,
   credentials: true
 }));
 app.use(express.json());

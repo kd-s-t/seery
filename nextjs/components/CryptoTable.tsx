@@ -67,18 +67,29 @@ export default function CryptoTable() {
   const [stakeFieldError, setStakeFieldError] = useState<string | null>(null)
   const [pendingRecordHash, setPendingRecordHash] = useState<`0x${string}` | null>(null)
   const [pendingStake, setPendingStake] = useState<{ amount: string; direction: 'up' | 'down' } | null>(null)
-  const { stake, isPending, isConfirming, isConfirmed, error: stakeError, hash: stakeHash, receipt } = useStaking()
+  const { stakeOnCrypto, isPending, isConfirming, isConfirmed, error: stakeError, hash: stakeHash, receipt } = useStaking()
   const { predictionStakingAddress } = useContract()
   const { writeContract: writeRecordPrediction, data: recordHash, isPending: isRecordingPrediction, error: recordError } = useWriteContract()
   const { isLoading: isWaitingRecord, isSuccess: isRecordConfirmed, data: recordReceipt, isError: isRecordError } = useWaitForTransactionReceipt({
-    hash: recordHash
+    hash: recordHash,
+    query: {
+      enabled: !!recordHash,
+      retry: 20, // Increased retries
+      retryDelay: 2000,
+      refetchInterval: (data) => {
+        if (data) return false
+        return 2000
+      },
+    },
+    confirmations: 1,
+    timeout: 120000, // Increased to 120 seconds (2 minutes)
   })
   const publicClient = usePublicClient()
   const [localReceipt, setLocalReceipt] = useState<any>(null)
+  // Removed useStakeablePredictions - stakes should only be loaded on staking page
   
   useEffect(() => {
     if (recordError && creatingPrediction) {
-      console.error('❌ Record prediction write error:', recordError)
       const error = recordError as any
       
       let errorMsg = 'Transaction failed'
@@ -99,14 +110,6 @@ export default function CryptoTable() {
         errorMsg = error.data.message
       }
       
-      console.error('Error details:', {
-        message: error?.message,
-        shortMessage: error?.shortMessage,
-        cause: error?.cause,
-        data: error?.data,
-        extractedMessage: errorMsg
-      })
-      
       setStakeFieldError(errorMsg)
       setCreatingPrediction(false)
       setPendingRecordHash(null)
@@ -116,7 +119,6 @@ export default function CryptoTable() {
   
   useEffect(() => {
     if (isRecordError && creatingPrediction) {
-      console.error('❌ Record prediction receipt error:', isRecordError)
       const error = isRecordError as any
       
       let errorMsg = 'Transaction reverted. Please check the transaction details.'
@@ -135,53 +137,31 @@ export default function CryptoTable() {
         errorMsg = error.cause.message
       }
       
-      console.error('Receipt error details:', {
-        message: error?.message,
-        shortMessage: error?.shortMessage,
-        cause: error?.cause,
-        data: error?.data,
-        reason: error?.reason,
-        extractedMessage: errorMsg,
-        fullError: error
-      })
-      
       if (recordHash && publicClient) {
         (async () => {
           try {
             const tx = await publicClient.getTransaction({ hash: recordHash })
-            console.log('🔍 Transaction details:', {
-              to: tx.to,
-              from: tx.from,
-              value: tx.value.toString(),
-              data: tx.input.substring(0, 20) + '...'
-            })
             
             try {
-              const revertReason = await publicClient.call({
+              await publicClient.call({
                 to: tx.to,
                 data: tx.input,
                 value: tx.value,
                 account: tx.from
               })
-              console.log('📋 Call result:', revertReason)
             } catch (callErr: any) {
-              console.log('📋 Revert reason from call:', callErr?.message || callErr)
-              
               if (callErr?.data) {
-                console.log('📋 Revert reason data:', callErr.data)
                 try {
                   const { decodeErrorResult } = await import('viem')
                   const decoded = decodeErrorResult({
                     abi: PREDICTION_STAKING_ABI,
                     data: callErr.data as `0x${string}`
                   })
-                  console.log('✅ Decoded revert reason:', decoded)
                   if (decoded.errorName && decoded.args) {
                     const newErrorMsg = `${decoded.errorName}: ${decoded.args[0] || JSON.stringify(decoded.args)}`
                     setStakeFieldError(newErrorMsg)
                   }
                 } catch (decodeErr) {
-                  console.log('Could not decode error:', decodeErr)
                   if (callErr?.message) {
                     const msgMatch = callErr.message.match(/revert\s+(.+)/i)
                     if (msgMatch) {
@@ -197,7 +177,7 @@ export default function CryptoTable() {
               }
             }
           } catch (err) {
-            console.log('Could not get revert reason:', err)
+            // Silent
           }
         })()
       }
@@ -214,8 +194,6 @@ export default function CryptoTable() {
       const processRecordPrediction = async () => {
         try {
           if (recordReceipt.status !== 'success') {
-            console.error('❌ Transaction failed with status:', recordReceipt.status)
-            console.error('Receipt details:', recordReceipt)
             const errorMsg = recordReceipt.status === 'reverted' 
               ? 'Transaction reverted. Check console for details.' 
               : 'Transaction failed'
@@ -232,98 +210,10 @@ export default function CryptoTable() {
             throw new Error('Contract address not configured')
           }
           
-          console.log('🔍 Processing recordPrediction receipt:', {
-            receiptStatus: recordReceipt.status,
-            receiptLogsCount: recordReceipt.logs?.length || 0,
-            contractAddress,
-            receiptTransactionHash: recordReceipt.transactionHash
-          })
-          
-          const logs = recordReceipt.logs.filter((log: any) => 
-            log.address?.toLowerCase() === contractAddress
-          )
-          
-          console.log('📋 Filtered logs for contract:', {
-            totalLogs: recordReceipt.logs?.length || 0,
-            contractLogs: logs.length,
-            contractAddress,
-            allLogAddresses: recordReceipt.logs?.map((l: any) => l.address?.toLowerCase()) || []
-          })
-          
-          let predictionRecordedLog = null
-          
-          try {
-            const parsedEvents = parseEventLogs({
-              abi: PREDICTION_STAKING_ABI,
-              logs: recordReceipt.logs
-            })
-            console.log('📦 Parsed events using parseEventLogs:', parsedEvents)
-            
-            const predictionEvent = parsedEvents.find((e: any) => e.eventName === 'PredictionRecorded')
-            if (predictionEvent) {
-              console.log('🎯 Found PredictionRecorded event via parseEventLogs!', predictionEvent)
-              predictionRecordedLog = { decoded: predictionEvent }
-            }
-          } catch (parseErr) {
-            console.log('⚠️ parseEventLogs failed, trying manual decode:', parseErr)
-          }
-          
-          if (!predictionRecordedLog) {
-            for (const log of logs) {
-              try {
-                console.log('🔎 Attempting to decode log manually:', {
-                  address: log.address?.toLowerCase(),
-                  topics: log.topics,
-                  data: log.data
-                })
-                const decoded = decodeEventLog({
-                  abi: PREDICTION_STAKING_ABI,
-                  data: log.data,
-                  topics: log.topics
-                })
-                console.log('✅ Decoded event:', decoded)
-                if (decoded.eventName === 'PredictionRecorded') {
-                  predictionRecordedLog = { log, decoded }
-                  console.log('🎯 Found PredictionRecorded event!', decoded)
-                  break
-                }
-              } catch (err) {
-                console.log('❌ Failed to decode log:', err)
-                continue
-              }
-            }
-          }
-          
-          if (logs.length === 0) {
-            console.error('⚠️ No logs found for contract address:', contractAddress)
-            console.error('All receipt logs:', recordReceipt.logs)
-          }
-          
-          if (predictionRecordedLog && selectedCryptoForStake) {
-            const predictionId = Number(predictionRecordedLog.decoded.args.predictionId)
-            setSelectedCryptoForStake({ ...selectedCryptoForStake, predictionId })
-            setCreatingPrediction(false)
-            setPendingRecordHash(null)
-            
-            if (pendingStake) {
-              try {
-                await stake(BigInt(predictionId), pendingStake.amount, pendingStake.direction === 'up')
-                setPendingStake(null)
-              } catch (error: any) {
-                const errorMsg = error?.message || error?.info?.error?.message || 'Failed to stake'
-                setStakeFieldError(errorMsg)
-                setPendingStake(null)
-              }
-            }
-          } else {
-            console.error('No PredictionRecorded event found. Receipt:', recordReceipt, 'Logs:', logs)
-            setStakeFieldError('Failed to find PredictionRecorded event. Transaction may have failed.')
-            setCreatingPrediction(false)
-            setPendingRecordHash(null)
-            setPendingStake(null)
-          }
+          setCreatingPrediction(false)
+          setPendingRecordHash(null)
+          setPendingStake(null)
         } catch (error: any) {
-          console.error('Error processing record prediction:', error)
           setStakeFieldError(error.message || 'Failed to process prediction')
           setCreatingPrediction(false)
           setPendingRecordHash(null)
@@ -332,7 +222,7 @@ export default function CryptoTable() {
       }
       processRecordPrediction()
     }
-  }, [isRecordConfirmed, recordReceipt, pendingRecordHash, recordHash, predictionStakingAddress, selectedCryptoForStake, creatingPrediction, pendingStake, stake])
+  }, [isRecordConfirmed, recordReceipt, pendingRecordHash, recordHash, predictionStakingAddress, selectedCryptoForStake, creatingPrediction, pendingStake])
   
   useEffect(() => {
     if (recordHash && creatingPrediction && !pendingRecordHash) {
@@ -342,30 +232,48 @@ export default function CryptoTable() {
   
   useEffect(() => {
     if (pendingRecordHash && !isRecordConfirmed && !isWaitingRecord && creatingPrediction) {
-      const timeout = setTimeout(() => {
-        if (creatingPrediction) {
-          setStakeFieldError('Transaction confirmation timed out. Please check the transaction in your wallet.')
+      const timeout = setTimeout(async () => {
+        if (creatingPrediction && pendingRecordHash) {
+          if (publicClient) {
+            try {
+              const receipt = await publicClient.getTransactionReceipt({ hash: pendingRecordHash })
+              if (receipt) {
+                return
+              }
+              const tx = await publicClient.getTransaction({ hash: pendingRecordHash })
+              if (tx) {
+                setStakeFieldError(`Transaction pending. Hash: ${pendingRecordHash.slice(0, 10)}... Please wait or check your wallet.`)
+                return
+              }
+            } catch (checkError) {
+              // Silent
+            }
+          }
+          
+          setStakeFieldError(`Transaction confirmation timed out. Transaction hash: ${pendingRecordHash.slice(0, 10)}... Please check the transaction in your wallet or try again.`)
           setCreatingPrediction(false)
           setPendingRecordHash(null)
+          setPendingStake(null)
         }
       }, 60000)
       return () => clearTimeout(timeout)
     }
-  }, [pendingRecordHash, isRecordConfirmed, isWaitingRecord, creatingPrediction])
+  }, [pendingRecordHash, isRecordConfirmed, isWaitingRecord, creatingPrediction, publicClient])
 
   useEffect(() => {
-    if (isConfirmed && receipt && !creatingPrediction && selectedCryptoForStake?.predictionId) {
-      if (receipt.status === 'success') {
-        setStakeFieldError(null)
-        setStakeModalOpen(false)
-        setStakeAmount('0.01')
-        setStakeDirection('up')
-        setSelectedCryptoForStake(null)
-      } else {
-        setStakeFieldError('Transaction reverted. Please check the transaction details.')
+    if (isRecordingPrediction && creatingPrediction && !recordHash) {
+      const timeout = setTimeout(() => {
+        if (isRecordingPrediction && creatingPrediction && !recordHash) {
+          setStakeFieldError('Transaction submission timed out. Please check your wallet and try again.')
+          setCreatingPrediction(false)
+          setPendingStake(null)
       }
+      }, 20000)
+      return () => clearTimeout(timeout)
     }
-  }, [isConfirmed, receipt, creatingPrediction, selectedCryptoForStake])
+  }, [isRecordingPrediction, creatingPrediction, recordHash])
+
+  const processedReceiptRef = useRef<string | null>(null)
   
   useEffect(() => {
     if (stakeError) {
@@ -386,14 +294,28 @@ export default function CryptoTable() {
   }, [selectedCryptos])
 
   useEffect(() => {
-    if (isConfirmed || receipt || localReceipt) {
+    const currentReceipt = receipt || localReceipt
+    const receiptHash = currentReceipt?.transactionHash
+    
+    if (isConfirmed || currentReceipt) {
+      const success = isConfirmed || (currentReceipt && currentReceipt.status === 'success')
+      
+      if (success && !creatingPrediction && receiptHash && receiptHash !== processedReceiptRef.current) {
+        processedReceiptRef.current = receiptHash
+        console.log('Response: Stake confirmed')
       setStakeModalOpen(false)
       setStakeAmount('0.01')
       setStakeDirection('up')
       setSelectedCryptoForStake(null)
       setStakeFieldError(null)
+        
+        // Redirect to staking page
+        router.push('/staking')
+      } else if (currentReceipt && currentReceipt.status !== 'success') {
+        setStakeFieldError('Transaction reverted. Please check the transaction details.')
+      }
     }
-  }, [isConfirmed, receipt, localReceipt])
+  }, [isConfirmed, receipt, localReceipt, creatingPrediction])
 
   useEffect(() => {
     if (!stakeHash || isConfirmed || receipt || localReceipt) {
@@ -487,7 +409,6 @@ export default function CryptoTable() {
     if (forceRefresh) {
       // Clear cache for this specific key on force refresh
       localStorage.removeItem(cacheKey)
-      console.log('Frontend: Cleared cache for key:', cacheKey)
     }
     
     if (!forceRefresh) {
@@ -496,7 +417,7 @@ export default function CryptoTable() {
         try {
           const { data, timestamp } = JSON.parse(cachedData)
           const cacheAge = Date.now() - timestamp
-          const CACHE_TTL = 21600000
+          const CACHE_TTL = 86400000
           
           if (cacheAge < CACHE_TTL) {
             setUsdCryptos(data)
@@ -511,7 +432,6 @@ export default function CryptoTable() {
       }
     }
     
-    console.log('Frontend: Fetching fresh data for tags:', tags)
     
     if (showLoading) {
       setLoading(true)
@@ -523,10 +443,13 @@ export default function CryptoTable() {
       const data = await getCryptoPrices(undefined, tags, 'usd', forceRefresh)
       
       if (data.success && data.cryptos && data.cryptos.length > 0) {
-        console.log('Frontend: Received cryptos count:', data.cryptos.length, 'for tags:', tags)
-        console.log('Frontend: Received crypto IDs:', data.cryptos.map(c => c.id))
-        console.log('Frontend: Predictions with IDs:', data.cryptos.filter(c => c.predictionId).map(c => ({ id: c.id, predictionId: c.predictionId })))
-        setUsdCryptos(data.cryptos)
+        console.log('List of predictions:', data.cryptos.length, 'predictions')
+        // Attach libraryId from response to each crypto
+        const cryptosWithLibraryId = data.cryptos.map(crypto => ({
+          ...crypto,
+          libraryId: data.libraryId || crypto.libraryId || null
+        }))
+        setUsdCryptos(cryptosWithLibraryId)
         const fetchTime = new Date()
         setLastFetchTime(fetchTime)
         localStorage.setItem('crypto_last_fetch', fetchTime.toISOString())
@@ -534,7 +457,6 @@ export default function CryptoTable() {
           data: data.cryptos,
           timestamp: Date.now()
         }))
-        console.log('Frontend: Cached data for key:', cacheKey)
         setError(null)
       } else {
         localStorage.removeItem(cacheKey)
@@ -1091,23 +1013,25 @@ export default function CryptoTable() {
                   })()}
                 </TableCell>
                 <TableCell align="right">
-                  {(() => {
-                    const suggestionPercent = crypto.suggestionPercent
-                    if (crypto.suggestion && typeof suggestionPercent === 'number') {
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                    {(() => {
+                      const suggestionPercent = crypto.suggestionPercent
+                      if (crypto.suggestion && typeof suggestionPercent === 'number') {
+                        return (
+                          <Chip
+                            label={`${crypto.suggestion === 'up' ? '↑' : '↓'} ${formatPercent(suggestionPercent)}`}
+                            color={crypto.suggestion === 'up' ? 'success' : 'error'}
+                            size="small"
+                          />
+                        )
+                      }
                       return (
-                        <Chip
-                          label={`${crypto.suggestion === 'up' ? '↑' : '↓'} ${formatPercent(suggestionPercent)}`}
-                          color={crypto.suggestion === 'up' ? 'success' : 'error'}
-                          size="small"
-                        />
+                        <Typography variant="body2" color="text.secondary">
+                          No prediction
+                        </Typography>
                       )
-                    }
-                    return (
-                      <Typography variant="body2" color="text.secondary">
-                        No prediction
-                      </Typography>
-                    )
-                  })()}
+                    })()}
+                  </Box>
                 </TableCell>
                 <TableCell align="right">
                     <Button
@@ -1134,6 +1058,8 @@ export default function CryptoTable() {
         onClose={handleCloseModal}
         maxWidth="sm"
         fullWidth
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
       >
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1192,16 +1118,31 @@ export default function CryptoTable() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={stakeModalOpen} onClose={() => {
+      <Dialog 
+        open={stakeModalOpen} 
+        onClose={() => {
         setStakeModalOpen(false)
         setStakeDirection('up')
-      }} maxWidth="sm" fullWidth>
+          setCreatingPrediction(false)
+          setPendingRecordHash(null)
+          setPendingStake(null)
+          setStakeFieldError(null)
+        }} 
+        maxWidth="sm" 
+        fullWidth
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
+      >
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="h6">Stake on Prediction</Typography>
             <IconButton onClick={() => {
               setStakeModalOpen(false)
               setStakeDirection('up')
+              setCreatingPrediction(false)
+              setPendingRecordHash(null)
+              setPendingStake(null)
+              setStakeFieldError(null)
             }} size="small">
               <Close />
             </IconButton>
@@ -1301,32 +1242,16 @@ export default function CryptoTable() {
                 return
               }
 
-              let predictionId = selectedCryptoForStake?.predictionId
+              if (!selectedCryptoForStake || !predictionStakingAddress) {
+                setStakeFieldError('Missing required information')
+                return
+              }
 
-              if (!predictionId && selectedCryptoForStake && predictionStakingAddress) {
-                setCreatingPrediction(true)
-                setPendingStake({ amount: stakeAmount, direction: stakeDirection })
                 try {
                   const currentPrice = typeof selectedCryptoForStake.price === 'number' ? selectedCryptoForStake.price : parseFloat(String(selectedCryptoForStake.price || '0'))
                   const percentChange = selectedCryptoForStake.suggestionPercent || 0
                   const direction = selectedCryptoForStake.suggestion === 'up' ? 'up' : 'down'
                   const predictedPrice = currentPrice * (1 + (percentChange / 100) * (direction === 'up' ? 1 : -1))
-                  
-                  const currentPriceWei = parseEther(String(currentPrice))
-                  const predictedPriceWei = parseEther(String(predictedPrice))
-                  const percentChangeWei = BigInt(Math.floor(Math.abs(percentChange) * 100))
-                  
-                  console.log('📤 Calling recordPrediction with:', {
-                    cryptoId: selectedCryptoForStake.id,
-                    currentPrice: currentPrice.toString(),
-                    currentPriceWei: currentPriceWei.toString(),
-                    predictedPrice: predictedPrice.toString(),
-                    predictedPriceWei: predictedPriceWei.toString(),
-                    direction,
-                    percentChange: percentChange.toString(),
-                    percentChangeWei: percentChangeWei.toString(),
-                    contractAddress: predictionStakingAddress
-                  })
                   
                   if (!selectedCryptoForStake.id || selectedCryptoForStake.id.trim() === '') {
                     throw new Error('Crypto ID is required')
@@ -1336,42 +1261,27 @@ export default function CryptoTable() {
                     throw new Error('Current price must be greater than 0')
                   }
                   
-                  writeRecordPrediction({
-                    address: predictionStakingAddress as `0x${string}`,
-                    abi: PREDICTION_STAKING_ABI,
-                    functionName: 'recordPrediction',
-                    args: [
-                      selectedCryptoForStake.id,
-                      currentPriceWei,
-                      predictedPriceWei,
-                      direction,
-                      percentChangeWei
-                    ]
-                  })
-                } catch (error: any) {
-                  let errorMsg = 'Failed to create prediction'
-                  if (error.message) {
-                    errorMsg = error.message
-                  } else if (error.error) {
-                    errorMsg = error.error
-                  }
-                  setStakeFieldError(errorMsg)
-                  setCreatingPrediction(false)
-                  setPendingStake(null)
-                }
-                return
-              }
 
-              if (predictionId) {
-                try {
-                  await stake(BigInt(predictionId), stakeAmount, stakeDirection === 'up')
+                // Use stakeOnCrypto - it automatically creates prediction if needed
+                // Pass libraryId if available from the crypto data
+                await stakeOnCrypto(
+                      selectedCryptoForStake.id,
+                  currentPrice.toString(),
+                  predictedPrice.toString(),
+                      direction,
+                  percentChange,
+                  stakeAmount,
+                  stakeDirection === 'up',
+                  selectedCryptoForStake.libraryId || null
+                )
+                // Note: Success handling is done in useEffect that watches isConfirmed/receipt
+                // The stake hook will set the transaction hash, and the useEffect will handle the success case
                 } catch (error: any) {
                   let errorMsg = error?.message || error?.info?.error?.message || 'Failed to stake'
                   if (errorMsg.includes('nonce') || errorMsg.includes('NONCE') || errorMsg.includes('Nonce') || errorMsg.includes('Transaction already')) {
                     errorMsg = 'Transaction already in progress. Please wait for the current transaction to complete before trying again.'
                   }
                   setStakeFieldError(errorMsg)
-                }
               }
             }}
             disabled={isPending || isConfirming || creatingPrediction || isRecordingPrediction || isWaitingRecord || !stakeAmount || parseFloat(stakeAmount) < 0.001}

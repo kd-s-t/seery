@@ -6,7 +6,7 @@ export function useContract() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const address = process.env.NEXT_PUBLIC_PREDICTION_STAKING_ADDRESS || null
+    const address = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || null
     if (address) {
       setPredictionStakingAddress(address)
     }

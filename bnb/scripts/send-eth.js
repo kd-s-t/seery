@@ -1,11 +1,12 @@
 const hre = require("hardhat");
 
 async function main() {
-  // Get the recipient address from command line or use first account as example
-  const recipientAddress = process.argv[2];
+  // Get the recipient address from command line or use default
+  const recipientAddress = process.argv[2] || '0xa347f85cc98e691c882a38dad051c249a2ad8a77';
   
-  if (!recipientAddress) {
-    console.log("Usage: npx hardhat run scripts/send-eth.js --network localhost <recipient_address>");
+  if (!recipientAddress || !hre.ethers.isAddress(recipientAddress)) {
+    console.log("Usage: npx hardhat run scripts/send-eth.js --network localhost");
+    console.log("Or set recipient address in the script");
     console.log("\nAvailable accounts with balances:");
     const accounts = await hre.ethers.getSigners();
     for (let i = 0; i < Math.min(10, accounts.length); i++) {

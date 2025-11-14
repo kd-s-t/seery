@@ -10,7 +10,9 @@ import { useNetwork } from '@/hooks/useNetwork'
 import { localhost } from '@/lib/wagmi'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { useNavigation } from '@/contexts/NavigationContext'
-import { getCryptoPrices } from '@/lib/coingecko/prices'
+import { useAppSelector, useAppDispatch } from '@/lib/store/hooks'
+import { fetchBnbPrice, shouldFetchPrice } from '@/lib/store/slices/priceSlice'
+import { store } from '@/lib/store'
 
 interface HeaderProps {
   address: string | undefined
@@ -36,9 +38,12 @@ export default function Header({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [qrOpen, setQrOpen] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [bnbPrice, setBnbPrice] = useState<number | null>(null)
+  const { bnbPrice, isLoading: priceLoading } = useAppSelector((state) => state.price)
+  const dispatch = useAppDispatch()
   const [localhostBalance, setLocalhostBalance] = useState<string | null>(null)
-  const publicClient = usePublicClient({ chainId: localhost.id })
+  const publicClient = usePublicClient({ 
+    chainId: isLocalhost ? localhost.id : undefined,
+  })
   
   const { data: balance, refetch: refetchBalance } = useBalance({
     address: address as `0x${string}` | undefined,
@@ -49,29 +54,58 @@ export default function Header({
       refetchOnWindowFocus: false,
       staleTime: 0,
       gcTime: 0,
+      retry: false,
     },
   })
   
   useEffect(() => {
+    let hasFailed = false
+    
     const fetchLocalhostBalance = async () => {
-      if (address && publicClient) {
+      if (hasFailed || !address || !publicClient || !isLocalhost) {
+        if (!isLocalhost) {
+          setLocalhostBalance(null)
+        }
+        return
+      }
+      
         try {
           const bal = await publicClient.getBalance({
             address: address as `0x${string}`,
           })
           const formatted = (Number(bal) / 1e18).toFixed(18)
           setLocalhostBalance(formatted)
-          console.log('Localhost balance fetched:', formatted)
-        } catch (error) {
-          console.error('Failed to fetch localhost balance:', error)
+        hasFailed = false
+        } catch (error: any) {
+        const isConnectionError = 
+          error?.message?.includes('Failed to fetch') || 
+          error?.message?.includes('ECONNREFUSED') ||
+          error?.message?.includes('connection refused') ||
+          error?.message?.includes('signal timed out') ||
+          error?.code === 'ECONNREFUSED' ||
+          error?.name === 'AbortError' ||
+          error?.name === 'TimeoutError'
+        
+        if (isConnectionError) {
+          hasFailed = true
+            setLocalhostBalance(null)
+          return
         }
       }
     }
     
-    fetchLocalhostBalance()
-    const interval = setInterval(fetchLocalhostBalance, 5000)
-    return () => clearInterval(interval)
-  }, [address, publicClient])
+    if (isLocalhost) {
+      fetchLocalhostBalance()
+      const interval = setInterval(() => {
+        if (!hasFailed) {
+          fetchLocalhostBalance()
+        }
+      }, 5000)
+      return () => clearInterval(interval)
+    } else {
+      setLocalhostBalance(null)
+    }
+  }, [address, publicClient, isLocalhost])
   
   const displayBalance = useMemo(() => {
     if (localhostBalance && address) {
@@ -93,9 +127,12 @@ export default function Header({
     return null
   }, [displayBalance, bnbPrice, currency, formatPrice])
   
+  const showFormattedBalance = formattedBalance !== null && displayBalance !== null
+  
   const isNewsActive = pathname === '/news'
   const isMarketActive = pathname === '/market'
   const isStakingActive = pathname === '/staking'
+  const isProfileActive = pathname === '/profile'
   
   const open = Boolean(anchorEl)
 
@@ -104,26 +141,22 @@ export default function Header({
   }, [])
 
   useEffect(() => {
-    const fetchBnbPrice = async () => {
-      try {
-        const response = await getCryptoPrices(['binancecoin'], undefined, 'usd')
-        if (response.success && response.cryptos && response.cryptos.length > 0) {
-          const bnbCrypto = response.cryptos.find((c: any) => c.id === 'binancecoin' || c.symbol === 'BNB')
-          if (bnbCrypto) {
-            setBnbPrice(bnbCrypto.price)
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to fetch BNB price')
+    if (!isConnected) return
+
+    const priceState = store.getState().price
+    if (shouldFetchPrice(priceState)) {
+      dispatch(fetchBnbPrice())
+    }
+
+    const interval = setInterval(() => {
+      const currentPriceState = store.getState().price
+      if (shouldFetchPrice(currentPriceState)) {
+        dispatch(fetchBnbPrice())
       }
-    }
-    
-    if (isConnected) {
-      fetchBnbPrice()
-      const interval = setInterval(fetchBnbPrice, 60000)
+    }, 300000)
+
       return () => clearInterval(interval)
-    }
-  }, [isConnected])
+  }, [isConnected, dispatch])
 
   const handleLogoClick = () => {
     setLoading(true)
@@ -145,8 +178,14 @@ export default function Header({
     router.push('/staking')
   }
 
-  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleProfileMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
+  }
+
+  const handleNavigateToProfile = () => {
+    handleProfileClose()
+    setLoading(true)
+    router.push('/profile')
   }
 
   const handleProfileClose = () => {
@@ -329,7 +368,7 @@ export default function Header({
             {mounted && isConnected ? (
               <>
                 <IconButton
-                  onClick={handleProfileClick}
+                  onClick={handleProfileMenuClick}
                   sx={{
                     padding: '4px',
                     color: 'white',
@@ -361,6 +400,17 @@ export default function Header({
                     horizontal: 'right',
                   }}
                 >
+                  <MenuItem 
+                    onClick={handleNavigateToProfile}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.04)'
+                      }
+                    }}
+                  >
+                    Profile
+                  </MenuItem>
                   <Box
                     sx={{
                       px: 2,
@@ -421,13 +471,18 @@ export default function Header({
                         Balance
                       </Typography>
                       <Typography variant="caption" sx={{ fontWeight: 600, color: '#000000', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {formattedBalance && displayBalance ? (
+                        {displayBalance ? (
                           <>
                             <span>{parseFloat(displayBalance.formatted).toFixed(4)} {displayBalance.symbol || 'BNB'}</span>
+                            {showFormattedBalance && (
                             <span>({formattedBalance})</span>
+                            )}
+                            {!showFormattedBalance && priceLoading && (
+                              <span style={{ opacity: 0.5 }}>(loading...)</span>
+                            )}
                           </>
                         ) : (
-                          <span>{displayBalance ? `${parseFloat(displayBalance.formatted).toFixed(4)} ${displayBalance.symbol || 'BNB'}` : '0.0000 BNB'}</span>
+                          <span>0.0000 BNB</span>
                         )}
                       </Typography>
                     </Box>

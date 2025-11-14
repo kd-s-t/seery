@@ -54,7 +54,7 @@ services:
       - /app/node_modules
       - /app/artifacts
       - /app/cache
-    command: tail -f /dev/null  # Keep container running for manual commands
+    command: npx hardhat node --hostname 0.0.0.0
     profiles:
       - tools  # Only start when explicitly requested
 

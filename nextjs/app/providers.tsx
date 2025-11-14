@@ -4,6 +4,8 @@ import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Provider as ReduxProvider } from 'react-redux'
+import { store } from '@/lib/store'
 import { wagmiConfig } from '@/lib/wagmi'
 import { CurrencyProvider } from '@/contexts/CurrencyContext'
 import { NavigationProvider } from '@/contexts/NavigationContext'
@@ -22,6 +24,7 @@ const queryClient = new QueryClient({
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
+    <ReduxProvider store={store}>
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
@@ -35,6 +38,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
+    </ReduxProvider>
   )
 }
 

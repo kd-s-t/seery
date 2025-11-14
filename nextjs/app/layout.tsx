@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: 'Seery - A crypto forecast',
   description: 'AI-powered prediction market platform on BNB Chain',
   icons: {
-    icon: '/seeryicon.ico',
-    shortcut: '/seeryicon.ico',
-    apple: '/seeryicon.ico',
+    icon: '/serryicon.ico',
+    shortcut: '/serryicon.ico',
+    apple: '/serryicon.ico',
   },
 }
 

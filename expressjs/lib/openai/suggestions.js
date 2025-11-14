@@ -1,5 +1,6 @@
 const { getOpenAIClient } = require('./client');
 const cache = require('./cache');
+const blockchain = require('../blockchain');
 
 async function generatePriceSuggestion(crypto, tags = null, bypassCache = false) {
   if (!bypassCache) {
@@ -16,20 +17,41 @@ async function generatePriceSuggestion(crypto, tags = null, bypassCache = false)
   }
   
   try {
+    // Fetch correct historical predictions for this crypto
+    let historicalContext = '';
+    try {
+      const correctPredictions = await blockchain.getCorrectPredictionsByCrypto(crypto.id);
+      if (correctPredictions && correctPredictions.length > 0) {
+        historicalContext = `\n\nHistorical Correct Predictions for ${crypto.name}:\n`;
+        correctPredictions.slice(0, 5).forEach((pred, idx) => {
+          historicalContext += `${idx + 1}. Date: ${new Date(pred.createdAt).toLocaleDateString()}, `;
+          historicalContext += `Predicted: ${pred.direction} ${pred.percentChange.toFixed(2)}% `;
+          historicalContext += `(from $${pred.currentPrice.toFixed(2)} to $${pred.predictedPrice.toFixed(2)}), `;
+          historicalContext += `Actual: $${pred.actualPrice.toFixed(2)} (${pred.actualPercentChange > 0 ? '+' : ''}${pred.actualPercentChange.toFixed(2)}%)\n`;
+        });
+        historicalContext += `\nLearn from these successful predictions. Consider similar patterns, market conditions, and price movements that led to correct predictions.`;
+      }
+    } catch (error) {
+      console.error('Error fetching historical predictions:', error);
+      // Continue without historical context if there's an error
+    }
+
     const bnbContext = (!tags || tags.length === 0) ? ' Also consider BNB (Binance Coin) market dynamics and its impact on the broader ecosystem.' : '';
 
     const prompt = `Analyze the current state of ${crypto.name} (${crypto.symbol}).${bnbContext}
 
 Current Price: $${crypto.price.toFixed(2)}
 24h Change: ${crypto.change24h > 0 ? '+' : ''}${crypto.change24h.toFixed(2)}%
+${historicalContext}
 
-Based on market trends, technical analysis, and market sentiment, predict how much the price will change in the next 24-48 hours.
+Based on market trends, technical analysis, market sentiment, and historical successful predictions, predict how much the price will change in the next 24-48 hours.
 
 Consider:
 - Price trends and technical indicators
 - Market sentiment and volatility
 - Trading volume patterns
 - General crypto market conditions
+${historicalContext ? '- Patterns from historical correct predictions shown above' : ''}
 
 Return JSON with this structure:
 {

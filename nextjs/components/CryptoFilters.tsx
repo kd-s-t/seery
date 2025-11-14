@@ -15,8 +15,6 @@ import {
 import { Search, Clear, Refresh } from '@mui/icons-material'
 import { getCryptoLibrary, searchCrypto, type CryptoLibraryItem } from '@/lib/coingecko'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
-
 interface CryptoFiltersProps {
   selectedCryptos: string[]
   onCryptosChange: (cryptos: string[]) => void

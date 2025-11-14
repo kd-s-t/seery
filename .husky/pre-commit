@@ -4,10 +4,17 @@ echo "🔍 Running pre-commit checks..."
 if [ -d "nextjs" ]; then
   echo "📦 Type checking Next.js..."
   cd nextjs
-  ./node_modules/.bin/tsc --noEmit || {
-    echo "❌ Next.js type checking failed"
-    exit 1
-  }
+  if [ -f "./node_modules/.bin/tsc" ]; then
+    ./node_modules/.bin/tsc --noEmit || {
+      echo "❌ Next.js type checking failed"
+      exit 1
+    }
+  else
+    npx tsc --noEmit || {
+      echo "❌ Next.js type checking failed"
+      exit 1
+    }
+  fi
   echo "📦 Linting Next.js..."
   npm run lint -- --fix || {
     echo "❌ Next.js linting failed"

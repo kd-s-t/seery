@@ -25,6 +25,7 @@ export default function MarketPage() {
 
   useEffect(() => {
     setMounted(true)
+    console.log('Page load: Market')
   }, [])
 
   const showMessage = (message: string, severity: 'success' | 'error') => {

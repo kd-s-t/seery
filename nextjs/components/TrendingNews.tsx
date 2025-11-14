@@ -12,7 +12,7 @@ import {
 } from '@mui/material'
 import { Article, TrendingUp } from '@mui/icons-material'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
+import { getTrendingNews } from '@/lib/seery'
 
 interface NewsItem {
   title: string
@@ -35,14 +35,36 @@ export default function TrendingNews() {
     if (!mounted) return
 
     const fetchNews = async () => {
+      const cacheKey = 'news_trending_cache_trending'
+      const cachedData = localStorage.getItem(cacheKey)
+      
+      if (cachedData) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedData)
+          const cacheAge = Date.now() - timestamp
+          const CACHE_TTL = 86400000
+          
+          if (cacheAge < CACHE_TTL) {
+            setNews(data)
+            setLoading(false)
+            return
+          }
+        } catch (e) {
+        }
+      }
+      
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_URL}/api/news/trending?topic=cryptocurrency&count=5`)
-        const data = await response.json()
+        const data = await getTrendingNews('cryptocurrency', 5)
         
         if (data.success && data.news) {
+          console.log('List of news:', data.news.length, 'items')
           setNews(data.news)
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: data.news,
+            timestamp: Date.now()
+          }))
         } else {
           setError('Failed to load news')
         }
@@ -54,7 +76,7 @@ export default function TrendingNews() {
     }
 
     fetchNews()
-    const interval = setInterval(fetchNews, 6 * 60 * 60 * 1000)
+    const interval = setInterval(fetchNews, 24 * 60 * 60 * 1000)
     
     return () => clearInterval(interval)
   }, [mounted])

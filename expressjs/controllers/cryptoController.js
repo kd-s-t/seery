@@ -1,5 +1,6 @@
 const coingecko = require('../lib/coingecko/prices');
 const openai = require('../lib/openai');
+const blockchain = require('../lib/blockchain');
 
 const getCryptoPrices = async (req, res) => {
   try {
@@ -104,6 +105,32 @@ const getCryptoPrices = async (req, res) => {
       tags: tags || [],
       timestamp: new Date().toISOString()
     };
+    
+    let libraryResult = null;
+    try {
+      const libraryItems = cryptosWithSuggestions.map((crypto, index) => ({
+        id: crypto.id || `crypto-${index}`,
+        title: crypto.name || crypto.symbol || '',
+        summary: crypto.reasoning || '',
+        content: JSON.stringify(crypto),
+        url: '',
+        image: crypto.image || '',
+        date: new Date().toISOString(),
+        metadata: JSON.stringify(crypto)
+      }));
+      
+      libraryResult = await blockchain.createLibraryOnChain(
+        'market-prediction',
+        tags || [],
+        libraryItems,
+        'openai'
+      );
+    } catch (error) {
+      console.error('Error storing to library on-chain:', error);
+    }
+    
+    response.libraryId = libraryResult?.libraryId || null;
+    response.txHash = libraryResult?.txHash || null;
     
     res.json(response);
   } catch (error) {

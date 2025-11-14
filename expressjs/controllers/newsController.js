@@ -1,14 +1,40 @@
 const newsAPI = require('../lib/news');
+const blockchain = require('../lib/blockchain');
 
 const getTrendingNews = async (req, res) => {
   try {
     const newsResult = await newsAPI.fetchCryptoNews(10);
     
     if (newsResult.success && newsResult.news.length > 0) {
+      const libraryItems = newsResult.news.map((item, index) => ({
+        id: item.id || `news-${index}`,
+        title: item.title || '',
+        summary: item.summary || '',
+        content: item.summary || '',
+        url: item.url || '',
+        image: item.image || '',
+        date: item.date || '',
+        metadata: JSON.stringify(item)
+      }));
+      
+      let libraryResult = null;
+      try {
+        libraryResult = await blockchain.createLibraryOnChain(
+          'news',
+          ['trending', 'crypto'],
+          libraryItems,
+          'newspai'
+        );
+      } catch (error) {
+        console.error('Error storing news to library on-chain:', error);
+      }
+      
       return res.json({
         success: true,
         news: newsResult.news,
         count: newsResult.news.length,
+        libraryId: libraryResult?.libraryId || null,
+        txHash: libraryResult?.txHash || null,
         timestamp: new Date().toISOString()
       });
     }

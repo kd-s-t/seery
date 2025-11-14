@@ -27,6 +27,10 @@ export default function Home() {
     severity: 'success'
   })
 
+  useEffect(() => {
+    console.log('Page load: Home')
+  }, [])
+
   // Show message helper
   const showMessage = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity })

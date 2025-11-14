@@ -1,16 +1,44 @@
 const openai = require('../lib/openai');
 const coingecko = require('../lib/coingecko/prices');
+const { ethers } = require('ethers');
 
-// Deprecated: Blockchain interactions moved to frontend
-// This endpoint is kept for backward compatibility but returns empty
+// Get all stakes with caching (long-term solution for timeout issues)
 const getStakeablePredictions = async (req, res) => {
-  res.json({
-    success: true,
-    predictions: [],
-    count: 0,
-    message: 'This endpoint is deprecated. Use frontend blockchain calls instead.',
-    timestamp: new Date().toISOString()
-  });
+  try {
+    const blockchain = require('../lib/blockchain');
+    const result = await blockchain.getAllStakes(true); // Use cache
+    
+    if (result === null) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch stakes from blockchain',
+        predictions: [],
+        count: 0,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    const cacheInfo = blockchain.getStakesCacheInfo();
+    
+    res.json({
+      success: true,
+      predictions: result.stakes || [],
+      count: result.stakes?.length || 0,
+      totalStakes: result.totalStakes || '0',
+      totalAmountStaked: result.totalAmountStaked || '0',
+      cached: cacheInfo.cached && cacheInfo.age < cacheInfo.ttl,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting stakeable predictions:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get stakeable predictions',
+      predictions: [],
+      count: 0,
+      timestamp: new Date().toISOString()
+    });
+  }
 };
 
 // Generate AI prediction suggestion only (no blockchain interaction)
@@ -82,26 +110,93 @@ const createPredictionAndRegister = async (req, res) => {
   }
 };
 
-// Deprecated: Blockchain interactions moved to frontend
-// This endpoint is kept for backward compatibility but returns empty
-const getUserStakes = async (req, res) => {
-  const { address } = req.params;
-  
-  if (!address) {
-    return res.status(400).json({
+const getUserStats = async (req, res) => {
+  try {
+    const { address } = req.params;
+    
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        error: 'User address is required'
+      });
+    }
+    
+    if (!ethers.isAddress(address)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid address format'
+      });
+    }
+    
+    const blockchain = require('../lib/blockchain');
+    const stats = await blockchain.getUserStats(address);
+    
+    if (stats === null) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch user stats from blockchain'
+      });
+    }
+    
+    res.json({
+      success: true,
+      stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting user stats:', error);
+    res.status(500).json({
       success: false,
-      error: 'User address is required',
-      predictions: []
+      error: error.message || 'Failed to get user stats'
     });
   }
-  
-  res.json({
-    success: true,
-    predictions: [],
-    count: 0,
-    message: 'This endpoint is deprecated. Use frontend blockchain calls (getStakesByUser) instead.',
-    timestamp: new Date().toISOString()
-  });
+};
+
+const getUserStakes = async (req, res) => {
+  try {
+    const { address } = req.params;
+    
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        error: 'User address is required',
+        stakes: []
+      });
+    }
+      
+    if (!ethers.isAddress(address)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid address format',
+        stakes: []
+      });
+    }
+      
+    const blockchain = require('../lib/blockchain');
+    const stakes = await blockchain.getUserStakesWithDetails(address);
+    
+    if (stakes === null) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch stakes from blockchain',
+        stakes: []
+      });
+    }
+    
+    res.json({
+      success: true,
+      stakes: stakes,
+      count: stakes.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting user stakes:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get user stakes',
+      stakes: []
+    });
+  }
 };
 
 // Deprecated: Blockchain interactions moved to frontend
@@ -132,6 +227,7 @@ const getClaimablePredictions = async (req, res) => {
 
 module.exports = {
   getStakeablePredictions,
+  getUserStats,
   getUserStakes,
   getClaimablePredictions,
   createPredictionAndRegister

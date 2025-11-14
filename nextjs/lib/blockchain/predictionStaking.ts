@@ -1,135 +1,177 @@
 export const PREDICTION_STAKING_ABI = [
   {
-    name: 'stakeOnPrediction',
+    name: 'createStake',
     type: 'function',
     stateMutability: 'payable',
-    inputs: [
-      { name: 'predictionId', type: 'uint256' },
-      { name: 'stakeUp', type: 'bool' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'claimRewards',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'predictionId', type: 'uint256' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'recordPrediction',
-    type: 'function',
-    stateMutability: 'nonpayable',
     inputs: [
       { name: 'cryptoId', type: 'string' },
       { name: 'currentPrice', type: 'uint256' },
       { name: 'predictedPrice', type: 'uint256' },
       { name: 'direction', type: 'string' },
-      { name: 'percentChange', type: 'uint256' }
+      { name: 'percentChange', type: 'uint256' },
+      { name: 'stakeUp', type: 'bool' },
+      { name: 'libraryId', type: 'uint256' }
     ],
-    outputs: [{ name: 'predictionId', type: 'uint256' }]
+    outputs: [{ name: 'stakeId', type: 'uint256' }]
   },
   {
-    name: 'verifyPrediction',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'predictionId', type: 'uint256' },
-      { name: 'actualPrice', type: 'uint256' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'getUserStakedPredictions',
+    name: 'getStakes',
     type: 'function',
     stateMutability: 'view',
-    inputs: [{ name: 'user', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256[]' }]
-  },
-  {
-    name: 'getStakesByUser',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'user', type: 'address' }],
+    inputs: [],
     outputs: [{
       name: '',
-      type: 'tuple[]',
+      type: 'tuple',
       components: [
-        { name: 'predictionId', type: 'uint256' },
+        {
+          name: 'stakes',
+          type: 'tuple[]',
+          components: [
+            { name: 'createdBy', type: 'address' },
+            { name: 'createdAt', type: 'uint256' },
+            { name: 'expiresAt', type: 'uint256' },
+            { name: 'libraryId', type: 'uint256' },
+            { name: 'rewarded', type: 'bool' },
+            { name: 'predictionCorrect', type: 'bool' },
+            { name: 'stakeUp', type: 'bool' },
         { name: 'cryptoId', type: 'string' },
         { name: 'currentPrice', type: 'uint256' },
         { name: 'predictedPrice', type: 'uint256' },
         { name: 'actualPrice', type: 'uint256' },
-        { name: 'timestamp', type: 'uint256' },
-        { name: 'verified', type: 'bool' },
-        { name: 'accuracy', type: 'uint256' },
         { name: 'direction', type: 'string' },
-        { name: 'percentChange', type: 'uint256' },
-        { name: 'expiresAt', type: 'uint256' },
-        { name: 'totalStakedUp', type: 'uint256' },
-        { name: 'totalStakedDown', type: 'uint256' },
-        { name: 'userStakeUp', type: 'uint256' },
-        { name: 'userStakeDown', type: 'uint256' }
+            { name: 'percentChange', type: 'uint256' }
+          ]
+        },
+        { name: 'totalStakes', type: 'uint256' },
+        { name: 'totalAmountStaked', type: 'uint256' }
       ]
     }]
   },
   {
-    name: 'getPrediction',
+    name: 'getStake',
     type: 'function',
     stateMutability: 'view',
-    inputs: [{ name: 'predictionId', type: 'uint256' }],
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
     outputs: [
-      { name: 'predictor', type: 'address' },
+      { name: 'createdBy', type: 'address' },
+      { name: 'createdAt', type: 'uint256' },
+      { name: 'expiresAt', type: 'uint256' },
+      { name: 'libraryId', type: 'uint256' },
+      { name: 'rewarded', type: 'bool' },
+      { name: 'predictionCorrect', type: 'bool' },
+      { name: 'stakeUp', type: 'bool' },
       { name: 'cryptoId', type: 'string' },
       { name: 'currentPrice', type: 'uint256' },
       { name: 'predictedPrice', type: 'uint256' },
       { name: 'actualPrice', type: 'uint256' },
-      { name: 'timestamp', type: 'uint256' },
-      { name: 'verified', type: 'bool' },
-      { name: 'accuracy', type: 'uint256' },
       { name: 'direction', type: 'string' },
       { name: 'percentChange', type: 'uint256' }
     ]
   },
   {
-    name: 'getPredictionExpiry',
+    name: 'getStakesByCreator',
     type: 'function',
     stateMutability: 'view',
-    inputs: [{ name: 'predictionId', type: 'uint256' }],
+    inputs: [{ name: 'creator', type: 'address' }],
+    outputs: [{
+      name: '',
+      type: 'tuple[]',
+      components: [
+        { name: 'createdBy', type: 'address' },
+        { name: 'createdAt', type: 'uint256' },
+        { name: 'expiresAt', type: 'uint256' },
+        { name: 'libraryId', type: 'uint256' },
+        { name: 'rewarded', type: 'bool' },
+        { name: 'stakeUp', type: 'bool' },
+        { name: 'cryptoId', type: 'string' },
+        { name: 'currentPrice', type: 'uint256' },
+        { name: 'predictedPrice', type: 'uint256' },
+        { name: 'direction', type: 'string' },
+        { name: 'percentChange', type: 'uint256' }
+      ]
+    }]
+  },
+  {
+    name: 'stakeOnIt',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'stakeId', type: 'uint256' },
+      { name: 'stakeUp', type: 'bool' }
+    ],
+    outputs: [{ name: 'stakerId', type: 'uint256' }]
+  },
+  {
+    name: 'getStakersByStake',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    outputs: [{
+      name: '',
+      type: 'tuple[]',
+      components: [
+        { name: 'id', type: 'uint256' },
+        { name: 'wallet', type: 'address' },
+        { name: 'stakeId', type: 'uint256' },
+        { name: 'amountInBNB', type: 'uint256' },
+        { name: 'createdAt', type: 'uint256' },
+        { name: 'stakeUp', type: 'bool' },
+        { name: 'rewarded', type: 'bool' }
+      ]
+    }]
+  },
+  {
+    name: 'stakeCount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
     outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    name: 'resolveStake',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'stakeId', type: 'uint256' },
+      { name: 'actualPrice', type: 'uint256' }
+    ],
+    outputs: []
+  },
+  {
+    name: 'getUserStats',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [
+      { name: 'wins', type: 'uint256' },
+      { name: 'losses', type: 'uint256' },
+      { name: 'totalStaked', type: 'uint256' },
+      { name: 'totalWon', type: 'uint256' },
+      { name: 'totalLost', type: 'uint256' },
+      { name: 'winRate', type: 'uint256' }
+    ]
   },
   {
     name: 'StakePlaced',
     type: 'event',
     inputs: [
-      { name: 'predictionId', type: 'uint256', indexed: true },
-      { name: 'staker', type: 'address', indexed: true },
+      { name: 'stakeId', type: 'uint256', indexed: true },
+      { name: 'createdBy', type: 'address', indexed: true },
       { name: 'amount', type: 'uint256' },
       { name: 'stakeUp', type: 'bool' },
       { name: 'timestamp', type: 'uint256' }
     ]
   },
   {
-    name: 'PredictionRecorded',
+    name: 'StakerJoined',
     type: 'event',
     inputs: [
-      { name: 'predictionId', type: 'uint256', indexed: true },
-      { name: 'predictor', type: 'address', indexed: true },
-      { name: 'cryptoId', type: 'string' },
-      { name: 'currentPrice', type: 'uint256' },
-      { name: 'predictedPrice', type: 'uint256' },
+      { name: 'stakerId', type: 'uint256', indexed: true },
+      { name: 'stakeId', type: 'uint256', indexed: true },
+      { name: 'wallet', type: 'address', indexed: true },
+      { name: 'amount', type: 'uint256' },
+      { name: 'stakeUp', type: 'bool' },
       { name: 'timestamp', type: 'uint256' }
-    ]
-  },
-  {
-    name: 'PredictionVerified',
-    type: 'event',
-    inputs: [
-      { name: 'predictionId', type: 'uint256', indexed: true },
-      { name: 'actualPrice', type: 'uint256' },
-      { name: 'accuracy', type: 'uint256' }
     ]
   }
 ] as const
