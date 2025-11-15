@@ -61,7 +61,7 @@ All submissions must be made via Dorahacks using "Submit Buidl".
 
 The project must demonstrate core features:
 - User interaction
-- Data handling (database), or AI integration
+- AI integration
 - Blockchain integration
 - Any Web3 integrations if applicable (encouraged but not required)
 - Revenue focused projects will be prioritized

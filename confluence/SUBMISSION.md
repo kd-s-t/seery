@@ -16,13 +16,6 @@
 - ✅ Betting interface
 - ✅ Market browsing
 
-#### Database
-- ✅ SQLite database (`database.js`)
-- ✅ Markets table
-- ✅ Bets table
-- ✅ AI resolutions table
-- ✅ All CRUD operations implemented
-
 #### AI Integration
 - ✅ AI market generation (`ai-service.js`)
 - ✅ AI-assisted resolution
@@ -44,7 +37,6 @@
 
 ### C) Tests
 - ✅ Test suite (`tests/test.js`)
-- ✅ Database tests
 - ✅ AI service tests
 - ✅ API endpoint tests
 

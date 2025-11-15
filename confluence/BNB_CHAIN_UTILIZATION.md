@@ -447,7 +447,6 @@ class EventListener {
     this.contract.on("MarketCreated", (marketId, creator, question, event) => {
       console.log(`New market created: ${marketId} by ${creator}`);
       // Emit to frontend via WebSocket
-      // Update database
       // Notify users
     });
 

@@ -130,7 +130,6 @@ npm test
 expressjs/
 ├── server.js         # Express API server
 ├── ai-service.js     # OpenAI integration
-├── database.js       # SQLite database operations
 ├── prompts.js        # AI prompt templates
 ├── lib/              # Library modules
 │   ├── binance/      # BNB Chain & Binance integration

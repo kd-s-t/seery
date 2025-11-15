@@ -10,7 +10,7 @@
                           ↕ HTTP/REST API
 ┌─────────────────────────────────────────────────────────┐
 │                    Backend Layer                         │
-│  Node.js + Express.js + SQLite                          │
+│  Node.js + Express.js                                    │
 └─────────────────────────────────────────────────────────┘
                           ↕
 ┌─────────────────────────────────────────────────────────┐
@@ -27,11 +27,6 @@
 - **dotenv** (v16.3.1) - Environment variable management
 - **CORS** (v2.8.5) - Cross-origin resource sharing
 - **axios** (v1.6.2) - HTTP client for external APIs
-
-### **Database**
-- **SQLite** - Embedded database
-- **better-sqlite3** (v9.2.2) - Fast, synchronous SQLite driver
-- **sqlite3** (v5.1.6) - SQLite bindings
 
 ### **Blockchain**
 - **Solidity** (v0.8.20) - Smart contract language
@@ -83,8 +78,7 @@ server.js
 ├── REST API endpoints
 ├── Market management
 ├── Betting operations
-├── AI integration
-└── Database operations
+└── AI integration
 ```
 
 **Endpoints:**
@@ -93,20 +87,7 @@ server.js
 - `/api/markets/:id/resolve` - Resolve markets
 - `/api/ai/*` - AI-powered features
 
-### 3. **Database Layer** (Off-Chain)
-```
-database.js (SQLite)
-├── markets table
-├── bets table
-└── ai_resolutions table
-```
-
-**Features:**
-- Fast, embedded database
-- No external dependencies
-- Perfect for MVP/prototype
-
-### 4. **AI Service Layer**
+### 3. **AI Service Layer**
 ```
 ai-service.js
 ├── generateMarketsFromNews()
@@ -118,7 +99,7 @@ ai-service.js
 - GPT-3.5-turbo (default, cost-effective)
 - GPT-4-turbo (optional, higher quality)
 
-### 5. **Blockchain Integration Layer**
+### 4. **Blockchain Integration Layer**
 ```
 blockchain.js
 ├── Contract interaction
@@ -132,7 +113,7 @@ blockchain.js
 - BNB Mainnet (Chain ID: 56)
 - Hardhat Local (for testing)
 
-### 6. **Frontend Layer**
+### 5. **Frontend Layer**
 ```
 public/index.html
 ├── Market browsing
@@ -152,9 +133,7 @@ public/index.html
 
 ### Market Creation Flow
 ```
-User → Frontend → API → Database
-                    ↓
-                 Blockchain (optional)
+User → Frontend → API → Blockchain
                     ↓
                  AI Service (optional)
 ```
@@ -162,13 +141,11 @@ User → Frontend → API → Database
 ### Betting Flow
 ```
 User → Frontend → MetaMask → BNB Chain
-                    ↓
-                 API → Database
 ```
 
 ### Resolution Flow
 ```
-Creator/AI → API → AI Service → Database
+Creator/AI → API → AI Service
                     ↓
                  Blockchain → Payouts
 ```
@@ -208,7 +185,6 @@ npm run deploy       # Deploy to BNB Chain
 |------------|----------------|
 | **Node.js** | JavaScript everywhere, fast development |
 | **Express.js** | Lightweight, flexible, widely used |
-| **SQLite** | No setup needed, perfect for MVP |
 | **Solidity** | Standard for BNB Chain/EVM chains |
 | **Hardhat** | Best tooling, great testing, fast |
 | **ethers.js** | Modern, well-maintained, v6 API |
@@ -226,12 +202,11 @@ npm run deploy       # Deploy to BNB Chain
 ## 📈 Scalability Path
 
 **Current (MVP):**
-- SQLite for data
 - Single server
 - Direct OpenAI calls
+- On-chain data storage
 
 **Future Scaling:**
-- PostgreSQL/MySQL for production
 - Redis for caching
 - Queue system for AI requests
 - CDN for frontend
@@ -258,7 +233,6 @@ npm run deploy       # Deploy to BNB Chain
 
 ✅ **BNB Chain** - Required blockchain  
 ✅ **AI Integration** - OpenAI for market generation  
-✅ **Database** - SQLite for data persistence  
 ✅ **User Interaction** - Web interface  
 ✅ **Blockchain Integration** - Full on-chain functionality  
 ✅ **Revenue Model** - Platform fees implemented  

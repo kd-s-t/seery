@@ -1,105 +1,4 @@
-const db = require('../database');
 const openai = require('../lib/openai');
-
-// Test database operations
-function testDatabase() {
-  console.log('🧪 Testing Database Operations...\n');
-  
-  // Use a unique test market ID to avoid conflicts
-  const testMarketId = Math.floor(Date.now() / 1000);
-  
-  try {
-    // Clean up any existing test data with this ID (in case of retry)
-    try {
-      const existingMarket = db.markets.get(testMarketId);
-      if (existingMarket) {
-        db.db.prepare('DELETE FROM bets WHERE market_id = ?').run(testMarketId);
-        db.db.prepare('DELETE FROM markets WHERE market_id = ?').run(testMarketId);
-      }
-    } catch (cleanupError) {
-      // Ignore cleanup errors
-    }
-    
-    // Test market creation
-    const marketData = {
-      marketId: testMarketId,
-      creatorAddress: '0x1234567890123456789012345678901234567890',
-      question: 'Will Bitcoin reach $100k by end of 2024?',
-      outcomes: ['Yes', 'No'],
-      endTime: Math.floor(Date.now() / 1000) + 259200 // 3 days
-    };
-    
-    db.markets.create(marketData);
-    console.log('✅ Market created successfully');
-    
-    // Test market retrieval
-    const market = db.markets.get(testMarketId);
-    if (market && market.question === marketData.question) {
-      console.log('✅ Market retrieved successfully');
-    } else {
-      throw new Error('Market retrieval failed');
-    }
-    
-    // Test bet creation
-    const betData = {
-      marketId: testMarketId,
-      userAddress: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-      outcome: 0,
-      amount: 0.1
-    };
-    
-    db.bets.create(betData);
-    console.log('✅ Bet created successfully');
-    
-    // Test bet retrieval
-    const bets = db.bets.getMarketBets(testMarketId);
-    if (bets.length > 0) {
-      console.log('✅ Bets retrieved successfully');
-    } else {
-      throw new Error('Bet retrieval failed');
-    }
-    
-    // Test outcome total
-    const total = db.bets.getOutcomeTotal(testMarketId, 0);
-    if (total === 0.1) {
-      console.log('✅ Outcome total calculated correctly');
-    } else {
-      throw new Error('Outcome total calculation failed');
-    }
-    
-    // Test market resolution
-    db.markets.resolve(testMarketId, 0);
-    const resolvedMarket = db.markets.get(testMarketId);
-    if (resolvedMarket.resolved && resolvedMarket.winning_outcome === 0) {
-      console.log('✅ Market resolved successfully');
-    } else {
-      throw new Error('Market resolution failed');
-    }
-    
-    console.log('\n✅ All database tests passed!\n');
-    
-    // Clean up test data
-    try {
-      db.db.prepare('DELETE FROM bets WHERE market_id = ?').run(testMarketId);
-      db.db.prepare('DELETE FROM markets WHERE market_id = ?').run(testMarketId);
-    } catch (cleanupError) {
-      // Ignore cleanup errors
-    }
-    
-    return true;
-  } catch (error) {
-    // Clean up test data on error
-    try {
-      db.db.prepare('DELETE FROM bets WHERE market_id = ?').run(testMarketId);
-      db.db.prepare('DELETE FROM markets WHERE market_id = ?').run(testMarketId);
-    } catch (cleanupError) {
-      // Ignore cleanup errors
-    }
-    
-    console.error('❌ Database test failed:', error.message);
-    return false;
-  }
-}
 
 // Test AI service (requires OPENAI_API_KEY)
 async function testAIService() {
@@ -191,19 +90,17 @@ async function runTests() {
   console.log('='.repeat(50) + '\n');
   
   const results = {
-    database: testDatabase(),
     ai: await testAIService(),
     api: await testAPI()
   };
   
   console.log('='.repeat(50));
   console.log('\n📊 Test Results:');
-  console.log(`   Database: ${results.database ? '✅ PASS' : '❌ FAIL'}`);
   console.log(`   AI Service: ${results.ai ? '✅ PASS' : '❌ FAIL'}`);
   console.log(`   API: ${results.api ? '✅ PASS' : '⚠️  SKIPPED'}`);
   console.log('\n');
   
-  if (results.database && results.ai) {
+  if (results.ai) {
     console.log('✅ Core functionality is working!');
     process.exit(0);
   } else {
@@ -220,5 +117,5 @@ if (require.main === module) {
   });
 }
 
-module.exports = { testDatabase, testAIService, testAPI };
+module.exports = { testAIService, testAPI };
 
