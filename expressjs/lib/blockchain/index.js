@@ -5,9 +5,9 @@ require('dotenv').config();
 const BNB_TESTNET_RPC = process.env.BNB_TESTNET_RPC;
 const BNB_MAINNET_RPC = process.env.BNB_MAINNET_RPC;
 const RPC = process.env.BLOCKCHAIN_RPC;
-const NETWORK = process.env.BLOCKCHAIN_NETWORK;
+const NETWORK = process.env.BLOCKCHAIN_NETWORK || process.env.NETWORK;
 // Main contract address (combines Library + Stakes functionality)
-const MAIN_CONTRACT_ADDRESS = process.env.BLOCKCHAIN_CONTRACT_ADDRESS || process.env.MAIN_CONTRACT_ADDRESS || process.env.PREDICTION_STAKING_ADDRESS;
+const MAIN_CONTRACT_ADDRESS = process.env.BLOCKCHAIN_CONTRACT_ADDRESS || process.env.MAIN_CONTRACT_ADDRESS || process.env.PREDICTION_STAKING_ADDRESS || process.env.CONTRACT_ADDRESS;
 const PRIVATE_KEY = process.env.BLOCKCHAIN_PRIVATE_KEY || process.env.PRIVATE_KEY;
 
 // Combined ABI for Main contract (includes both library and staking functions)
@@ -655,10 +655,27 @@ async function getUserStats(userAddress) {
   try {
     const contract = getMainContract();
     if (!contract) {
+      console.error('Contract not initialized. Check MAIN_CONTRACT_ADDRESS in .env');
+      return null;
+    }
+    
+    if (!MAIN_CONTRACT_ADDRESS) {
+      console.error('MAIN_CONTRACT_ADDRESS not set in environment variables');
       return null;
     }
     
     const result = await contract.getUserStats(userAddress);
+    
+    if (!result) {
+      return {
+        wins: '0',
+        losses: '0',
+        totalStaked: '0',
+        totalWon: '0',
+        totalLost: '0',
+        winRate: '0'
+      };
+    }
     
     return {
       wins: result[0].toString(),
@@ -670,6 +687,24 @@ async function getUserStats(userAddress) {
     };
   } catch (error) {
     console.error('Error getting user stats:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      address: userAddress,
+      contractAddress: MAIN_CONTRACT_ADDRESS
+    });
+    
+    if (error.code === 'CALL_EXCEPTION' || error.message?.includes('revert')) {
+      return {
+        wins: '0',
+        losses: '0',
+        totalStaked: '0',
+        totalWon: '0',
+        totalLost: '0',
+        winRate: '0'
+      };
+    }
+    
     return null;
   }
 }

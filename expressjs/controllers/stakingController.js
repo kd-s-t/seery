@@ -129,12 +129,20 @@ const getUserStats = async (req, res) => {
     }
     
     const blockchain = require('../lib/blockchain');
+    
+    if (!process.env.BLOCKCHAIN_CONTRACT_ADDRESS && !process.env.MAIN_CONTRACT_ADDRESS && !process.env.PREDICTION_STAKING_ADDRESS && !process.env.CONTRACT_ADDRESS) {
+      return res.status(500).json({
+        success: false,
+        error: 'Contract address not configured. Please set BLOCKCHAIN_CONTRACT_ADDRESS, MAIN_CONTRACT_ADDRESS, PREDICTION_STAKING_ADDRESS, or CONTRACT_ADDRESS in your .env file'
+      });
+    }
+    
     const stats = await blockchain.getUserStats(address);
     
     if (stats === null) {
       return res.status(500).json({
         success: false,
-        error: 'Failed to fetch user stats from blockchain'
+        error: 'Failed to fetch user stats from blockchain. Check contract address and RPC connection.'
       });
     }
     

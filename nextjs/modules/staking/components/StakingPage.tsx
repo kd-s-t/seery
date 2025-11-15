@@ -297,11 +297,11 @@ export default function StakingPage() {
 
             {!contractLoading && !predictionStakingAddress && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                Contract address not configured. Please set PREDICTION_STAKING_ADDRESS in your backend .env file.
+                Contract address not configured. Please set NEXT_PUBLIC_CONTRACT_ADDRESS in nextjs/.env.local file.
               </Alert>
             )}
 
-            {predictionsError && (
+            {predictionsError && !(!contractLoading && !predictionStakingAddress) && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {predictionsError}
               </Alert>
@@ -320,7 +320,7 @@ export default function StakingPage() {
                   </Button>
                 }
               >
-                No stakeable predictions available. Predictions are created when you refresh the market page. Click the refresh button on the market page to create new predictions.
+                No stakeable predictions available. Go to the market page and refresh to create new predictions.
               </Alert>
             )}
 
