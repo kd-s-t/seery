@@ -200,10 +200,10 @@ Each module follows a consistent structure:
 ### Backend API
 
 - **Express.js** server with RESTful API endpoints
-- **OpenAI** integration for price predictions
+- **OpenAI** integration for price predictions (paid)
 - **BNB Chain** integration using ethers.js
 - **CoinGecko** API for real-time crypto prices
-- **TheNewsAPI** for crypto news aggregation
+- **TheNewsAPI** for crypto news aggregation (paid)
 
 ### On-Chain Storage
 
