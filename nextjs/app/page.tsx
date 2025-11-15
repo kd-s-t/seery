@@ -97,13 +97,13 @@ export default function Home() {
               Prediction staking contract address is not configured.
             </Typography>
             <Typography variant="body2" component="pre" sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 1, fontSize: '0.85rem', overflow: 'auto' }}>
-{`1. Set NEXT_PUBLIC_CONTRACT_ADDRESS in nextjs/.env.local:
+{`Set NEXT_PUBLIC_CONTRACT_ADDRESS environment variable:
    NEXT_PUBLIC_CONTRACT_ADDRESS=0x... (your deployed contract address)
 
-2. Restart the Next.js dev server:
-   npm run dev
+For local development, add to .env.local or .env file.
+For production, set as environment variable in your deployment.
 
-3. Refresh this page`}
+After setting, restart the server and refresh this page.`}
             </Typography>
           </Box>
         )}

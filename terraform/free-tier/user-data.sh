@@ -98,6 +98,7 @@ services:
     environment:
       - NEXT_PUBLIC_SEERY_BACKEND_DOMAIN=$$BACKEND_DOMAIN
       - SEERY_BACKEND_DOMAIN=$$BACKEND_DOMAIN
+      - NEXT_PUBLIC_CONTRACT_ADDRESS=$${CONTRACT_ADDRESS}
       - PORT=3015
       - NODE_ENV=production
     container_name: seery-testnet-fe

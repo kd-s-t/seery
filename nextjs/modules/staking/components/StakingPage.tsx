@@ -297,7 +297,7 @@ export default function StakingPage() {
 
             {!contractLoading && !predictionStakingAddress && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                Contract address not configured. Please set NEXT_PUBLIC_CONTRACT_ADDRESS in nextjs/.env.local file.
+                Contract address not configured. Please set NEXT_PUBLIC_CONTRACT_ADDRESS environment variable.
               </Alert>
             )}
 

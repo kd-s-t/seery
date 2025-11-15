@@ -3,8 +3,8 @@ aws_region  = "us-east-1"
 environment = "dev"
 
 # Instance Configuration
-instance_type      = "t2.micro"  # Free tier eligible
-key_name           = "seer-free-tier"  # Your EC2 Key Pair name
+instance_type       = "t3.small"  # 2GB RAM - needed for Next.js build (t2.micro for free tier, but may not have enough memory)
+key_name            = "your-ec2-key-pair-name"  # Your EC2 Key Pair name
 allocate_elastic_ip = false      # Set to true for static IP (costs ~$0.005/hour if not attached)
 
 # SSH Access (IMPORTANT: Restrict to your IP in production!)
@@ -14,11 +14,17 @@ ssh_allowed_cidrs = ["0.0.0.0/0"]  # WARNING: Change this to your IP, e.g., ["1.
 # OpenAI API key (optional - leave empty to disable AI features)
 # Without it, the app works but AI features are disabled
 # With gpt-3.5-turbo, costs ~$1-2/month for light usage
-openai_api_key   = ""  # Optional: "sk-your-openai-api-key-here" or leave empty
-network          = "testnet"  # or "mainnet"
-bnb_testnet_rpc  = "https://data-seed-prebsc-1-s1.binance.org:8545"
-bnb_mainnet_rpc  = "https://bsc-dataseed.binance.org/"
-contract_address = "0x..."  # Your deployed PredictionMarket contract address
+openai_api_key              = ""  # Optional: "sk-your-openai-api-key-here" or leave empty
+openai_model                = "gpt-3.5-turbo"  # or "gpt-4-turbo" for better results
+blockchain_network          = "testnet"  # or "mainnet"
+blockchain_rpc              = "https://data-seed-prebsc-1-s1.binance.org:8545"  # BNB Chain testnet RPC
+blockchain_contract_address = "0x..."  # Your deployed PredictionMarket contract address
+blockchain_wallet_address   = ""  # Optional: Wallet address for blockchain transactions
+blockchain_private_key       = ""  # Optional: Private key for automated transactions (keep secure!)
+binance_api_key             = ""  # Optional: Binance API key for trading
+binance_secret_key          = ""  # Optional: Binance secret key for trading
+binance_testnet             = true  # Use Binance testnet (true/false)
+thenews_api_key             = ""  # Optional: TheNewsAPI key for news feed
 
 # Repository Configuration (optional)
 # Leave empty to skip automatic deployment
