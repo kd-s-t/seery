@@ -10,6 +10,15 @@ function getApiBaseUrl(): string {
   console.log('All process.env:', allEnv)
   const envValue = process.env.NEXT_PUBLIC_SEERY_BACKEND_DOMAIN || ''
   console.log('NEXT_PUBLIC_SEERY_BACKEND_DOMAIN:', envValue)
+  
+  if (!envValue) {
+    return ''
+  }
+  
+  if (envValue.endsWith('/api')) {
+    return envValue.slice(0, -4)
+  }
+  
   return envValue
 }
 

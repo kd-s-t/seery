@@ -13,6 +13,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NEXT_PUBLIC_SEERY_BACKEND_DOMAIN
+ENV NEXT_PUBLIC_SEERY_BACKEND_DOMAIN=$NEXT_PUBLIC_SEERY_BACKEND_DOMAIN
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
