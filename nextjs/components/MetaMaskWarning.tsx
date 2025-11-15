@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert } from '@mui/material'
+import { Alert, Link } from '@mui/material'
 import { AccountBalanceWallet } from '@mui/icons-material'
 
 interface MetaMaskWarningProps {
@@ -18,7 +18,11 @@ export default function MetaMaskWarning({ show, onClose }: MetaMaskWarningProps)
       sx={{ mb: 3 }}
       icon={<AccountBalanceWallet />}
     >
-      MetaMask not found. Please install MetaMask.
+      MetaMask not found. Please{' '}
+      <Link href="https://metamask.io/" target="_blank" rel="noopener noreferrer" sx={{ fontWeight: 'bold' }}>
+        install MetaMask
+      </Link>
+      .
     </Alert>
   )
 }
