@@ -44,10 +44,15 @@ function initBlockchain(network = NETWORK) {
     if (network === 'localhost' || network === 'local') {
       rpcUrl = RPC;
     } else if (network === 'mainnet') {
-      rpcUrl = BNB_MAINNET_RPC;
+      rpcUrl = BNB_MAINNET_RPC || RPC;
     } else {
-      rpcUrl = BNB_TESTNET_RPC;
+      rpcUrl = BNB_TESTNET_RPC || RPC;
     }
+    
+    if (!rpcUrl) {
+      throw new Error('No RPC URL configured. Set BNB_TESTNET_RPC, BNB_MAINNET_RPC, or BLOCKCHAIN_RPC');
+    }
+    
     provider = new ethers.JsonRpcProvider(rpcUrl);
     
     if (MAIN_CONTRACT_ADDRESS) {
