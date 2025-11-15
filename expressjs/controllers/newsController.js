@@ -17,7 +17,7 @@ const getTrendingNews = async (req, res) => {
         metadata: JSON.stringify(item)
       }));
       
-      blockchain.createLibraryOnChain(
+      const blockchainPromise = blockchain.createLibraryOnChain(
         'news',
         ['trending', 'crypto'],
         libraryItems,
@@ -26,16 +26,34 @@ const getTrendingNews = async (req, res) => {
         if (libraryResult) {
           console.log('News library created on-chain:', libraryResult.libraryId, libraryResult.txHash);
         }
+        return libraryResult;
       }).catch(error => {
         console.error('Error storing news to library on-chain:', error);
+        return null;
+      });
+      
+      let libraryResult = null;
+      try {
+        libraryResult = await Promise.race([
+          blockchainPromise,
+          new Promise(resolve => setTimeout(() => resolve(null), 2000))
+        ]);
+      } catch (error) {
+        console.error('Error waiting for blockchain result:', error);
+      }
+      
+      blockchainPromise.then(result => {
+        if (result && !libraryResult) {
+          console.log('Blockchain transaction completed after response:', result.libraryId, result.txHash);
+        }
       });
       
       return res.json({
         success: true,
         news: newsResult.news,
         count: newsResult.news.length,
-        libraryId: null,
-        txHash: null,
+        libraryId: libraryResult?.libraryId || null,
+        txHash: libraryResult?.txHash || null,
         timestamp: new Date().toISOString()
       });
     }
