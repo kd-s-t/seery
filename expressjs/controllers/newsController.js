@@ -17,24 +17,25 @@ const getTrendingNews = async (req, res) => {
         metadata: JSON.stringify(item)
       }));
       
-      let libraryResult = null;
-      try {
-        libraryResult = await blockchain.createLibraryOnChain(
-          'news',
-          ['trending', 'crypto'],
-          libraryItems,
-          'newspai'
-        );
-      } catch (error) {
+      blockchain.createLibraryOnChain(
+        'news',
+        ['trending', 'crypto'],
+        libraryItems,
+        'newspai'
+      ).then(libraryResult => {
+        if (libraryResult) {
+          console.log('News library created on-chain:', libraryResult.libraryId, libraryResult.txHash);
+        }
+      }).catch(error => {
         console.error('Error storing news to library on-chain:', error);
-      }
+      });
       
       return res.json({
         success: true,
         news: newsResult.news,
         count: newsResult.news.length,
-        libraryId: libraryResult?.libraryId || null,
-        txHash: libraryResult?.txHash || null,
+        libraryId: null,
+        txHash: null,
         timestamp: new Date().toISOString()
       });
     }
