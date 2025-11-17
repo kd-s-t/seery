@@ -82,7 +82,7 @@ export default function MarketPage() {
           show={showWarning && !isConnected}
           onClose={() => setShowWarning(false)}
         />
-        
+
         <Header
           address={address}
           isConnected={isConnected}
@@ -90,10 +90,6 @@ export default function MarketPage() {
           onConnect={onConnect}
           onDisconnect={handleDisconnect}
         />
-
-        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mt: 4, mb: 2 }}>
-          Market
-        </Typography>
 
         <CryptoTable />
 
