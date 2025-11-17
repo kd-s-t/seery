@@ -41,10 +41,10 @@ export default function Header({
   const { bnbPrice, isLoading: priceLoading } = useAppSelector((state) => state.price)
   const dispatch = useAppDispatch()
   const [localhostBalance, setLocalhostBalance] = useState<string | null>(null)
-  const publicClient = usePublicClient({ 
+  const publicClient = usePublicClient({
     chainId: isLocalhost ? localhost.id : undefined,
   })
-  
+
   const { data: balance, refetch: refetchBalance } = useBalance({
     address: address as `0x${string}` | undefined,
     chainId: chainId === localhost.id ? localhost.id : chainId,
@@ -57,10 +57,10 @@ export default function Header({
       retry: false,
     },
   })
-  
+
   useEffect(() => {
     let hasFailed = false
-    
+
     const fetchLocalhostBalance = async () => {
       if (hasFailed || !address || !publicClient || !isLocalhost) {
         if (!isLocalhost) {
@@ -68,32 +68,32 @@ export default function Header({
         }
         return
       }
-      
-        try {
-          const bal = await publicClient.getBalance({
-            address: address as `0x${string}`,
-          })
-          const formatted = (Number(bal) / 1e18).toFixed(18)
-          setLocalhostBalance(formatted)
+
+      try {
+        const bal = await publicClient.getBalance({
+          address: address as `0x${string}`,
+        })
+        const formatted = (Number(bal) / 1e18).toFixed(18)
+        setLocalhostBalance(formatted)
         hasFailed = false
-        } catch (error: any) {
-        const isConnectionError = 
-          error?.message?.includes('Failed to fetch') || 
+      } catch (error: any) {
+        const isConnectionError =
+          error?.message?.includes('Failed to fetch') ||
           error?.message?.includes('ECONNREFUSED') ||
           error?.message?.includes('connection refused') ||
           error?.message?.includes('signal timed out') ||
           error?.code === 'ECONNREFUSED' ||
           error?.name === 'AbortError' ||
           error?.name === 'TimeoutError'
-        
+
         if (isConnectionError) {
           hasFailed = true
-            setLocalhostBalance(null)
+          setLocalhostBalance(null)
           return
         }
       }
     }
-    
+
     if (isLocalhost) {
       fetchLocalhostBalance()
       const interval = setInterval(() => {
@@ -106,7 +106,7 @@ export default function Header({
       setLocalhostBalance(null)
     }
   }, [address, publicClient, isLocalhost])
-  
+
   const displayBalance = useMemo(() => {
     if (localhostBalance && address) {
       return {
@@ -118,7 +118,7 @@ export default function Header({
     }
     return balance
   }, [localhostBalance, balance, address])
-  
+
   const formattedBalance = useMemo(() => {
     if (displayBalance && bnbPrice) {
       const usdValue = parseFloat(displayBalance.formatted) * bnbPrice
@@ -126,18 +126,18 @@ export default function Header({
     }
     return null
   }, [displayBalance, bnbPrice, currency, formatPrice])
-  
+
   const showFormattedBalance = formattedBalance !== null && displayBalance !== null
-  
+
   const isNewsActive = pathname === '/news'
   const isMarketActive = pathname === '/market'
   const isStakingActive = pathname === '/staking'
   const isProfileActive = pathname === '/profile'
   const isAnalyticsActive = pathname === '/analytics'
-  
+
   const ADMIN_ADDRESS = '0x4D3EbC244B5d875F8b284e54e76acBb7Eaf1afAe'
   const isAdmin = address && address.toLowerCase() === ADMIN_ADDRESS.toLowerCase()
-  
+
   const open = Boolean(anchorEl)
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export default function Header({
       }
     }, 300000)
 
-      return () => clearInterval(interval)
+    return () => clearInterval(interval)
   }, [isConnected, dispatch])
 
   const handleLogoClick = () => {
@@ -217,20 +217,21 @@ export default function Header({
 
   return (
     <>
-      <AppBar 
-        position="static" 
-        sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      <AppBar
+        position="static"
+        sx={{
+          background: '#fff',
+          borderRadius: '0.75rem',
           mb: 3
         }}
       >
         <Toolbar>
           <Box
             component="img"
-            src="/seerylogov2.png"
+            src="/serrylogo.png"
             alt="Seery"
             onClick={handleLogoClick}
-            sx={{ 
+            sx={{
               cursor: 'pointer',
               userSelect: 'none',
               mr: 3,
@@ -238,37 +239,44 @@ export default function Header({
               width: 'auto',
               objectFit: 'contain',
               backgroundColor: 'transparent',
-              mixBlendMode: 'screen',
               filter: 'brightness(1.1)',
               '&:hover': {
                 opacity: 0.8
               }
             }}
           />
-          
-          <Stack 
-            direction="row" 
-            spacing={1.5} 
+
+          <Stack
+            direction="row"
+            spacing={1.5}
             alignItems="center"
             sx={{ mr: 2 }}
           >
             <Button
-              color="inherit"
               variant={isNewsActive ? "contained" : "text"}
               size="small"
               startIcon={<Article />}
               onClick={handleNewsClick}
-              sx={{ 
+              sx={{
                 minWidth: { xs: 80, sm: 100 },
                 fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                borderRadius: '1rem',
                 ...(isNewsActive ? {
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+                  bgcolor: '#7248d6',
+                  color: 'white',
+                  '& .MuiSvgIcon-root': {
+                    color: 'white'
+                  },
                   '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.3)'
+                    bgcolor: '#5d3ab0'
                   }
                 } : {
+                  color: 'black',
+                  '& .MuiSvgIcon-root': {
+                    color: 'black'
+                  },
                   '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                    bgcolor: 'rgba(0, 0, 0, 0.04)'
                   }
                 })
               }}
@@ -277,46 +285,62 @@ export default function Header({
             </Button>
             {mounted && isConnected && (
               <>
-              <Button
-                color="inherit"
-                variant={isMarketActive ? "contained" : "text"}
-                size="small"
-                startIcon={<TrendingUp />}
-                onClick={handleMarketClick}
-                sx={{ 
-                  minWidth: { xs: 80, sm: 100 },
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  ...(isMarketActive ? {
-                    bgcolor: 'rgba(255, 255, 255, 0.2)',
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.3)'
-                    }
-                  } : {
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.1)'
-                    }
-                  })
-                }}
-              >
-                Market
-              </Button>
                 <Button
-                  color="inherit"
+                  variant={isMarketActive ? "contained" : "text"}
+                  size="small"
+                  startIcon={<TrendingUp />}
+                  onClick={handleMarketClick}
+                  sx={{
+                    minWidth: { xs: 80, sm: 100 },
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    borderRadius: '1rem',
+                    ...(isMarketActive ? {
+                      bgcolor: '#7248d6',
+                      color: 'white',
+                      '& .MuiSvgIcon-root': {
+                        color: 'white'
+                      },
+                      '&:hover': {
+                        bgcolor: '#5d3ab0'
+                      }
+                    } : {
+                      color: 'black',
+                      '& .MuiSvgIcon-root': {
+                        color: 'black'
+                      },
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.04)'
+                      }
+                    })
+                  }}
+                >
+                  Market
+                </Button>
+                <Button
                   variant={isStakingActive ? "contained" : "text"}
                   size="small"
                   startIcon={<AccountBalance />}
                   onClick={handleStakingClick}
-                  sx={{ 
+                  sx={{
                     minWidth: { xs: 80, sm: 100 },
                     fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    borderRadius: '1rem',
                     ...(isStakingActive ? {
-                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      bgcolor: '#7248d6',
+                      color: 'white',
+                      '& .MuiSvgIcon-root': {
+                        color: 'white'
+                      },
                       '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.3)'
+                        bgcolor: '#5d3ab0'
                       }
                     } : {
+                      color: 'black',
+                      '& .MuiSvgIcon-root': {
+                        color: 'black'
+                      },
                       '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.1)'
+                        bgcolor: 'rgba(0, 0, 0, 0.04)'
                       }
                     })
                   }}
@@ -325,22 +349,30 @@ export default function Header({
                 </Button>
                 {isAdmin && (
                   <Button
-                    color="inherit"
                     variant={isAnalyticsActive ? "contained" : "text"}
                     size="small"
                     startIcon={<Assessment />}
                     onClick={handleAnalyticsClick}
-                    sx={{ 
+                    sx={{
                       minWidth: { xs: 80, sm: 100 },
                       fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      borderRadius: '1rem',
                       ...(isAnalyticsActive ? {
-                        bgcolor: 'rgba(255, 255, 255, 0.2)',
+                        bgcolor: '#7248d6',
+                        color: 'white',
+                        '& .MuiSvgIcon-root': {
+                          color: 'white'
+                        },
                         '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.3)'
+                          bgcolor: '#5d3ab0'
                         }
                       } : {
+                        color: 'black',
+                        '& .MuiSvgIcon-root': {
+                          color: 'black'
+                        },
                         '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.1)'
+                          bgcolor: 'rgba(0, 0, 0, 0.04)'
                         }
                       })
                     }}
@@ -351,14 +383,14 @@ export default function Header({
               </>
             )}
           </Stack>
-          
+
           <Box sx={{ flexGrow: 1 }} />
-          
-          <Stack 
-            direction="row" 
-            spacing={1.5} 
-            alignItems="center" 
-            sx={{ 
+
+          <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
+            sx={{
               mr: { xs: 0, sm: 2 },
               flexWrap: { xs: 'wrap', sm: 'nowrap' },
               justifyContent: { xs: 'flex-end', sm: 'flex-start' }
@@ -377,20 +409,21 @@ export default function Header({
                 sx={{
                   height: 28,
                   '& .MuiToggleButton-root': {
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    color: 'black',
+                    borderColor: '#e0e0e0',
+                    bgcolor: 'white',
                     fontSize: '0.7rem',
                     padding: '4px 12px',
                     minWidth: 'auto',
                     '&.Mui-selected': {
                       color: 'white',
-                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      bgcolor: '#7248d6',
                       '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.3)',
+                        bgcolor: '#5d3ab0',
                       },
                     },
                     '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      bgcolor: 'rgba(0, 0, 0, 0.04)',
                     },
                   },
                 }}
@@ -417,7 +450,8 @@ export default function Header({
                     sx={{
                       width: 32,
                       height: 32,
-                      bgcolor: 'rgba(255, 255, 255, 0.2)'
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      border: '2px solid #7248d6'
                     }}
                   />
                 </IconButton>
@@ -434,7 +468,7 @@ export default function Header({
                     horizontal: 'right',
                   }}
                 >
-                  <MenuItem 
+                  <MenuItem
                     onClick={handleNavigateToProfile}
                     sx={{
                       justifyContent: 'flex-start',
@@ -464,7 +498,7 @@ export default function Header({
                         <IconButton
                           size="small"
                           onClick={handleCopyAddress}
-                          sx={{ 
+                          sx={{
                             color: '#000000',
                             p: 0.5,
                             '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
@@ -475,7 +509,7 @@ export default function Header({
                         <IconButton
                           size="small"
                           onClick={handleShowQR}
-                          sx={{ 
+                          sx={{
                             color: '#000000',
                             p: 0.5,
                             '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
@@ -509,7 +543,7 @@ export default function Header({
                           <>
                             <span>{parseFloat(displayBalance.formatted).toFixed(4)} {displayBalance.symbol || 'BNB'}</span>
                             {showFormattedBalance && (
-                            <span>({formattedBalance})</span>
+                              <span>({formattedBalance})</span>
                             )}
                             {!showFormattedBalance && priceLoading && (
                               <span style={{ opacity: 0.5 }}>(loading...)</span>
@@ -521,9 +555,9 @@ export default function Header({
                       </Typography>
                     </Box>
                   </Box>
-                  <MenuItem 
+                  <MenuItem
                     onClick={() => { handleProfileClose(); onDisconnect(); }}
-                    sx={{ 
+                    sx={{
                       justifyContent: 'center',
                       color: '#d32f2f',
                       '&:hover': {
@@ -595,11 +629,11 @@ export default function Header({
                 }
                 onClick={onConnect}
                 disabled={mounted && isConnecting}
-                sx={{ 
+                sx={{
                   minWidth: { xs: 80, sm: 100 },
                   fontSize: { xs: '0.75rem', sm: '0.875rem' },
                   bgcolor: 'white',
-                  color: '#667eea',
+                  color: '#7248d6',
                   fontWeight: 600,
                   '&:hover': {
                     bgcolor: 'rgba(255, 255, 255, 0.9)',
@@ -616,10 +650,10 @@ export default function Header({
           </Stack>
         </Toolbar>
       </AppBar>
-      
+
       {mounted && isConnected && !isTestnet && !isLocalhost && (
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           sx={{ mb: 2 }}
           action={
             <Button
@@ -628,7 +662,7 @@ export default function Header({
               onClick={switchToTestnet}
               disabled={isSwitching}
               startIcon={<SwapHoriz />}
-              sx={{ 
+              sx={{
                 fontSize: { xs: '0.7rem', sm: '0.875rem' },
                 minWidth: { xs: 'auto', sm: 120 }
               }}

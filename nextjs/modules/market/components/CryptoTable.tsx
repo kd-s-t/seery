@@ -86,13 +86,13 @@ export default function CryptoTable() {
   const publicClient = usePublicClient()
   const [localReceipt, setLocalReceipt] = useState<any>(null)
   // Removed useStakeablePredictions - stakes should only be loaded on staking page
-  
+
   useEffect(() => {
     if (recordError && creatingPrediction) {
       const error = recordError as any
-      
+
       let errorMsg = 'Transaction failed'
-      
+
       if (error?.shortMessage) {
         errorMsg = error.shortMessage
       } else if (error?.message) {
@@ -108,20 +108,20 @@ export default function CryptoTable() {
       } else if (error?.data?.message) {
         errorMsg = error.data.message
       }
-      
+
       setStakeFieldError(errorMsg)
       setCreatingPrediction(false)
       setPendingRecordHash(null)
       setPendingStake(null)
     }
   }, [recordError, creatingPrediction])
-  
+
   useEffect(() => {
     if (isRecordError && creatingPrediction) {
       const error = isRecordError as any
-      
+
       let errorMsg = 'Transaction reverted. Please check the transaction details.'
-      
+
       if (error?.shortMessage) {
         errorMsg = error.shortMessage
       } else if (error?.message) {
@@ -135,12 +135,12 @@ export default function CryptoTable() {
       } else if (error?.cause?.message) {
         errorMsg = error.cause.message
       }
-      
+
       if (recordHash && publicClient) {
         (async () => {
           try {
             const tx = await publicClient.getTransaction({ hash: recordHash })
-            
+
             try {
               await publicClient.call({
                 to: tx.to,
@@ -180,21 +180,21 @@ export default function CryptoTable() {
           }
         })()
       }
-      
+
       setStakeFieldError(errorMsg)
       setCreatingPrediction(false)
       setPendingRecordHash(null)
       setPendingStake(null)
     }
   }, [isRecordError, creatingPrediction, recordHash, publicClient])
-  
+
   useEffect(() => {
     if (isRecordConfirmed && recordReceipt && pendingRecordHash && recordHash && recordHash === pendingRecordHash && creatingPrediction) {
       const processRecordPrediction = async () => {
         try {
           if (recordReceipt.status !== 'success') {
-            const errorMsg = recordReceipt.status === 'reverted' 
-              ? 'Transaction reverted. Check console for details.' 
+            const errorMsg = recordReceipt.status === 'reverted'
+              ? 'Transaction reverted. Check console for details.'
               : 'Transaction failed'
             setStakeFieldError(errorMsg)
             setCreatingPrediction(false)
@@ -202,16 +202,16 @@ export default function CryptoTable() {
             setPendingStake(null)
             return
           }
-          
+
           const { decodeEventLog, parseEventLogs } = await import('viem')
           const contractAddress = predictionStakingAddress?.toLowerCase()
           if (!contractAddress) {
             throw new Error('Contract address not configured')
           }
-          
-            setCreatingPrediction(false)
-            setPendingRecordHash(null)
-                setPendingStake(null)
+
+          setCreatingPrediction(false)
+          setPendingRecordHash(null)
+          setPendingStake(null)
         } catch (error: any) {
           setStakeFieldError(error.message || 'Failed to process prediction')
           setCreatingPrediction(false)
@@ -222,13 +222,13 @@ export default function CryptoTable() {
       processRecordPrediction()
     }
   }, [isRecordConfirmed, recordReceipt, pendingRecordHash, recordHash, predictionStakingAddress, selectedCryptoForStake, creatingPrediction, pendingStake])
-  
+
   useEffect(() => {
     if (recordHash && creatingPrediction && !pendingRecordHash) {
       setPendingRecordHash(recordHash)
     }
   }, [recordHash, creatingPrediction, pendingRecordHash])
-  
+
   useEffect(() => {
     if (pendingRecordHash && !isRecordConfirmed && !isWaitingRecord && creatingPrediction) {
       const timeout = setTimeout(async () => {
@@ -248,7 +248,7 @@ export default function CryptoTable() {
               // Silent
             }
           }
-          
+
           setStakeFieldError(`Transaction confirmation timed out. Transaction hash: ${pendingRecordHash.slice(0, 10)}... Please check the transaction in your wallet or try again.`)
           setCreatingPrediction(false)
           setPendingRecordHash(null)
@@ -266,14 +266,14 @@ export default function CryptoTable() {
           setStakeFieldError('Transaction submission timed out. Please check your wallet and try again.')
           setCreatingPrediction(false)
           setPendingStake(null)
-      }
+        }
       }, 20000)
       return () => clearTimeout(timeout)
     }
   }, [isRecordingPrediction, creatingPrediction, recordHash])
 
   const processedReceiptRef = useRef<string | null>(null)
-  
+
   useEffect(() => {
     if (stakeError) {
       const errorAny = stakeError as any
@@ -285,9 +285,9 @@ export default function CryptoTable() {
       }
     }
   }, [stakeError])
-  
+
   const selectedCryptosRef = useRef(selectedCryptos)
-  
+
   useEffect(() => {
     selectedCryptosRef.current = selectedCryptos
   }, [selectedCryptos])
@@ -295,19 +295,19 @@ export default function CryptoTable() {
   useEffect(() => {
     const currentReceipt = receipt || localReceipt
     const receiptHash = currentReceipt?.transactionHash
-    
+
     if (isConfirmed || currentReceipt) {
       const success = isConfirmed || (currentReceipt && currentReceipt.status === 'success')
-      
+
       if (success && !creatingPrediction && receiptHash && receiptHash !== processedReceiptRef.current) {
         processedReceiptRef.current = receiptHash
         console.log('Response: Stake confirmed')
-      setStakeModalOpen(false)
-      setStakeAmount('0.01')
-      setStakeDirection('up')
-      setSelectedCryptoForStake(null)
-      setStakeFieldError(null)
-        
+        setStakeModalOpen(false)
+        setStakeAmount('0.01')
+        setStakeDirection('up')
+        setSelectedCryptoForStake(null)
+        setStakeFieldError(null)
+
         // Redirect to staking page
         router.push('/staking')
       } else if (currentReceipt && currentReceipt.status !== 'success') {
@@ -326,11 +326,11 @@ export default function CryptoTable() {
       try {
         if (typeof window !== 'undefined' && window.ethereum) {
           const { createPublicClient, custom } = await import('viem')
-          
+
           const client = createPublicClient({
             transport: custom(window.ethereum),
           })
-          
+
           const txReceipt = await client.getTransactionReceipt({ hash: stakeHash as `0x${string}` })
           if (txReceipt && txReceipt.status === 'success' && !cancelled) {
             setLocalReceipt(txReceipt)
@@ -352,7 +352,7 @@ export default function CryptoTable() {
       clearInterval(interval)
     }
   }, [stakeHash, isConfirmed, receipt, localReceipt])
-  
+
   useEffect(() => {
     if (stakeHash && !isConfirmed && !receipt && !localReceipt) {
       const timeout = setTimeout(() => {
@@ -362,7 +362,7 @@ export default function CryptoTable() {
           setSelectedCryptoForStake(null)
         }
       }, 30000)
-      
+
       return () => clearTimeout(timeout)
     }
   }, [stakeHash, isConfirmed, receipt, localReceipt, isConfirming, isPending])
@@ -377,7 +377,7 @@ export default function CryptoTable() {
         // Invalid date, ignore
       }
     }
-    
+
     // Only use default cache if no cryptos are selected
     if (selectedCryptos.length === 0) {
       const cachedData = localStorage.getItem('crypto_prices_cache')
@@ -385,7 +385,7 @@ export default function CryptoTable() {
         try {
           const { data, timestamp } = JSON.parse(cachedData)
           const cacheAge = Date.now() - timestamp
-          
+
           if (cacheAge < CACHE_TTL_DEFAULT && data && data.length > 0) {
             setUsdCryptos(data)
             setLoading(false)
@@ -401,19 +401,19 @@ export default function CryptoTable() {
 
   const fetchCryptoData = async (showLoading = true, forceRefresh = false, tags?: string[]) => {
     const cacheKey = getCacheKeyUtil(tags)
-    
+
     if (forceRefresh) {
       // Clear cache for this specific key on force refresh
       localStorage.removeItem(cacheKey)
     }
-    
+
     if (!forceRefresh) {
       const cachedData = localStorage.getItem(cacheKey)
       if (cachedData) {
         try {
           const { data, timestamp } = JSON.parse(cachedData)
           const cacheAge = Date.now() - timestamp
-          
+
           if (cacheAge < CACHE_TTL_FILTERED) {
             setUsdCryptos(data)
             if (showLoading) {
@@ -426,8 +426,8 @@ export default function CryptoTable() {
         }
       }
     }
-    
-    
+
+
     if (showLoading) {
       setLoading(true)
     } else {
@@ -436,7 +436,7 @@ export default function CryptoTable() {
     setError(null)
     try {
       const data = await getCryptoPrices(undefined, tags, 'usd', forceRefresh)
-      
+
       if (data.success && data.cryptos && data.cryptos.length > 0) {
         console.log('List of predictions:', data.cryptos.length, 'predictions')
         // Attach libraryId from response to each crypto
@@ -501,18 +501,18 @@ export default function CryptoTable() {
 
     const initialTags = selectedCryptosRef.current.length > 0 ? selectedCryptosRef.current.map(c => c.id) : undefined
     fetchCryptoData(true, false, initialTags)
-    
+
     const interval = setInterval(() => {
       const currentTags = selectedCryptosRef.current.length > 0 ? selectedCryptosRef.current.map(c => c.id) : undefined
       fetchCryptoData(false, false, currentTags)
     }, 60000)
-    
+
     return () => clearInterval(interval)
   }, [mounted])
 
   useEffect(() => {
     if (usdCryptos.length === 0) return
-    
+
     setCryptos(usdCryptos)
   }, [usdCryptos])
 
@@ -619,111 +619,80 @@ export default function CryptoTable() {
     <Box sx={{ mb: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <Box sx={{ flex: 1, minWidth: 300 }}>
+          <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mt: 4, mb: 2 }}>
+            Market
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
           <Autocomplete
-          multiple
-          options={cryptoLibrary}
-          getOptionLabel={(option) => `${option.name} (${option.symbol})`}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          value={selectedCryptos}
-          onChange={(_, newValue) => handleCryptoSelect(newValue)}
-          loading={libraryLoading}
-          filterOptions={(options, state) => {
-            // Filter out already selected options from the dropdown
-            const filtered = options.filter(
-              (option) => !selectedCryptos.some((selected) => selected.id === option.id)
-            )
-            // But allow searching through all options
-            if (state.inputValue) {
-              return filtered.filter(option => 
-                option.name.toLowerCase().includes(state.inputValue.toLowerCase()) ||
-                option.symbol.toLowerCase().includes(state.inputValue.toLowerCase())
+            size='small'
+            multiple
+            options={cryptoLibrary}
+            getOptionLabel={(option) => `${option.name} (${option.symbol})`}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            value={selectedCryptos}
+            onChange={(_, newValue) => handleCryptoSelect(newValue)}
+            loading={libraryLoading}
+            filterOptions={(options, state) => {
+              // Filter out already selected options from the dropdown
+              const filtered = options.filter(
+                (option) => !selectedCryptos.some((selected) => selected.id === option.id)
               )
-            }
-            return filtered
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Search or select cryptocurrencies"
-              variant="outlined"
-              InputLabelProps={{
-                ...params.InputLabelProps,
-                shrink: true,
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  color: 'white',
-                  borderRadius: '8px',
-                  '& fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
+              // But allow searching through all options
+              if (state.inputValue) {
+                return filtered.filter(option =>
+                  option.name.toLowerCase().includes(state.inputValue.toLowerCase()) ||
+                  option.symbol.toLowerCase().includes(state.inputValue.toLowerCase())
+                )
+              }
+              return filtered
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Search or select cryptocurrencies"
+                variant="outlined"
+                InputLabelProps={{
+                  ...params.InputLabelProps,
+                  shrink: true,
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(10px)',
+                    color: 'white',
+                    borderRadius: '8px',
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.7)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.9)',
+                    },
                   },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.7)',
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    '&.MuiInputLabel-shrink': {
+                      color: 'rgba(255, 255, 255, 1)',
+                      transform: 'translate(14px, -9px) scale(0.75)',
+                    },
                   },
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'rgba(255, 255, 255, 0.9)',
+                  '& .MuiInputBase-input': {
+                    color: 'white',
+                    '&::placeholder': {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      opacity: 1,
+                    },
                   },
-                },
-                '& .MuiInputLabel-root': {
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  '&.MuiInputLabel-shrink': {
-                    color: 'rgba(255, 255, 255, 1)',
-                    transform: 'translate(14px, -9px) scale(0.75)',
-                  },
-                },
-                '& .MuiInputBase-input': {
-                  color: 'white',
-                  '&::placeholder': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    opacity: 1,
-                  },
-                },
-              }}
-            />
-          )}
-          renderOption={(props, option) => (
-            <Box component="li" {...props} key={option.id}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {option.image && (
-                  <Box
-                    component="img"
-                    src={option.image}
-                    alt={option.name}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
-                    sx={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      flexShrink: 0
-                    }}
-                  />
-                )}
-                <Box>
-                  <Typography variant="body1" fontWeight="medium">
-                    {option.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.symbol}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          )}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => {
-              const { key, ...tagProps } = getTagProps({ index })
-              return (
-                <Chip
-                  key={key}
-                  {...tagProps}
-                  label={`${option.symbol}`}
-                  size="small"
-                  icon={option.image ? (
+                }}
+              />
+            )}
+            renderOption={(props, option) => (
+              <Box component="li" {...props} key={option.id}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  {option.image && (
                     <Box
                       component="img"
                       src={option.image}
@@ -732,55 +701,90 @@ export default function CryptoTable() {
                         e.currentTarget.style.display = 'none'
                       }}
                       sx={{
-                        width: 18,
-                        height: 18,
+                        width: 24,
+                        height: 24,
                         borderRadius: '50%',
-                        objectFit: 'cover'
+                        objectFit: 'cover',
+                        flexShrink: 0
                       }}
                     />
-                  ) : undefined}
-                  sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'white',
-                    '& .MuiChip-deleteIcon': {
-                      color: 'rgba(255, 255, 255, 0.9)',
-                      '&:hover': {
-                        color: 'white',
+                  )}
+                  <Box>
+                    <Typography variant="body1" fontWeight="medium">
+                      {option.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.symbol}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => {
+                const { key, ...tagProps } = getTagProps({ index })
+                return (
+                  <Chip
+                    key={key}
+                    {...tagProps}
+                    label={`${option.symbol}`}
+                    size="small"
+                    icon={option.image ? (
+                      <Box
+                        component="img"
+                        src={option.image}
+                        alt={option.name}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                        sx={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: '50%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : undefined}
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      color: 'white',
+                      '& .MuiChip-deleteIcon': {
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        '&:hover': {
+                          color: 'white',
+                        },
                       },
-                    },
-                  }}
-                />
-              )
-            })
-          }
-          sx={{
-            maxWidth: 600,
-            '& .MuiAutocomplete-inputRoot': {
-              color: 'white',
-            },
-            '& .MuiAutocomplete-popupIndicator': {
-              color: 'rgba(255, 255, 255, 0.9)',
-            },
-            '& .MuiAutocomplete-clearIndicator': {
-              color: 'rgba(255, 255, 255, 0.9)',
-            },
-            '& .MuiAutocomplete-listbox': {
-              bgcolor: 'rgba(102, 126, 234, 0.98)',
-              backdropFilter: 'blur(10px)',
-              '& .MuiAutocomplete-option': {
+                    }}
+                  />
+                )
+              })
+            }
+            sx={{
+              maxWidth: 600,
+              '& .MuiAutocomplete-inputRoot': {
                 color: 'white',
-                '&[aria-selected="true"]': {
-                  bgcolor: 'rgba(255, 255, 255, 0.3)',
-                },
-                '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+              },
+              '& .MuiAutocomplete-popupIndicator': {
+                color: 'rgba(255, 255, 255, 0.9)',
+              },
+              '& .MuiAutocomplete-clearIndicator': {
+                color: 'rgba(255, 255, 255, 0.9)',
+              },
+              '& .MuiAutocomplete-listbox': {
+                bgcolor: 'rgba(102, 126, 234, 0.98)',
+                backdropFilter: 'blur(10px)',
+                '& .MuiAutocomplete-option': {
+                  color: 'white',
+                  '&[aria-selected="true"]': {
+                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                  },
                 },
               },
-            },
-          }}
+            }}
           />
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
           <Button
             variant="outlined"
             size="small"
@@ -816,10 +820,10 @@ export default function CryptoTable() {
           )}
         </Box>
       </Box>
-      
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
+
+      <TableContainer
+        component={Paper}
+        sx={{
           bgcolor: '#ffffff',
           overflowX: 'auto'
         }}
@@ -827,8 +831,8 @@ export default function CryptoTable() {
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: '#ffffff' }}>
-              <TableCell 
-                sx={{ 
+              <TableCell
+                sx={{
                   cursor: 'pointer',
                   userSelect: 'none',
                   '&:hover': { bgcolor: 'action.hover' }
@@ -842,9 +846,9 @@ export default function CryptoTable() {
                   )}
                 </Box>
               </TableCell>
-              <TableCell 
+              <TableCell
                 align="right"
-                sx={{ 
+                sx={{
                   cursor: 'pointer',
                   userSelect: 'none',
                   '&:hover': { bgcolor: 'action.hover' }
@@ -858,9 +862,9 @@ export default function CryptoTable() {
                   )}
                 </Box>
               </TableCell>
-              <TableCell 
-                align="right" 
-                sx={{ 
+              <TableCell
+                align="right"
+                sx={{
                   display: { xs: 'none', md: 'table-cell' }
                 }}
               >
@@ -869,9 +873,9 @@ export default function CryptoTable() {
               <TableCell align="left">
                 <strong>Analysis</strong>
               </TableCell>
-              <TableCell 
+              <TableCell
                 align="right"
-                sx={{ 
+                sx={{
                   cursor: 'pointer',
                   userSelect: 'none',
                   '&:hover': { bgcolor: 'action.hover' }
@@ -901,138 +905,154 @@ export default function CryptoTable() {
               </TableRow>
             ) : (
               sortedCryptos.map((crypto) => (
-              <TableRow key={crypto.id} hover sx={{ bgcolor: '#ffffff' }}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    {crypto.image && (
-                      <Box
-                        component="img"
-                        src={crypto.image}
-                        alt={crypto.name}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                        }}
+                <TableRow key={crypto.id} hover
+                  sx={{
+                    bgcolor: '#ffffff',
+                    '& > td, & > th': {
+                      verticalAlign: 'top',
+                    },
+                  }}
+                >
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1.5 }}>
+                      {crypto.image && (
+                        <Box
+                          component="img"
+                          src={crypto.image}
+                          alt={crypto.name}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            flexShrink: 0
+                          }}
+                        />
+                      )}
+                      <Box>
+                        <Typography variant="body1" fontWeight="bold" sx={{ textTransform: 'uppercase' }}>
+                          {crypto.symbol}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {crypto.name}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body1" fontWeight="medium">
+                      {formatPrice(crypto.price)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
+                      {crypto.change24h >= 0 ? (
+                        <TrendingUp sx={{ color: 'success.main', fontSize: 18 }} />
+                      ) : (
+                        <TrendingDown sx={{ color: 'error.main', fontSize: 18 }} />
+                      )}
+                      <Typography
+                        variant="body1"
                         sx={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          flexShrink: 0
+                          color: crypto.change24h >= 0 ? 'success.main' : 'error.main',
+                          fontWeight: 'medium'
                         }}
-                      />
-                    )}
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold">
-                        {crypto.symbol}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {crypto.name}
+                      >
+                        {formatPercentUtil(crypto.change24h)}
                       </Typography>
                     </Box>
-                  </Box>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography variant="body1" fontWeight="medium">
-                    {formatPrice(crypto.price)}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
-                    {crypto.change24h >= 0 ? (
-                      <TrendingUp sx={{ color: 'success.main', fontSize: 18 }} />
-                    ) : (
-                      <TrendingDown sx={{ color: 'error.main', fontSize: 18 }} />
-                    )}
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: crypto.change24h >= 0 ? 'success.main' : 'error.main',
-                        fontWeight: 'medium'
-                      }}
-                    >
-                      {formatPercentUtil(crypto.change24h)}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell align="left">
-                  {(() => {
-                    if (crypto.reasoning) {
-                      return (
-                        <Box>
-                          <Typography 
-                            variant="body2" 
-                            color="text.secondary" 
-                            sx={{ 
-                              maxWidth: { xs: 150, sm: 250 },
-                              overflow: 'hidden',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: 'vertical',
-                              mb: 0.5,
-                              lineHeight: 1.4
-                            }}
-                          >
-                            {crypto.reasoning}
-                          </Typography>
-                          <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => handleShowMore(crypto)}
-                            sx={{
-                              textTransform: 'none',
-                              fontSize: '0.7rem',
-                              p: 0,
-                              minWidth: 'auto',
-                              color: 'primary.main'
-                            }}
-                          >
-                            Show more
-                          </Button>
-                        </Box>
-                      )
-                    }
-                    return (
-                      <Typography variant="body2" color="text.secondary">
-                        No analysis available
-                      </Typography>
-                    )
-                  })()}
-                </TableCell>
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                  </TableCell>
+                  <TableCell align="left">
                     {(() => {
-                      const suggestionPercent = crypto.suggestionPercent
-                      if (crypto.suggestion && typeof suggestionPercent === 'number') {
+                      if (crypto.reasoning) {
                         return (
-                          <Chip
-                            label={`${crypto.suggestion === 'up' ? '↑' : '↓'} ${formatPercentUtil(suggestionPercent)}`}
-                            color={crypto.suggestion === 'up' ? 'success' : 'error'}
-                            size="small"
-                          />
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                maxWidth: { xs: 150, sm: 250 },
+                                overflow: 'hidden',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                mb: 0.5,
+                                lineHeight: 1.4
+                              }}
+                            >
+                              {crypto.reasoning}
+                            </Typography>
+                            <Button
+                              size="small"
+                              variant="text"
+                              onClick={() => handleShowMore(crypto)}
+                              sx={{
+                                textTransform: 'none',
+                                fontSize: '0.7rem',
+                                p: 0,
+                                minWidth: 'auto',
+                                color: 'primary.main'
+                              }}
+                            >
+                              See more
+                            </Button>
+                          </Box>
                         )
                       }
                       return (
                         <Typography variant="body2" color="text.secondary">
-                          No prediction
+                          No analysis available
                         </Typography>
                       )
                     })()}
-                  </Box>
-                </TableCell>
-                <TableCell align="right">
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                      {(() => {
+                        const suggestionPercent = crypto.suggestionPercent
+                        if (crypto.suggestion && typeof suggestionPercent === 'number') {
+                          return (
+                            <Chip
+                              label={`${crypto.suggestion === 'up' ? '↑' : '↓'} ${formatPercentUtil(suggestionPercent)}`}
+                              color={crypto.suggestion === 'up' ? 'success' : 'error'}
+                              size="small"
+                            />
+                          )
+                        }
+                        return (
+                          <Typography variant="body2" color="text.secondary">
+                            No prediction
+                          </Typography>
+                        )
+                      })()}
+                    </Box>
+                  </TableCell>
+                  <TableCell align="right">
                     <Button
-                      variant="contained"
-                    color="primary"
+                      variant="outlined"
                       size="small"
-                    onClick={() => {
-                      setSelectedCryptoForStake(crypto)
-                      setStakeModalOpen(true)
-                    }}
+                      onClick={() => {
+                        setSelectedCryptoForStake(crypto)
+                        setStakeModalOpen(true)
+                      }}
+                      sx={{
+                        bgcolor: 'white',
+                        borderColor: 'rgba(0, 0, 0, 0.23)',
+                        color: 'text.primary',
+                        '&:hover': {
+                          bgcolor: 'white',
+                          borderColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        borderRadius: '16px'
+                      }}
                     >
-                    Stake
+                      Stake
                     </Button>
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                </TableRow>
               ))
             )}
           </TableBody>
@@ -1065,7 +1085,7 @@ export default function CryptoTable() {
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, mb: 2 }}>
             {selectedReasoning?.reasoning}
           </Typography>
-          
+
           {selectedReasoning?.newsSources && selectedReasoning.newsSources.length > 0 && (
             <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', fontWeight: 600 }}>
@@ -1104,17 +1124,17 @@ export default function CryptoTable() {
         </DialogActions>
       </Dialog>
 
-      <Dialog 
-        open={stakeModalOpen} 
+      <Dialog
+        open={stakeModalOpen}
         onClose={() => {
-        setStakeModalOpen(false)
-        setStakeDirection('up')
+          setStakeModalOpen(false)
+          setStakeDirection('up')
           setCreatingPrediction(false)
           setPendingRecordHash(null)
           setPendingStake(null)
           setStakeFieldError(null)
-        }} 
-        maxWidth="sm" 
+        }}
+        maxWidth="sm"
         fullWidth
         disableEnforceFocus={false}
         disableAutoFocus={false}
@@ -1217,12 +1237,12 @@ export default function CryptoTable() {
             onClick={async () => {
               // Clear previous errors when starting a new transaction attempt
               setStakeFieldError(null)
-              
+
               // Prevent multiple clicks
               if (isPending || isConfirming || creatingPrediction) {
                 return
               }
-              
+
               if (!stakeAmount || parseFloat(stakeAmount) < 0.00001) {
                 setStakeFieldError('Please enter a valid stake amount (minimum 0.00001 BNB)')
                 return
@@ -1233,28 +1253,28 @@ export default function CryptoTable() {
                 return
               }
 
-                try {
-                  const currentPrice = typeof selectedCryptoForStake.price === 'number' ? selectedCryptoForStake.price : parseFloat(String(selectedCryptoForStake.price || '0'))
-                  const percentChange = selectedCryptoForStake.suggestionPercent || 0
-                  const direction = selectedCryptoForStake.suggestion === 'up' ? 'up' : 'down'
-                  const predictedPrice = currentPrice * (1 + (percentChange / 100) * (direction === 'up' ? 1 : -1))
-                  
-                  if (!selectedCryptoForStake.id || selectedCryptoForStake.id.trim() === '') {
-                    throw new Error('Crypto ID is required')
-                  }
-                  
-                  if (currentPrice <= 0) {
-                    throw new Error('Current price must be greater than 0')
-                  }
-                  
+              try {
+                const currentPrice = typeof selectedCryptoForStake.price === 'number' ? selectedCryptoForStake.price : parseFloat(String(selectedCryptoForStake.price || '0'))
+                const percentChange = selectedCryptoForStake.suggestionPercent || 0
+                const direction = selectedCryptoForStake.suggestion === 'up' ? 'up' : 'down'
+                const predictedPrice = currentPrice * (1 + (percentChange / 100) * (direction === 'up' ? 1 : -1))
+
+                if (!selectedCryptoForStake.id || selectedCryptoForStake.id.trim() === '') {
+                  throw new Error('Crypto ID is required')
+                }
+
+                if (currentPrice <= 0) {
+                  throw new Error('Current price must be greater than 0')
+                }
+
 
                 // Use stakeOnCrypto - it automatically creates prediction if needed
                 // Pass libraryId if available from the crypto data
                 await stakeOnCrypto(
-                      selectedCryptoForStake.id,
+                  selectedCryptoForStake.id,
                   currentPrice.toString(),
                   predictedPrice.toString(),
-                      direction,
+                  direction,
                   percentChange,
                   stakeAmount,
                   stakeDirection === 'up',
@@ -1262,12 +1282,12 @@ export default function CryptoTable() {
                 )
                 // Note: Success handling is done in useEffect that watches isConfirmed/receipt
                 // The stake hook will set the transaction hash, and the useEffect will handle the success case
-                } catch (error: any) {
-                  let errorMsg = error?.message || error?.info?.error?.message || 'Failed to stake'
-                  if (errorMsg.includes('nonce') || errorMsg.includes('NONCE') || errorMsg.includes('Nonce') || errorMsg.includes('Transaction already')) {
-                    errorMsg = 'Transaction already in progress. Please wait for the current transaction to complete before trying again.'
-                  }
-                  setStakeFieldError(errorMsg)
+              } catch (error: any) {
+                let errorMsg = error?.message || error?.info?.error?.message || 'Failed to stake'
+                if (errorMsg.includes('nonce') || errorMsg.includes('NONCE') || errorMsg.includes('Nonce') || errorMsg.includes('Transaction already')) {
+                  errorMsg = 'Transaction already in progress. Please wait for the current transaction to complete before trying again.'
+                }
+                setStakeFieldError(errorMsg)
               }
             }}
             disabled={isPending || isConfirming || creatingPrediction || isRecordingPrediction || isWaitingRecord || !stakeAmount || parseFloat(stakeAmount) < 0.00001}
