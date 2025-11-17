@@ -98,6 +98,14 @@ seer/
     └── package.json
 ```
 
+## 5-Minute Demo
+
+<div align="center">
+	<a href="https://drive.google.com/file/d/1CYyGCiKw3f5tB9xWkWkaQ8ZMhaPpVCor/view?usp=sharing" target="_blank">
+		<img src="https://img.shields.io/badge/Google%20Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white" alt="Watch 5-Minute Demo" />
+	</a>
+</div>
+
 ## Quick Use
 
 The live deployment at [theseery.com](https://theseery.com) uses **BNB Smart Chain Testnet** for all on-chain transactions.
