@@ -12,19 +12,19 @@
 
 **Features:**
 
-**🎯 Hackathon Core Requirements:**
+**Hackathon Core Requirements:**
 - **BNB Chain Integration**: Full mainnet and testnet support for all on-chain transactions (Required)
 - **AI-Powered Predictions**: OpenAI generates price predictions with direction and percentage change (AI Integration)
 - **On-Chain Staking**: All stakes stored on blockchain smart contracts with individual stake tracking (Blockchain Integration)
 - **User Interaction**: Modern web interface with wallet connection, market browsing, and staking (User Interaction)
 
-**🚀 YZi Labs Preferred Track - AI-Assisted Oracles:**
+**YZi Labs Preferred Track - AI-Assisted Oracles:**
 - **AI-Assisted Oracle Integration**: Chainlink and Pyth Network oracles for faster, contextual price resolution (24h vs traditional 24-48h)
 - **Hybrid Oracle System**: Chainlink for major coins (BTC, ETH, BNB), Pyth Network for altcoins (SOL, XRP, ADA, etc.), CoinGecko fallback
 - **Auto-Resolution System**: Automated cron job resolves expired stakes using oracle price feeds without manual intervention
 - **Reward Distribution**: Automatic reward distribution to winning stakers based on prediction accuracy
 
-**📊 Additional Features:**
+**Additional Features:**
 - **24-Hour Prediction Window**: Each prediction expires after 24 hours for resolution
 - **Multiple Stakers**: Support for multiple users staking on the same prediction (up/down pools)
 - **Real-Time Market Data**: Live cryptocurrency prices from CoinGecko API

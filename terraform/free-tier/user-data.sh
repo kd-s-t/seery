@@ -304,6 +304,6 @@ systemctl reload nginx || systemctl restart nginx
 
 # Log completion
 echo "Seer deployment completed at $(date)" >> /var/log/seer-deployment.log
-echo "Next.js status: $(curl -s -o /dev/null -w '%{http_code}' http://localhost:3015 || echo 'not responding')" >> /var/log/seer-deployment.log
-echo "Express.js status: $(curl -s -o /dev/null -w '%{http_code}' http://localhost:3016/health || echo 'not responding')" >> /var/log/seer-deployment.log
+echo "Next.js status: $(curl -s -o /dev/null -w '%%{http_code}' http://localhost:3015 || echo 'not responding')" >> /var/log/seer-deployment.log
+echo "Express.js status: $(curl -s -o /dev/null -w '%%{http_code}' http://localhost:3016/health || echo 'not responding')" >> /var/log/seer-deployment.log
 

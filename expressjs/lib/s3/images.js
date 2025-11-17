@@ -10,7 +10,10 @@ const s3Client = new S3Client({
   } : undefined
 })
 
-const BUCKET_NAME = process.env.S3_COIN_IMAGES_BUCKET || ''
+function getBucketName() {
+  return process.env.S3_COIN_IMAGES_BUCKET || ''
+}
+const BUCKET_NAME = getBucketName()
 const COINGECKO_IMAGES_BASE = 'https://assets.coingecko.com/coins/images'
 
 const COINGECKO_IMAGE_ID_MAP = {
@@ -106,14 +109,15 @@ function getS3Key(cryptoId, size = 'small') {
 }
 
 async function checkS3ImageExists(cryptoId, size = 'small') {
-  if (!BUCKET_NAME) {
+  const bucketName = getBucketName()
+  if (!bucketName) {
     return false
   }
   
   try {
     const key = getS3Key(cryptoId, size)
     const command = new HeadObjectCommand({
-      Bucket: BUCKET_NAME,
+      Bucket: bucketName,
       Key: key
     })
     await s3Client.send(command)
@@ -128,24 +132,48 @@ async function checkS3ImageExists(cryptoId, size = 'small') {
 }
 
 async function uploadToS3(cryptoId, imageBuffer, size = 'small', contentType = 'image/png') {
-  if (!BUCKET_NAME) {
+  console.log(`[S3 Upload] Starting upload for ${cryptoId}...`)
+  
+  const bucketName = getBucketName()
+  if (!bucketName) {
+    console.warn(`[S3 Upload] ❌ Cannot upload ${cryptoId} to S3: S3_COIN_IMAGES_BUCKET not set`)
+    console.warn(`[S3 Upload]    Set S3_COIN_IMAGES_BUCKET=production-seer-coin-images in expressjs/.env file`)
+    console.warn(`[S3 Upload]    Current env value: "${process.env.S3_COIN_IMAGES_BUCKET || 'undefined'}"`)
+    return null
+  }
+  
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.warn(`[S3 Upload] ❌ Cannot upload ${cryptoId} to S3: AWS credentials not configured`)
+    console.warn(`[S3 Upload]    Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in .env file`)
     return null
   }
   
   try {
     const key = getS3Key(cryptoId, size)
+    console.log(`[S3 Upload] Uploading to s3://${bucketName}/${key}`)
     const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
+      Bucket: bucketName,
       Key: key,
       Body: imageBuffer,
       ContentType: contentType,
-      CacheControl: 'max-age=31536000',
-      ACL: 'public-read'
+      CacheControl: 'max-age=31536000'
     })
     await s3Client.send(command)
+    console.log(`[S3 Upload] ✅ Successfully uploaded ${cryptoId} to S3: s3://${bucketName}/${key}`)
     return key
   } catch (error) {
-    console.error(`Error uploading ${cryptoId} to S3:`, error.message)
+    console.error(`[S3 Upload] ❌ Error uploading ${cryptoId} to S3:`, error.message)
+    if (error.name === 'NoSuchBucket') {
+      console.error(`[S3 Upload]    Bucket ${bucketName} does not exist. Create it in AWS S3.`)
+    } else if (error.name === 'AccessDenied') {
+      console.error(`[S3 Upload]    Access denied to bucket ${bucketName}. Check AWS credentials and bucket permissions.`)
+    } else if (error.name === 'InvalidAccessKeyId') {
+      console.error(`[S3 Upload]    Invalid AWS Access Key ID. Check AWS_ACCESS_KEY_ID.`)
+    } else if (error.name === 'SignatureDoesNotMatch') {
+      console.error(`[S3 Upload]    Invalid AWS Secret Key. Check AWS_SECRET_ACCESS_KEY.`)
+    } else {
+      console.error(`[S3 Upload]    Full error:`, error)
+    }
     return null
   }
 }
@@ -171,23 +199,39 @@ async function getCoinImageUrl(cryptoId, size = 'small') {
   
   const id = cryptoId.toLowerCase().trim()
   
-  if (!BUCKET_NAME) {
+  const bucketName = getBucketName()
+  
+  if (!bucketName) {
+    console.log(`[S3] ⚠️  S3 bucket not configured (S3_COIN_IMAGES_BUCKET is empty), using CoinGecko directly for ${id}`)
+    console.log(`[S3]    To enable S3 uploads, set S3_COIN_IMAGES_BUCKET=production-seer-coin-images in expressjs/.env file`)
+    console.log(`[S3]    Current env value: "${process.env.S3_COIN_IMAGES_BUCKET || 'undefined'}"`)
     return getCoinGeckoImageUrl(id, size)
   }
   
+  console.log(`[S3] Checking if ${id} exists in S3 bucket ${bucketName}...`)
   const exists = await checkS3ImageExists(id, size)
   
   if (exists) {
+    console.log(`[S3] ✅ Image ${id} already exists in S3`)
     const region = process.env.AWS_REGION || 'us-east-1'
-    return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${getS3Key(id, size)}`
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${getS3Key(id, size)}`
   }
   
+  console.log(`[S3] 📥 Image ${id} not in S3, downloading from CoinGecko and uploading...`)
   const imageBuffer = await downloadFromCoinGecko(id, size)
   
   if (imageBuffer) {
-    await uploadToS3(id, imageBuffer, size)
-    const region = process.env.AWS_REGION || 'us-east-1'
-    return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${getS3Key(id, size)}`
+    console.log(`[S3] ✅ Downloaded ${id} from CoinGecko (${imageBuffer.length} bytes)`)
+    const uploadResult = await uploadToS3(id, imageBuffer, size)
+    if (uploadResult) {
+      console.log(`[S3] ✅ Successfully uploaded ${id} to S3: ${uploadResult}`)
+      const region = process.env.AWS_REGION || 'us-east-1'
+      return `https://${bucketName}.s3.${region}.amazonaws.com/${getS3Key(id, size)}`
+    } else {
+      console.warn(`[S3] ⚠️  Failed to upload ${id} to S3, using CoinGecko fallback`)
+    }
+  } else {
+    console.warn(`[S3] ⚠️  Failed to download ${id} from CoinGecko`)
   }
   
   return getCoinGeckoImageUrl(id, size)
@@ -195,6 +239,7 @@ async function getCoinImageUrl(cryptoId, size = 'small') {
 
 module.exports = {
   getCoinImageUrl,
+  getCoinGeckoImageUrl,
   checkS3ImageExists,
   uploadToS3,
   downloadFromCoinGecko

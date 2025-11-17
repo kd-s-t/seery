@@ -2,16 +2,16 @@ const s3Images = require('../lib/s3/images')
 const axios = require('axios')
 
 const getCoinImage = async (req, res) => {
+  const { cryptoId, size = 'small' } = req.query
+  
+  if (!cryptoId) {
+    return res.status(400).json({
+      success: false,
+      error: 'cryptoId is required'
+    })
+  }
+  
   try {
-    const { cryptoId, size = 'small' } = req.query
-    
-    if (!cryptoId) {
-      return res.status(400).json({
-        success: false,
-        error: 'cryptoId is required'
-      })
-    }
-    
     const imageUrl = await s3Images.getCoinImageUrl(cryptoId, size)
     
     try {
