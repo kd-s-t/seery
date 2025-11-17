@@ -15,6 +15,7 @@ const theme = createTheme({
     },
     background: {
       default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      paper: '#ffffff',
     },
   },
   typography: {
@@ -40,6 +41,7 @@ const theme = createTheme({
         root: {
           borderRadius: '10px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          backgroundColor: '#ffffff',
         },
       },
     },

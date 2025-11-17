@@ -35,7 +35,6 @@ import { parseEther } from 'viem'
 import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
 import { PREDICTION_STAKING_ABI } from '@/lib/blockchain/predictionStaking'
 import { useContract } from '@/hooks/useContract'
-// import { buyCrypto, sellCrypto } from '@/lib/binance/trading'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { type SortOption, type SortDirection } from '../types'
 import { formatPercent as formatPercentUtil, formatLastFetchTime as formatLastFetchTimeUtil, sortCryptos as sortCryptosUtil, getCacheKey as getCacheKeyUtil } from '../utils'
@@ -468,8 +467,32 @@ export default function CryptoTable() {
   }
 
   const handleRefresh = () => {
+    if (lastFetchTime) {
+      const timeSinceLastRefresh = Date.now() - lastFetchTime.getTime()
+      const oneHour = 60 * 60 * 1000 // 1 hour in milliseconds
+      if (timeSinceLastRefresh < oneHour) {
+        return // Cooldown active, don't refresh
+      }
+    }
     const tags = selectedCryptos.length > 0 ? selectedCryptos.map(c => c.id) : undefined
     fetchCryptoData(false, true, tags)
+  }
+
+  const isRefreshCooldown = () => {
+    if (!lastFetchTime) return false
+    const timeSinceLastRefresh = Date.now() - lastFetchTime.getTime()
+    const oneHour = 60 * 60 * 1000 // 1 hour in milliseconds
+    return timeSinceLastRefresh < oneHour
+  }
+
+  const getCooldownRemaining = () => {
+    if (!lastFetchTime) return null
+    const timeSinceLastRefresh = Date.now() - lastFetchTime.getTime()
+    const oneHour = 60 * 60 * 1000 // 1 hour in milliseconds
+    const remaining = oneHour - timeSinceLastRefresh
+    if (remaining <= 0) return null
+    const minutes = Math.ceil(remaining / (60 * 1000))
+    return minutes
   }
 
 
@@ -763,13 +786,17 @@ export default function CryptoTable() {
             size="small"
             startIcon={isRefreshing ? <CircularProgress size={16} /> : <Refresh />}
             onClick={handleRefresh}
-            disabled={isRefreshing || loading}
+            disabled={isRefreshing || loading || isRefreshCooldown()}
             sx={{
               color: 'white',
               borderColor: 'rgba(255, 255, 255, 0.7)',
               '&:hover': {
                 borderColor: 'rgba(255, 255, 255, 0.9)',
                 bgcolor: 'rgba(255, 255, 255, 0.2)'
+              },
+              '&:disabled': {
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                color: 'rgba(255, 255, 255, 0.5)'
               }
             }}
           >
@@ -778,6 +805,13 @@ export default function CryptoTable() {
           {lastFetchTime && (
             <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '0.75rem' }}>
               Last updated: {formatLastFetchTimeUtil(lastFetchTime)}
+              {(() => {
+                const cooldownMinutes = getCooldownRemaining()
+                if (cooldownMinutes !== null) {
+                  return ` (${cooldownMinutes}m cooldown)`
+                }
+                return ''
+              })()}
             </Typography>
           )}
         </Box>
@@ -786,13 +820,13 @@ export default function CryptoTable() {
       <TableContainer 
         component={Paper} 
         sx={{ 
-          bgcolor: 'background.paper',
+          bgcolor: '#ffffff',
           overflowX: 'auto'
         }}
       >
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ bgcolor: '#ffffff' }}>
               <TableCell 
                 sx={{ 
                   cursor: 'pointer',
@@ -833,7 +867,7 @@ export default function CryptoTable() {
                 <strong>Last 24hr</strong>
               </TableCell>
               <TableCell align="left">
-                <strong>Story</strong>
+                <strong>Analysis</strong>
               </TableCell>
               <TableCell 
                 align="right"
@@ -858,7 +892,7 @@ export default function CryptoTable() {
           </TableHead>
           <TableBody>
             {sortedCryptos.length === 0 ? (
-              <TableRow>
+              <TableRow sx={{ bgcolor: '#ffffff' }}>
                 <TableCell colSpan={6} align="center">
                   <Typography color="text.secondary" sx={{ py: 3 }}>
                     {loading ? 'Loading...' : 'No cryptos found'}
@@ -867,7 +901,7 @@ export default function CryptoTable() {
               </TableRow>
             ) : (
               sortedCryptos.map((crypto) => (
-              <TableRow key={crypto.id} hover>
+              <TableRow key={crypto.id} hover sx={{ bgcolor: '#ffffff' }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     {crypto.image && (
@@ -959,7 +993,7 @@ export default function CryptoTable() {
                     }
                     return (
                       <Typography variant="body2" color="text.secondary">
-                        No story available
+                        No analysis available
                       </Typography>
                     )
                   })()}

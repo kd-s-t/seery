@@ -134,7 +134,7 @@ export default function AnalyticsPage() {
                     <EmojiEvents sx={{ fontSize: 40, color: 'warning.main' }} />
                     <Box>
                       <Typography variant="h4" component="div" sx={{ fontWeight: 600 }}>
-                        {analytics.correctPredictions}
+                        {analytics.correctPredictions} / {analytics.resolvedStakes}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Correct Predictions

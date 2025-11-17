@@ -97,3 +97,28 @@ resource "aws_iam_role_policy" "ecs_task_ssm" {
   })
 }
 
+# Policy for ECS tasks to access S3 for coin images
+resource "aws_iam_role_policy" "ecs_task_s3" {
+  name = "${var.environment}-seer-ecs-task-s3-policy"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:HeadObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "${var.s3_bucket_arn}",
+          "${var.s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+

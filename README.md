@@ -8,17 +8,29 @@
 	<img src="./seerylogov3.png" width="200px" alt="Seery Logo" />
 </div>
 
-**Seery** is a decentralized crypto price prediction platform on BNB Chain that uses AI to generate price predictions for cryptocurrencies. Users can stake BNB on whether prices will go up or down within a specified time period. All staking data, predictions, and payouts are stored on-chain. The platform features a modern web interface with real-time market data, news integration, and comprehensive user analytics.
+**Seery** is a decentralized crypto price prediction platform on BNB Chain that uses AI to generate price predictions for cryptocurrencies. Users can stake BNB on whether prices will go up or down within a 24-hour period. All staking data, predictions, and payouts are stored on-chain. The platform features a modern web interface with real-time market data, news integration, oracle-based price verification, automatic stake resolution, and comprehensive user analytics.
 
 **Features:**
-- **BNB Chain**: Mainnet and testnet support for all transactions
-- **AI-Powered Predictions**: OpenAI generates price predictions for cryptocurrencies with direction and percentage change
-- **On-Chain Staking**: All stakes are stored on blockchain smart contracts
+
+**🎯 Hackathon Core Requirements:**
+- **BNB Chain Integration**: Full mainnet and testnet support for all on-chain transactions (Required)
+- **AI-Powered Predictions**: OpenAI generates price predictions with direction and percentage change (AI Integration)
+- **On-Chain Staking**: All stakes stored on blockchain smart contracts with individual stake tracking (Blockchain Integration)
+- **User Interaction**: Modern web interface with wallet connection, market browsing, and staking (User Interaction)
+
+**🚀 YZi Labs Preferred Track - AI-Assisted Oracles:**
+- **AI-Assisted Oracle Integration**: Chainlink and Pyth Network oracles for faster, contextual price resolution (24h vs traditional 24-48h)
+- **Hybrid Oracle System**: Chainlink for major coins (BTC, ETH, BNB), Pyth Network for altcoins (SOL, XRP, ADA, etc.), CoinGecko fallback
+- **Auto-Resolution System**: Automated cron job resolves expired stakes using oracle price feeds without manual intervention
+- **Reward Distribution**: Automatic reward distribution to winning stakers based on prediction accuracy
+
+**📊 Additional Features:**
+- **24-Hour Prediction Window**: Each prediction expires after 24 hours for resolution
+- **Multiple Stakers**: Support for multiple users staking on the same prediction (up/down pools)
 - **Real-Time Market Data**: Live cryptocurrency prices from CoinGecko API
-- **News Integration**: Crypto news feed from TheNewsAPI
+- **News API Integration**: Crypto news feed from TheNewsAPI for market context
 - **User Profile**: Track wins, losses, net profit, and win rate
 - **Admin Analytics**: Dashboard showing ongoing stakes, resolved stakes, unique stakers, and accuracy metrics
-- **Modular Architecture**: Organized codebase with domain-specific modules
 
 ---  
 
@@ -202,6 +214,8 @@ Each module follows a consistent structure:
 - **Express.js** server with RESTful API endpoints
 - **OpenAI** integration for price predictions (paid)
 - **BNB Chain** integration using ethers.js
+- **Oracle Integration**: Chainlink and Pyth Network for price verification
+- **Auto-Resolution**: Automated cron job for resolving expired stakes
 - **CoinGecko** API for real-time crypto prices
 - **TheNewsAPI** for crypto news aggregation (paid)
 

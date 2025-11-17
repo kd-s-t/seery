@@ -61,7 +61,7 @@ export default function MarketPage() {
 
   if (!mounted) {
     return (
-      <Box sx={{ minHeight: '100vh', py: 4 }}>
+      <Box sx={{ minHeight: '100vh', py: 4, bgcolor: 'background.default' }}>
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
             Loading...
@@ -76,7 +76,7 @@ export default function MarketPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', py: 4 }}>
+    <Box sx={{ minHeight: '100vh', py: 4, bgcolor: 'background.default' }}>
       <Container maxWidth="lg">
         <MetaMaskWarning
           show={showWarning && !isConnected}

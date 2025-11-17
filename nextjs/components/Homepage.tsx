@@ -256,6 +256,7 @@ export default function Homepage() {
                   overflow: 'hidden',
                   cursor: item.url ? 'pointer' : 'default',
                   textDecoration: 'none',
+                  bgcolor: '#ffffff',
                 }}
               >
               {imageUrl && (

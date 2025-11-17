@@ -32,13 +32,21 @@ module "security" {
   availability_zones = data.aws_availability_zones.available.names
 }
 
+# S3 module
+module "s3" {
+  source = "./modules/s3"
+
+  environment = var.environment
+}
+
 # IAM module
 module "iam" {
   source = "./modules/iam"
 
-  environment = var.environment
-  aws_region  = var.aws_region
-  account_id  = data.aws_caller_identity.current.account_id
+  environment   = var.environment
+  aws_region    = var.aws_region
+  account_id    = data.aws_caller_identity.current.account_id
+  s3_bucket_arn = module.s3.bucket_arn
 }
 
 # ECR module
@@ -88,10 +96,14 @@ module "ecs" {
   # Account ID for SSM parameter
   account_id = data.aws_caller_identity.current.account_id
 
+  # S3 bucket
+  s3_bucket_name = module.s3.bucket_name
+
   depends_on = [
     module.security,
     module.iam,
-    module.ecr
+    module.ecr,
+    module.s3
   ]
 }
 

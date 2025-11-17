@@ -73,7 +73,7 @@ export default function Home() {
 
 
   return (
-    <Box sx={{ minHeight: '100vh', py: 4 }}>
+    <Box sx={{ minHeight: '100vh', py: 4, bgcolor: 'background.default' }}>
       <Container maxWidth="lg">
         <MetaMaskWarning
           show={showWarning && !isConnected}

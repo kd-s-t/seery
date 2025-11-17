@@ -20,7 +20,7 @@ export default function NewsFeed() {
     }).format(date)
   }
 
-  const { news, loading, error, lastRefreshed, refreshing, mounted, handleRefresh } = useNews()
+  const { news, loading, error, lastRefreshed, refreshing, mounted, handleRefresh, isRefreshCooldown, getCooldownRemaining } = useNews()
   const gridSizes = getGridSizes(news)
 
   if (!mounted) {
@@ -136,11 +136,18 @@ export default function NewsFeed() {
               }}
             >
               Refreshed at {formatRefreshDate(lastRefreshed)}
+              {(() => {
+                const cooldownMinutes = getCooldownRemaining()
+                if (cooldownMinutes !== null) {
+                  return ` (${cooldownMinutes}m cooldown)`
+                }
+                return ''
+              })()}
             </Typography>
           )}
           <IconButton
             onClick={handleRefresh}
-            disabled={refreshing || loading}
+            disabled={refreshing || loading || isRefreshCooldown()}
             size="small"
             sx={{
               color: 'text.secondary',

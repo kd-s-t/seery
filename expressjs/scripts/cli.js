@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const OpenAI = require('openai');
-const prompts = require('./prompts');
+const prompts = require('../lib/prompts');
 require('dotenv').config();
 
 // Initialize OpenAI
@@ -160,14 +160,14 @@ async function main() {
   if (args.length === 0) {
     console.log(`${colors.bright}${colors.blue}📰 News Checker CLI${colors.reset}\n`);
     console.log(`${colors.bright}Usage:${colors.reset}`);
-    console.log(`  node cli.js news <topic> [count]    - Fetch news articles`);
-    console.log(`  node cli.js bitcoin [count]         - Fetch Bitcoin news`);
-    console.log(`  node cli.js analyze <text>          - Analyze news text`);
+    console.log(`  node scripts/cli.js news <topic> [count]    - Fetch news articles`);
+    console.log(`  node scripts/cli.js bitcoin [count]         - Fetch Bitcoin news`);
+    console.log(`  node scripts/cli.js analyze <text>          - Analyze news text`);
     console.log(`\n${colors.bright}Examples:${colors.reset}`);
-    console.log(`  node cli.js news bitcoin 5`);
-    console.log(`  node cli.js bitcoin 10`);
-    console.log(`  node cli.js news "ethereum price" 3`);
-    console.log(`  node cli.js analyze "Bitcoin dropped 10% today..."`);
+    console.log(`  node scripts/cli.js news bitcoin 5`);
+    console.log(`  node scripts/cli.js bitcoin 10`);
+    console.log(`  node scripts/cli.js news "ethereum price" 3`);
+    console.log(`  node scripts/cli.js analyze "Bitcoin dropped 10% today..."`);
     process.exit(0);
   }
   
@@ -219,7 +219,7 @@ async function main() {
       
     } else {
       console.error(`${colors.red}❌ Unknown command: ${command}${colors.reset}`);
-      console.log(`Use: node cli.js news <topic> [count]`);
+      console.log(`Use: node scripts/cli.js news <topic> [count]`);
       process.exit(1);
     }
   } catch (error) {
@@ -230,4 +230,3 @@ async function main() {
 
 // Run CLI
 main();
-

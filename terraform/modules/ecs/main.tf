@@ -208,6 +208,14 @@ resource "aws_ecs_task_definition" "expressjs" {
         {
           name  = "CONTRACT_ADDRESS"
           value = var.contract_address
+        },
+        {
+          name  = "AWS_REGION"
+          value = var.aws_region
+        },
+        {
+          name  = "S3_COIN_IMAGES_BUCKET"
+          value = var.s3_bucket_name
         }
       ]
 

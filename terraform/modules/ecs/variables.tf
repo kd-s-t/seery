@@ -116,3 +116,9 @@ variable "account_id" {
   type        = string
 }
 
+variable "s3_bucket_name" {
+  description = "S3 bucket name for coin images"
+  type        = string
+  default     = ""
+}
+

@@ -74,10 +74,30 @@ export function useNews() {
     fetchNews()
   }, [mounted, fetchNews])
 
+  const isRefreshCooldown = useCallback(() => {
+    if (!lastRefreshed) return false
+    const timeSinceLastRefresh = Date.now() - lastRefreshed.getTime()
+    const oneHour = 60 * 60 * 1000 // 1 hour in milliseconds
+    return timeSinceLastRefresh < oneHour
+  }, [lastRefreshed])
+
+  const getCooldownRemaining = useCallback(() => {
+    if (!lastRefreshed) return null
+    const timeSinceLastRefresh = Date.now() - lastRefreshed.getTime()
+    const oneHour = 60 * 60 * 1000 // 1 hour in milliseconds
+    const remaining = oneHour - timeSinceLastRefresh
+    if (remaining <= 0) return null
+    const minutes = Math.ceil(remaining / (60 * 1000))
+    return minutes
+  }, [lastRefreshed])
+
   const handleRefresh = useCallback(async () => {
+    if (isRefreshCooldown()) {
+      return // Cooldown active, don't refresh
+    }
     setRefreshing(true)
     await fetchNews(true)
-  }, [fetchNews])
+  }, [fetchNews, isRefreshCooldown])
 
   return {
     news,
@@ -87,7 +107,9 @@ export function useNews() {
     refreshing,
     mounted,
     handleRefresh,
-    fetchNews
+    fetchNews,
+    isRefreshCooldown,
+    getCooldownRemaining
   }
 }
 

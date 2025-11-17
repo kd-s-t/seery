@@ -22,7 +22,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material'
-import { TrendingUp, TrendingDown, AccessTime, AttachMoney, Close, CurrencyBitcoin } from '@mui/icons-material'
+import { TrendingUp, TrendingDown, AccessTime, AttachMoney, Close, CurrencyBitcoin, CheckCircle, Pending } from '@mui/icons-material'
 import { useWallet, useContract } from '@/hooks'
 import { useStaking, useStakeablePredictions } from '@/hooks'
 import { useAccount } from 'wagmi'
@@ -132,7 +132,8 @@ export default function StakingPage() {
 
     const now = Date.now()
     const claimable = predictions.filter((prediction: any) => {
-      const expiresAt = parseInt(prediction.expiresAt) * 1000
+      const expiresAtNum = parseInt(prediction.expiresAt)
+      const expiresAt = expiresAtNum > 1e12 ? expiresAtNum : expiresAtNum * 1000
       const hasStake = parseFloat(prediction.userStakeUp || '0') > 0 || 
                        parseFloat(prediction.userStakeDown || '0') > 0
       const isExpired = expiresAt > 0 && expiresAt < now
@@ -248,7 +249,9 @@ export default function StakingPage() {
   }
 
   const getTimeRemaining = (expiresAt: string) => {
-    const expiry = parseInt(expiresAt) * 1000
+    const expiryNum = parseInt(expiresAt)
+    // If expiresAt is already in milliseconds (large number), use as-is, otherwise convert from seconds
+    const expiry = expiryNum > 1e12 ? expiryNum : expiryNum * 1000
     const now = Date.now()
     const diff = expiry - now
     
@@ -327,15 +330,25 @@ export default function StakingPage() {
             <Stack spacing={2}>
               {predictions.map((prediction: any, index: number) => (
                 <Card
-                  key={prediction.cryptoId || `prediction-${index}`}
+                  key={prediction.predictionId || prediction.stakeId || `prediction-${index}`}
                   sx={{
                     cursor: 'pointer',
                     border: selectedPrediction?.predictionId === prediction.predictionId ? 2 : 1,
-                    borderColor: selectedPrediction?.predictionId === prediction.predictionId ? 'primary.main' : 'divider',
+                    borderColor: selectedPrediction?.predictionId === prediction.predictionId 
+                      ? 'primary.main' 
+                      : prediction.rewarded 
+                        ? 'success.main' 
+                        : 'divider',
+                    backgroundColor: prediction.rewarded ? 'action.hover' : '#ffffff',
+                    bgcolor: prediction.rewarded ? 'action.hover' : '#ffffff',
+                    '& .MuiCardContent-root': {
+                      backgroundColor: prediction.rewarded ? 'action.hover' : '#ffffff',
+                    },
                     '&:hover': {
-                      borderColor: 'primary.main'
+                      borderColor: prediction.rewarded ? 'success.dark' : 'primary.main'
                     }
                   }}
+                  style={{backgroundColor: 'white'}}
                   onClick={() => setSelectedPrediction(prediction)}
                 >
                   <CardContent>
@@ -419,6 +432,28 @@ export default function StakingPage() {
                               variant="outlined"
                             />
                           </Tooltip>
+                          {prediction.rewarded && (
+                            <Tooltip title="This prediction has been resolved and rewards have been distributed.">
+                              <Chip
+                                icon={<CheckCircle />}
+                                label="Resolved"
+                                size="small"
+                                color="success"
+                                variant="filled"
+                              />
+                            </Tooltip>
+                          )}
+                          {!prediction.rewarded && getTimeRemaining(prediction.expiresAt) === 'Expired' && (
+                            <Tooltip title="This prediction has expired but is pending resolution.">
+                              <Chip
+                                icon={<Pending />}
+                                label="Pending Resolution"
+                                size="small"
+                                color="warning"
+                                variant="outlined"
+                              />
+                            </Tooltip>
+                          )}
                           {(() => {
                             const stakeUp = parseFloat(prediction.userStakeUp || '0')
                             const stakeDown = parseFloat(prediction.userStakeDown || '0')
@@ -440,6 +475,7 @@ export default function StakingPage() {
                         <Button
                           variant="contained"
                           size="small"
+                          disabled={prediction.rewarded || getTimeRemaining(prediction.expiresAt) === 'Expired'}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedPrediction(prediction);
@@ -449,7 +485,13 @@ export default function StakingPage() {
                             setStakeFieldError(null);
                           }}
                         >
-                          {parseFloat(prediction.userStakeUp || '0') > 0 || parseFloat(prediction.userStakeDown || '0') > 0 ? 'Stake More' : 'Stake'}
+                          {prediction.rewarded 
+                            ? 'Resolved' 
+                            : getTimeRemaining(prediction.expiresAt) === 'Expired'
+                              ? 'Expired'
+                              : parseFloat(prediction.userStakeUp || '0') > 0 || parseFloat(prediction.userStakeDown || '0') > 0 
+                                ? 'Stake More' 
+                                : 'Stake'}
                         </Button>
                       </Box>
                     </Stack>
@@ -461,7 +503,7 @@ export default function StakingPage() {
 
           <Grid item xs={12}>
             {claimablePredictions.length > 0 && (
-              <Card sx={{ mt: 2 }}>
+              <Card sx={{ mt: 2, bgcolor: '#ffffff' }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     Claimable Rewards

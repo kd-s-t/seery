@@ -8,6 +8,7 @@ router.get('/user/:address', stakingController.getUserStakes);
 router.get('/claimable', stakingController.getClaimablePredictions);
 router.post('/create-prediction', stakingController.createPredictionAndRegister);
 router.get('/analytics', stakingController.getAnalytics);
+router.post('/auto-resolve', stakingController.triggerAutoResolve);
 
 module.exports = router;
 

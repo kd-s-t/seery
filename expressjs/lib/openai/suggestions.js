@@ -44,7 +44,7 @@ Current Price: $${crypto.price.toFixed(2)}
 24h Change: ${crypto.change24h > 0 ? '+' : ''}${crypto.change24h.toFixed(2)}%
 ${historicalContext}
 
-Based on market trends, technical analysis, market sentiment, and historical successful predictions, predict how much the price will change in the next 24-48 hours.
+Based on market trends, technical analysis, market sentiment, and historical successful predictions, predict how much the price will change in the next 24 hours.
 
 Consider:
 - Price trends and technical indicators
@@ -60,7 +60,7 @@ Return JSON with this structure:
   "reasoning": "Brief explanation of why this prediction (2-3 sentences)"
 }
 
-Be realistic. Percent changes should typically be between -15% and +15% for 24-48 hour predictions.`;
+Be realistic. Percent changes should typically be between -15% and +15% for 24 hour predictions.`;
 
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',

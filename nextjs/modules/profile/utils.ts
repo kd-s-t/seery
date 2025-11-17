@@ -52,6 +52,13 @@ export function getStakeStatus(stake: UserStake): {
   color: 'info' | 'warning' | 'success' | 'error'
 } {
   if (stake.isResolved) {
+    // Use predictionCorrect if available, otherwise fall back to rewarded
+    if (stake.predictionCorrect !== null && stake.predictionCorrect !== undefined) {
+      return stake.predictionCorrect
+        ? { status: 'Won', color: 'success' }
+        : { status: 'Lost', color: 'error' }
+    }
+    // Fallback to rewarded if predictionCorrect is not available
     return stake.rewarded 
       ? { status: 'Won', color: 'success' }
       : { status: 'Lost', color: 'error' }

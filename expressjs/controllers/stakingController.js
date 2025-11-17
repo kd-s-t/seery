@@ -6,7 +6,7 @@ const { ethers } = require('ethers');
 const getStakeablePredictions = async (req, res) => {
   try {
     const blockchain = require('../lib/blockchain');
-    const result = await blockchain.getAllStakes(true); // Use cache
+    const result = await blockchain.getAllStakes({ useCache: true, activeOnly: false }); // Use cache, show all for demo
     
     if (result === null) {
       return res.status(500).json({
@@ -137,18 +137,63 @@ const getUserStats = async (req, res) => {
       });
     }
     
-    const stats = await blockchain.getUserStats(address);
+    // Calculate stats from user stakes using predictionCorrect for consistency with frontend
+    const userStakes = await blockchain.getUserStakesWithDetails(address);
     
-    if (stats === null) {
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch user stats from blockchain. Check contract address and RPC connection.'
+    if (!userStakes || userStakes.length === 0) {
+      return res.json({
+        success: true,
+        stats: {
+          wins: '0',
+          losses: '0',
+          totalStaked: '0',
+          totalWon: '0',
+          totalLost: '0',
+          winRate: '0'
+        },
+        timestamp: new Date().toISOString()
       });
+    }
+    
+    let wins = 0;
+    let losses = 0;
+    let totalStaked = BigInt(0);
+    let totalWon = BigInt(0);
+    let totalLost = BigInt(0);
+    
+    for (const stake of userStakes) {
+      const amountWei = BigInt(stake.amountWei || '0');
+      totalStaked += amountWei;
+      
+      if (stake.isResolved && stake.predictionCorrect !== null && stake.predictionCorrect !== undefined) {
+        if (stake.predictionCorrect) {
+          wins++;
+          // For winners, estimate total won (original stake + share of losers)
+          // This is an approximation since we'd need full stake data for exact calculation
+          totalWon += amountWei;
+        } else {
+          losses++;
+          totalLost += amountWei;
+        }
+      }
+    }
+    
+    // Calculate win rate (scaled by 10000 for 2 decimals: 6250 = 62.50%)
+    let winRate = 0;
+    if (wins + losses > 0) {
+      winRate = Math.floor((wins * 10000) / (wins + losses));
     }
     
     res.json({
       success: true,
-      stats,
+      stats: {
+        wins: wins.toString(),
+        losses: losses.toString(),
+        totalStaked: totalStaked.toString(),
+        totalWon: totalWon.toString(),
+        totalLost: totalLost.toString(),
+        winRate: winRate.toString()
+      },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -261,11 +306,31 @@ const getClaimablePredictions = async (req, res) => {
   }
 };
 
+const triggerAutoResolve = async (req, res) => {
+  try {
+    const autoResolve = require('../scripts/autoResolve');
+    const result = await autoResolve.autoResolveExpiredStakes();
+    
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('Error triggering auto-resolve:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to trigger auto-resolve',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 module.exports = {
   getStakeablePredictions,
   getUserStats,
   getUserStakes,
   getClaimablePredictions,
   createPredictionAndRegister,
-  getAnalytics
+  getAnalytics,
+  triggerAutoResolve
 };

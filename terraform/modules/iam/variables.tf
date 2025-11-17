@@ -13,3 +13,9 @@ variable "account_id" {
   type        = string
 }
 
+variable "s3_bucket_arn" {
+  description = "ARN of S3 bucket for coin images"
+  type        = string
+  default     = ""
+}
+

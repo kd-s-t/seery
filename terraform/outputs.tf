@@ -38,3 +38,13 @@ output "cluster_name" {
   value       = module.ecs.cluster_name
 }
 
+output "s3_bucket_name" {
+  description = "S3 bucket name for coin images"
+  value       = module.s3.bucket_name
+}
+
+output "s3_bucket_domain" {
+  description = "S3 bucket domain name for coin images"
+  value       = module.s3.bucket_regional_domain_name
+}
+

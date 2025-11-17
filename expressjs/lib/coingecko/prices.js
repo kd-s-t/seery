@@ -16,9 +16,10 @@ const SYMBOL_MAP = {
 const TRENDING_CRYPTOS = ['bitcoin', 'ethereum', 'binancecoin', 'solana', 'cardano', 'polkadot', 'chainlink', 'avalanche-2', 'polygon', 'litecoin'];
 
 const priceCache = new Map();
-const CACHE_TTL = 21600000;
+const CACHE_TTL = 21600000; // 6 hours (increased from default)
 const MAX_RETRIES = 1;
 const RETRY_DELAY = 2000;
+const RATE_LIMIT_DELAY = 3000; // 3 seconds between API calls to respect rate limits
 
 function getCacheKey(symbols, currency) {
   const sorted = [...symbols].sort().join(',');
@@ -135,63 +136,79 @@ async function fetchCryptoPrices(symbols, currency = 'usd', forceRefresh = false
       const ids = symbols.join(',');
       console.log('fetchCryptoPrices: Fetching from CoinGecko API with ids:', ids);
       
-      // Fetch both price data and coin details (for images)
-      const [priceResponse, coinResponse] = await Promise.all([
-        axios.get(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
-          { timeout: 10000 }
-        ),
-        axios.get(
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=250&page=1&sparkline=false`,
-          { timeout: 10000 }
-        ).catch(() => ({ data: [] })) // Fallback if this fails
-      ]);
-      
-      const response = priceResponse;
-      const coinDetails = coinResponse.data || [];
-      const coinImageMap = new Map();
-      coinDetails.forEach(coin => {
-        coinImageMap.set(coin.id, coin.image);
-      });
-    
-      if (!response.data) {
-        throw new Error('No data received from CoinGecko API');
-      }
-      
-      const data = response.data;
-      console.log('fetchCryptoPrices: CoinGecko API returned data for:', Object.keys(data));
-    
-      usdData = symbols.map(symbol => {
-        const coinData = data[symbol];
-        if (!coinData) {
-          console.warn(`No data for ${symbol}`);
-          return null;
-        }
-      
-        const usdPrice = coinData.usd;
-        const change24h = coinData.usd_24h_change !== undefined ? coinData.usd_24h_change : 0;
+      try {
+        // Fetch both price data and coin details (for images)
+        const [priceResponse, coinResponse] = await Promise.all([
+          axios.get(
+            `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+            { timeout: 10000 }
+          ),
+          axios.get(
+            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=250&page=1&sparkline=false`,
+            { timeout: 10000 }
+          ).catch(() => ({ data: [] })) // Fallback if this fails
+        ]);
         
-        if (usdPrice === undefined || usdPrice === null) {
-          console.warn(`No USD price for ${symbol}`);
-          return null;
+        const response = priceResponse;
+        const coinDetails = coinResponse.data || [];
+        const coinImageMap = new Map();
+        coinDetails.forEach(coin => {
+          coinImageMap.set(coin.id, coin.image);
+        });
+        
+        if (!response.data) {
+          throw new Error('No data received from CoinGecko API');
         }
-      
-        return {
-          id: symbol,
-          symbol: SYMBOL_MAP[symbol] || symbol.toUpperCase(),
-          name: symbol.charAt(0).toUpperCase() + symbol.slice(1).replace(/-/g, ' '),
-          price: usdPrice,
-          change24h: change24h,
-          currency: 'usd',
-          image: coinImageMap.get(symbol) || `https://assets.coingecko.com/coins/images/${getCoinImageId(symbol)}/small/${symbol}.png`
-        };
-      }).filter(Boolean);
-      
-      console.log('fetchCryptoPrices: Mapped usdData count:', usdData.length);
-      console.log('fetchCryptoPrices: Mapped usdData IDs:', usdData.map(c => c.id));
-      
-      if (usdData.length > 0 && !forceRefresh) {
-        setCachedUSDData(symbols, usdData);
+        
+        const data = response.data;
+        console.log('fetchCryptoPrices: CoinGecko API returned data for:', Object.keys(data));
+        
+        usdData = symbols.map(symbol => {
+          const coinData = data[symbol];
+          if (!coinData) {
+            console.warn(`No data for ${symbol}`);
+            return null;
+          }
+          
+          const usdPrice = coinData.usd;
+          const change24h = coinData.usd_24h_change !== undefined ? coinData.usd_24h_change : 0;
+          
+          if (usdPrice === undefined || usdPrice === null) {
+            console.warn(`No USD price for ${symbol}`);
+            return null;
+          }
+          
+          return {
+            id: symbol,
+            symbol: SYMBOL_MAP[symbol] || symbol.toUpperCase(),
+            name: symbol.charAt(0).toUpperCase() + symbol.slice(1).replace(/-/g, ' '),
+            price: usdPrice,
+            change24h: change24h,
+            currency: 'usd',
+            image: coinImageMap.get(symbol) || `https://assets.coingecko.com/coins/images/${getCoinImageId(symbol)}/small/${symbol}.png`
+          };
+        }).filter(Boolean);
+        
+        console.log('fetchCryptoPrices: Mapped usdData count:', usdData.length);
+        console.log('fetchCryptoPrices: Mapped usdData IDs:', usdData.map(c => c.id));
+        
+        if (usdData.length > 0 && !forceRefresh) {
+          setCachedUSDData(symbols, usdData);
+        }
+      } catch (error) {
+        // Check if it's a rate limit error
+        if (error.response && error.response.status === 429) {
+          console.error('CoinGecko API Rate Limit (429) - Too many requests');
+          console.error('API Response:', error.response.data);
+          throw new Error('Rate Limit: CoinGecko API rate limit exceeded. Please wait before retrying.');
+        }
+        
+        console.error('Error fetching crypto prices:', error.message);
+        if (error.response) {
+          console.error('API Status:', error.response.status);
+          console.error('API Response:', error.response.data);
+        }
+        throw error;
       }
     }
     
@@ -209,11 +226,7 @@ async function fetchCryptoPrices(symbols, currency = 'usd', forceRefresh = false
     
     return usdData;
   } catch (error) {
-    console.error('Error fetching crypto prices:', error.message);
-    if (error.response) {
-      console.error('API Status:', error.response.status);
-      console.error('API Response:', error.response.data);
-    }
+    console.error('Error in fetchCryptoPrices:', error.message);
     throw error;
   }
 }

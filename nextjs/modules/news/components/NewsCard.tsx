@@ -25,6 +25,7 @@ export default function NewsCard({ item, index }: NewsCardProps) {
         overflow: 'hidden',
         cursor: item.url ? 'pointer' : 'default',
         textDecoration: 'none',
+        bgcolor: '#ffffff',
       }}
     >
       {imageUrl && (

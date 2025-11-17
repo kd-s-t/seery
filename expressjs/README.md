@@ -34,11 +34,6 @@ BLOCKCHAIN_PRIVATE_KEY=your-private-key  # Alternative name (also accepts PRIVAT
 
 # AI Configuration
 OPENAI_MODEL=gpt-3.5-turbo  # or gpt-4-turbo for better results
-
-# Binance Trading API (optional)
-BINANCE_API_KEY=your-binance-api-key
-BINANCE_SECRET_KEY=your-binance-secret-key
-BINANCE_TESTNET=true  # Set to true for testnet, false for production
 ```
 
 **3. Deploy Smart Contract:**
@@ -87,9 +82,6 @@ Optional variables:
 - `PREDICTION_TRACKER_ADDRESS` - PredictionTracker contract address (for on-chain prediction tracking)
 - `PRIVATE_KEY` or `BLOCKCHAIN_PRIVATE_KEY` - For automated transactions (required for on-chain prediction recording)
 - `OPENAI_MODEL` - OpenAI model to use (default: gpt-3.5-turbo)
-- `BINANCE_API_KEY` - Binance API key for trading (optional)
-- `BINANCE_SECRET_KEY` - Binance secret key for trading (optional)
-- `BINANCE_TESTNET` - Use Binance testnet (default: true if API key not set)
 
 ## API Endpoints
 
@@ -105,12 +97,6 @@ Optional variables:
 - `POST /api/ai/generate-markets` - Generate markets from news
 - `POST /api/ai/analyze-news` - Analyze news and suggest markets
 - `GET /api/markets/:id/ai-resolution` - Get AI resolution suggestion
-
-### Trading (Binance)
-- `POST /api/trading/buy` - Place a buy order
-- `POST /api/trading/sell` - Place a sell order
-- `GET /api/trading/account` - Get account information
-- `GET /api/trading/price?symbol=BTCUSDT` - Get current price
 
 ### User Data
 - `GET /api/users/:address/bets` - Get user's betting history
@@ -138,7 +124,7 @@ expressjs/
 │   │   ├── predictionTracker.js # PredictionTracker contract
 │   │   ├── predictionStaking.js # PredictionStaking contract
 │   │   ├── utils.js              # Utility functions
-│   │   └── index.js              # Binance trading API
+│   │   └── index.js              # BNB Chain utilities
 │   ├── coingecko/    # CoinGecko API
 │   ├── openai/       # OpenAI integration
 │   └── news/         # News fetching

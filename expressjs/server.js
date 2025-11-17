@@ -34,7 +34,6 @@ const aiRoutes = require('./routes/ai');
 const newsRoutes = require('./routes/news');
 const cryptoRoutes = require('./routes/crypto');
 const configRoutes = require('./routes/config');
-const tradingRoutes = require('./routes/trading');
 const stakingRoutes = require('./routes/staking');
 const aiController = require('./controllers/aiController');
 const configController = require('./controllers/configController');
@@ -45,7 +44,6 @@ app.use('/api/news', newsRoutes);
 app.use('/api/crypto', cryptoRoutes);
 app.get('/api/market-prediction', cryptoController.getCryptoPrices);
 app.use('/api/config', configRoutes);
-app.use('/api/trading', tradingRoutes);
 app.use('/api/staking', stakingRoutes);
 
 app.get('/api/news/test', (req, res) => {
@@ -74,4 +72,9 @@ app.listen(PORT, () => {
   console.log(`📰 News API: ${process.env.THENEWS_API_KEY ? 'Enabled' : 'Disabled'}`);
   console.log(`💱 CoinGecko: Enabled`);
   console.log(`📊 Mode: API-only (blockchain interactions in frontend)`);
+  
+  if (process.env.AUTO_RESOLVE_ENABLED !== 'false') {
+    const autoResolve = require('./scripts/autoResolve');
+    autoResolve.startAutoResolve();
+  }
 });

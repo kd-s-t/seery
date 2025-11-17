@@ -24,7 +24,7 @@ const RANDOM_QUESTIONS = [
   {
     question: 'Will Ethereum hit $5,000 before December 2024?',
     outcomes: 'Yes, No',
-    duration: 48,
+    duration: 24,
   },
   {
     question: 'Will the S&P 500 close above 5,500 by end of 2024?',
@@ -49,7 +49,7 @@ const RANDOM_QUESTIONS = [
   {
     question: 'Will Tesla stock be above $250 by end of month?',
     outcomes: 'Yes, No',
-    duration: 48,
+    duration: 24,
   },
   {
     question: 'Will gold price exceed $2,500/oz by end of 2024?',

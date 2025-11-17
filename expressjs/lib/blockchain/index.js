@@ -20,6 +20,8 @@ const MAIN_ABI = [
   "function getUserStats(address user) view returns (uint256 wins, uint256 losses, uint256 totalStaked, uint256 totalWon, uint256 totalLost, uint256 winRate)",
   "function getCorrectPredictionsByCrypto(string memory cryptoId) view returns (tuple(address createdBy, uint256 createdAt, uint256 expiresAt, uint256 libraryId, bool rewarded, bool predictionCorrect, bool stakeUp, string cryptoId, uint256 currentPrice, uint256 predictedPrice, uint256 actualPrice, string direction, uint256 percentChange)[])",
   "function stakeCount() view returns (uint256)",
+  "function resolveStake(uint256 stakeId, uint256 actualPrice) external",
+  "function resolveExpiredStakes(uint256[] memory stakeIds, uint256[] memory actualPrices) external",
   // Library functions
   "function createLibrary(string memory dataType, string[] memory tags, tuple(string id, string title, string summary, string content, string url, string image, string date, string metadata)[] memory items, string memory source) returns (uint256)",
   "function getAllLibraries() view returns (uint256[] memory libraryIds, string[] memory dataTypes, uint256[] memory timestamps, string[] memory sources)",
@@ -173,6 +175,16 @@ function getLibraryStorage() {
 }
 
 /**
+ * Get wallet instance (for transactions)
+ */
+function getWallet() {
+  if (!wallet && PRIVATE_KEY) {
+    initBlockchain();
+  }
+  return wallet;
+}
+
+/**
  * Create library entry on-chain
  */
 async function createLibraryOnChain(dataType, tags, items, source = 'newspai') {
@@ -286,15 +298,20 @@ async function getAllLibrariesFromChain() {
 
 /**
  * Get all stakes with caching support
+ * @param {Object} options - Options object
+ * @param {boolean} options.useCache - Whether to use cached data (default: true)
+ * @param {boolean} options.activeOnly - If true, only return active stakes (not expired and not rewarded) (default: false)
  */
 let stakesCache = null;
 let stakesCacheTime = 0;
 const CACHE_TTL = 30000; // 30 seconds cache
 
-async function getAllStakes(useCache = true) {
+async function getAllStakes(options = {}) {
   try {
-    // Return cached data if still valid
-    if (useCache && stakesCache && (Date.now() - stakesCacheTime) < CACHE_TTL) {
+    const { useCache = true, activeOnly = false } = options;
+    
+    // Return cached data if still valid (only if not filtering for active only)
+    if (useCache && !activeOnly && stakesCache && (Date.now() - stakesCacheTime) < CACHE_TTL) {
       return stakesCache;
     }
     
@@ -316,6 +333,8 @@ async function getAllStakes(useCache = true) {
     const stakesArray = result.stakes || result[0] || [];
     const totalStakes = result.totalStakes || result[1] || 0;
     const totalAmountStaked = result.totalAmountStaked || result[2] || 0;
+    
+    const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
     
     const formattedStakes = stakesArray.map((stake, index) => {
       // Handle both struct format and array format
@@ -353,22 +372,45 @@ async function getAllStakes(useCache = true) {
       };
     });
     
+    // Filter for active stakes if requested
+    let filteredStakes = formattedStakes;
+    if (activeOnly) {
+      filteredStakes = formattedStakes.filter(stake => {
+        const isNotExpired = stake.expiresAt > now;
+        const isNotRewarded = !stake.rewarded;
+        return isNotExpired && isNotRewarded;
+      });
+    }
+    
+    // Calculate total amount staked for filtered stakes
+    let filteredTotalAmountStaked = BigInt(0);
+    if (activeOnly) {
+      // Need to recalculate totalAmountStaked for active stakes only
+      // This is an approximation since we'd need to check stakers for each stake
+      // For now, we'll use the original totalAmountStaked but note it's approximate
+      filteredTotalAmountStaked = BigInt(totalAmountStaked);
+    } else {
+      filteredTotalAmountStaked = BigInt(totalAmountStaked);
+    }
+    
     const response = {
-      stakes: formattedStakes,
-      totalStakes: totalStakes.toString(),
-      totalAmountStaked: totalAmountStaked.toString()
+      stakes: filteredStakes,
+      totalStakes: activeOnly ? filteredStakes.length.toString() : totalStakes.toString(),
+      totalAmountStaked: filteredTotalAmountStaked.toString()
     };
     
-    // Update cache
-    stakesCache = response;
-    stakesCacheTime = Date.now();
+    // Update cache only if not filtering (to maintain backward compatibility)
+    if (!activeOnly) {
+      stakesCache = response;
+      stakesCacheTime = Date.now();
+    }
     
     return response;
   } catch (error) {
     console.error('Error getting all stakes:', error.message || error);
     console.error('Error stack:', error.stack);
-    // Return cached data if available even on error
-    if (stakesCache) {
+    // Return cached data if available even on error (only if not filtering)
+    if (!activeOnly && stakesCache) {
       console.log('Returning cached stakes due to error');
       return stakesCache;
     }
@@ -434,7 +476,7 @@ async function getUserStakesWithDetails(userAddress) {
       return null;
     }
     
-    const allStakesData = await getAllStakes(false);
+    const allStakesData = await getAllStakes({ useCache: false });
     if (!allStakesData || !allStakesData.stakes) {
       return [];
     }
@@ -545,7 +587,7 @@ async function getAnalytics() {
       return null;
     }
     
-    const allStakesData = await getAllStakes(false);
+    const allStakesData = await getAllStakes({ useCache: false });
     if (!allStakesData || !allStakesData.stakes) {
       return {
         ongoingStakes: 0,
@@ -706,6 +748,8 @@ async function getUserStats(userAddress) {
 module.exports = {
   initBlockchain,
   getProvider,
+  getMainContract,
+  getWallet,
   getPredictionStaking,
   recordPredictionOnChain,
   verifyPredictionOnChain,

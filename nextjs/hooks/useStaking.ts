@@ -414,11 +414,9 @@ export function useStakeablePredictions() {
 
 
 
-        // User stakes will be calculated from all stakes by checking stakers
-        let userStakesMap: any = {}
-
-        // Get stakers for each stake to calculate totals and user stakes
-        const stakesByCrypto: any = {}
+        // Process each stake separately instead of grouping by cryptoId
+        const predictionsData: any[] = []
+        
         for (let i = 0; i < allStakes.length; i++) {
           if (cancelled) return
           
@@ -426,21 +424,10 @@ export function useStakeablePredictions() {
           const stakeId = i + 1 // Stake IDs start at 1
           const cryptoId = stake.cryptoId
           
-          if (!stakesByCrypto[cryptoId]) {
-            stakesByCrypto[cryptoId] = {
-              cryptoId,
-              currentPrice: stake.currentPrice.toString(),
-              predictedPrice: stake.predictedPrice.toString(),
-              direction: stake.direction,
-              percentChange: Number(stake.percentChange) / 100,
-              createdAt: stake.createdAt.toString(),
-              expiresAt: stake.expiresAt.toString(),
-              libraryId: stake.libraryId.toString(),
-              totalStakedUp: '0',
-              totalStakedDown: '0',
-              stakeCount: 0
-            }
-          }
+          let totalStakedUp = '0'
+          let totalStakedDown = '0'
+          let userStakeUp = '0'
+          let userStakeDown = '0'
           
           // Get stakers for this stake to calculate totals and user stakes
           try {
@@ -457,23 +444,17 @@ export function useStakeablePredictions() {
               stakers.forEach((staker: any) => {
                 // Calculate totals
                 if (staker.stakeUp) {
-                  stakesByCrypto[cryptoId].totalStakedUp = (BigInt(stakesByCrypto[cryptoId].totalStakedUp) + BigInt(staker.amountInBNB)).toString()
+                  totalStakedUp = (BigInt(totalStakedUp) + BigInt(staker.amountInBNB)).toString()
                 } else {
-                  stakesByCrypto[cryptoId].totalStakedDown = (BigInt(stakesByCrypto[cryptoId].totalStakedDown) + BigInt(staker.amountInBNB)).toString()
+                  totalStakedDown = (BigInt(totalStakedDown) + BigInt(staker.amountInBNB)).toString()
                 }
                 
                 // Track user stakes if user is connected
                 if (userAddress && staker.wallet.toLowerCase() === userAddress.toLowerCase()) {
-                  if (!userStakesMap[cryptoId]) {
-                    userStakesMap[cryptoId] = {
-                      userStakeUp: '0',
-                      userStakeDown: '0'
-                    }
-                  }
                   if (staker.stakeUp) {
-                    userStakesMap[cryptoId].userStakeUp = (BigInt(userStakesMap[cryptoId].userStakeUp) + BigInt(staker.amountInBNB)).toString()
+                    userStakeUp = (BigInt(userStakeUp) + BigInt(staker.amountInBNB)).toString()
                   } else {
-                    userStakesMap[cryptoId].userStakeDown = (BigInt(userStakesMap[cryptoId].userStakeDown) + BigInt(staker.amountInBNB)).toString()
+                    userStakeDown = (BigInt(userStakeDown) + BigInt(staker.amountInBNB)).toString()
                   }
                 }
               })
@@ -481,35 +462,37 @@ export function useStakeablePredictions() {
           } catch (err) {
           }
           
-          stakesByCrypto[cryptoId].stakeCount++
-        }
-
-        // Convert to array format expected by frontend
-        const predictionsData = Object.values(stakesByCrypto).map((stake: any) => {
-          const userStake = userStakesMap[stake.cryptoId] || { userStakeUp: '0', userStakeDown: '0' }
-          
-          return {
-            predictionId: stake.cryptoId, // Use cryptoId as unique identifier for React keys
-            stakeId: stake.cryptoId, // Also include for compatibility
-            cryptoId: stake.cryptoId,
+          // Create a separate prediction entry for each stake
+          predictionsData.push({
+            predictionId: `${cryptoId}-${stakeId}`, // Use cryptoId-stakeId as unique identifier
+            stakeId: stakeId.toString(),
+            cryptoId: cryptoId,
             currentPrice: formatEther(BigInt(stake.currentPrice || '0')),
             predictedPrice: formatEther(BigInt(stake.predictedPrice || '0')),
-            actualPrice: '0',
-            timestamp: stake.createdAt,
+            actualPrice: stake.actualPrice ? formatEther(BigInt(stake.actualPrice)) : '0',
+            rewarded: stake.rewarded || false,
+            predictionCorrect: stake.predictionCorrect || false,
+            timestamp: stake.createdAt.toString(),
             verified: false,
             accuracy: '0',
             direction: stake.direction,
-            percentChange: stake.percentChange.toString(),
-            expiresAt: stake.expiresAt,
-            totalStakedUp: formatEther(BigInt(stake.totalStakedUp || '0')),
-            totalStakedDown: formatEther(BigInt(stake.totalStakedDown || '0')),
-            userStakeUp: formatEther(BigInt(userStake.userStakeUp || '0')),
-            userStakeDown: formatEther(BigInt(userStake.userStakeDown || '0'))
-          }
-        })
+            percentChange: (Number(stake.percentChange) / 100).toString(),
+            expiresAt: stake.expiresAt.toString(),
+            totalStakedUp: formatEther(BigInt(totalStakedUp || '0')),
+            totalStakedDown: formatEther(BigInt(totalStakedDown || '0')),
+            userStakeUp: formatEther(BigInt(userStakeUp || '0')),
+            userStakeDown: formatEther(BigInt(userStakeDown || '0'))
+          })
+        }
         
         if (cancelled) return
         
+        // Sort by creation date descending (newest first)
+        predictionsData.sort((a, b) => {
+          const aTimestamp = parseInt(a.timestamp || '0')
+          const bTimestamp = parseInt(b.timestamp || '0')
+          return bTimestamp - aTimestamp
+        })
 
         if (!cancelled) {
           setPredictions(predictionsData)
@@ -580,31 +563,18 @@ export function useStakeablePredictions() {
           return
         }
 
-        // User stakes will be calculated from all stakes by checking stakers
-        let userStakesMap: any = {}
-
-        // Get stakers for each stake to calculate totals and user stakes
-        const stakesByCrypto: any = {}
+        // Process each stake separately instead of grouping by cryptoId
+        const predictionsData: any[] = []
+        
         for (let i = 0; i < allStakes.length; i++) {
           const stake = allStakes[i]
           const stakeId = i + 1 // Stake IDs start at 1
           const cryptoId = stake.cryptoId
           
-          if (!stakesByCrypto[cryptoId]) {
-            stakesByCrypto[cryptoId] = {
-              cryptoId,
-              currentPrice: stake.currentPrice.toString(),
-              predictedPrice: stake.predictedPrice.toString(),
-              direction: stake.direction,
-              percentChange: Number(stake.percentChange) / 100,
-              createdAt: stake.createdAt.toString(),
-              expiresAt: stake.expiresAt.toString(),
-              libraryId: stake.libraryId.toString(),
-              totalStakedUp: '0',
-              totalStakedDown: '0',
-              stakeCount: 0
-            }
-          }
+          let totalStakedUp = '0'
+          let totalStakedDown = '0'
+          let userStakeUp = '0'
+          let userStakeDown = '0'
           
           // Get stakers for this stake to calculate totals and user stakes
           try {
@@ -619,23 +589,17 @@ export function useStakeablePredictions() {
               stakers.forEach((staker: any) => {
                 // Calculate totals
                 if (staker.stakeUp) {
-                  stakesByCrypto[cryptoId].totalStakedUp = (BigInt(stakesByCrypto[cryptoId].totalStakedUp) + BigInt(staker.amountInBNB)).toString()
+                  totalStakedUp = (BigInt(totalStakedUp) + BigInt(staker.amountInBNB)).toString()
                 } else {
-                  stakesByCrypto[cryptoId].totalStakedDown = (BigInt(stakesByCrypto[cryptoId].totalStakedDown) + BigInt(staker.amountInBNB)).toString()
+                  totalStakedDown = (BigInt(totalStakedDown) + BigInt(staker.amountInBNB)).toString()
                 }
                 
                 // Track user stakes if user is connected
                 if (userAddress && staker.wallet.toLowerCase() === userAddress.toLowerCase()) {
-                  if (!userStakesMap[cryptoId]) {
-                    userStakesMap[cryptoId] = {
-                      userStakeUp: '0',
-                      userStakeDown: '0'
-                    }
-                  }
                   if (staker.stakeUp) {
-                    userStakesMap[cryptoId].userStakeUp = (BigInt(userStakesMap[cryptoId].userStakeUp) + BigInt(staker.amountInBNB)).toString()
+                    userStakeUp = (BigInt(userStakeUp) + BigInt(staker.amountInBNB)).toString()
                   } else {
-                    userStakesMap[cryptoId].userStakeDown = (BigInt(userStakesMap[cryptoId].userStakeDown) + BigInt(staker.amountInBNB)).toString()
+                    userStakeDown = (BigInt(userStakeDown) + BigInt(staker.amountInBNB)).toString()
                   }
                 }
               })
@@ -643,32 +607,34 @@ export function useStakeablePredictions() {
           } catch (err) {
           }
           
-          stakesByCrypto[cryptoId].stakeCount++
-        }
-
-        // Convert to array format expected by frontend
-        const predictionsData = Object.values(stakesByCrypto).map((stake: any) => {
-          const userStake = userStakesMap[stake.cryptoId] || { userStakeUp: '0', userStakeDown: '0' }
-          
-          return {
-            predictionId: stake.cryptoId, // Use cryptoId as unique identifier for React keys
-            stakeId: stake.cryptoId, // Also include for compatibility
-            cryptoId: stake.cryptoId,
-            currentPrice: formatEther(stake.currentPrice),
-            predictedPrice: formatEther(stake.predictedPrice),
-            actualPrice: '0',
+          // Create a separate prediction entry for each stake
+          predictionsData.push({
+            predictionId: `${cryptoId}-${stakeId}`, // Use cryptoId-stakeId as unique identifier
+            stakeId: stakeId.toString(),
+            cryptoId: cryptoId,
+            currentPrice: formatEther(BigInt(stake.currentPrice || '0')),
+            predictedPrice: formatEther(BigInt(stake.predictedPrice || '0')),
+            actualPrice: stake.actualPrice ? formatEther(BigInt(stake.actualPrice)) : '0',
+            rewarded: stake.rewarded || false,
+            predictionCorrect: stake.predictionCorrect || false,
             timestamp: stake.createdAt.toString(),
             verified: false,
             accuracy: '0',
             direction: stake.direction,
-            percentChange: stake.percentChange.toString(),
+            percentChange: (Number(stake.percentChange) / 100).toString(),
             expiresAt: stake.expiresAt.toString(),
-            libraryId: stake.libraryId,
-            totalStakedUp: formatEther(stake.totalStakedUp),
-            totalStakedDown: formatEther(stake.totalStakedDown),
-            userStakeUp: formatEther(userStake.userStakeUp),
-            userStakeDown: formatEther(userStake.userStakeDown)
-          }
+            totalStakedUp: formatEther(BigInt(totalStakedUp || '0')),
+            totalStakedDown: formatEther(BigInt(totalStakedDown || '0')),
+            userStakeUp: formatEther(BigInt(userStakeUp || '0')),
+            userStakeDown: formatEther(BigInt(userStakeDown || '0'))
+          })
+        }
+
+        // Sort by creation date descending (newest first)
+        predictionsData.sort((a, b) => {
+          const aTimestamp = parseInt(a.timestamp || '0')
+          const bTimestamp = parseInt(b.timestamp || '0')
+          return bTimestamp - aTimestamp
         })
 
         setPredictions(predictionsData)
