@@ -46,8 +46,8 @@ aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS 
 
 # Get instance public IP for backend domain
 INSTANCE_IP=$$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-FRONTEND_DOMAIN="http://$$INSTANCE_IP"
-BACKEND_DOMAIN="http://$$INSTANCE_IP/api"
+FRONTEND_DOMAIN="http://$${INSTANCE_IP}"
+BACKEND_DOMAIN="http://$${INSTANCE_IP}/api"
 
 # Clone repository (if repo_url is provided)
 if [ -n "${repo_url}" ]; then
