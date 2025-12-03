@@ -80,7 +80,7 @@ resource "aws_iam_instance_profile" "ec2_ecr_profile" {
 
 # Security Group
 resource "aws_security_group" "seer" {
-  name        = "${var.environment}-seer-free-tier-sg"
+  name        = "${var.environment}-seer-free-tier-sg-${substr(md5(timestamp()), 0, 4)}"
   description = "Security group for Seer free tier EC2 instance"
 
   # HTTP
