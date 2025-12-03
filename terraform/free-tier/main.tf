@@ -187,6 +187,9 @@ resource "aws_instance" "seer" {
   # Enable detailed monitoring (optional, costs extra)
   monitoring = false
 
+  # Prevent accidental termination
+  disable_api_termination = true
+
   tags = {
     Name        = "seery-testnet"
     Environment = var.environment
