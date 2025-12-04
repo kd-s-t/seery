@@ -6,6 +6,15 @@ const { ethers } = require('ethers');
 const getStakeablePredictions = async (req, res) => {
   try {
     const blockchain = require('../lib/blockchain');
+    
+    // Auto-resolve expired stakes when getting stakes (since cron doesn't work in production)
+    try {
+      const autoResolve = require('../scripts/autoResolve');
+      await autoResolve.autoResolveExpiredStakes();
+    } catch (resolveError) {
+      console.error('Auto-resolve error (non-fatal):', resolveError.message);
+    }
+    
     const result = await blockchain.getAllStakes({ useCache: true, activeOnly: false }); // Use cache, show all for demo
     
     if (result === null) {
