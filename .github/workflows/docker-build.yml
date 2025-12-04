@@ -58,7 +58,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/production-seer-nextjs:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_SEERY_BACKEND_DOMAIN=https://theseery.com/api
-            NEXT_PUBLIC_CONTRACT_ADDRESS="0x42067558c48f8c74C819461a9105CD47B90B098F"
+            NEXT_PUBLIC_CONTRACT_ADDRESS=0x42067558c48f8c74C819461a9105CD47B90B098F
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64

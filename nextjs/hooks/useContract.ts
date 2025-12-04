@@ -8,8 +8,13 @@ export function useContract() {
 
   useEffect(() => {
     const loadContractAddress = async () => {
+      const cleanAddress = (addr: string | null | undefined): string | null => {
+        if (!addr) return null
+        return addr.trim().replace(/^["']|["']$/g, '')
+      }
+
       // First try to get from build-time env variable
-      const buildTimeAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || null
+      const buildTimeAddress = cleanAddress(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || null)
       
       if (buildTimeAddress) {
         setPredictionStakingAddress(buildTimeAddress)
@@ -27,7 +32,7 @@ export function useContract() {
         }>('/api/config')
         
         if (config.success) {
-          const address = config.contractAddress || config.predictionStakingAddress || null
+          const address = cleanAddress(config.contractAddress || config.predictionStakingAddress || null)
           if (address) {
             setPredictionStakingAddress(address)
             setContractAddress(address)
