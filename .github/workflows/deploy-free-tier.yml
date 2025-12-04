@@ -65,7 +65,8 @@ jobs:
         run: terraform plan -no-color
         env:
           TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          TF_VAR_contract_address: 0x42067558c48f8c74C819461a9105CD47B90B098F
+          TF_VAR_blockchain_contract_address: 0x42067558c48f8c74C819461a9105CD47B90B098F
+          TF_VAR_backend_domain: https://theseery.com/api
           TF_VAR_key_name: ${{ secrets.EC2_KEY_NAME }}
       
       - name: Terraform Apply
@@ -74,7 +75,8 @@ jobs:
         run: terraform apply -auto-approve
         env:
           TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          TF_VAR_contract_address: 0x42067558c48f8c74C819461a9105CD47B90B098F
+          TF_VAR_blockchain_contract_address: 0x42067558c48f8c74C819461a9105CD47B90B098F
+          TF_VAR_backend_domain: https://theseery.com/api
           TF_VAR_key_name: ${{ secrets.EC2_KEY_NAME }}
       
       - name: Terraform Destroy

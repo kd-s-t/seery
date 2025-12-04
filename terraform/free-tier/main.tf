@@ -169,12 +169,14 @@ resource "aws_instance" "seer" {
     CONTRACT_ADDRESS          = var.blockchain_contract_address
     BLOCKCHAIN_PRIVATE_KEY    = var.blockchain_private_key
     BLOCKCHAIN_WALLET_ADDRESS = var.blockchain_wallet_address != "" ? var.blockchain_wallet_address : var.blockchain_contract_address
+    BACKEND_DOMAIN            = var.backend_domain
     openai_api_key            = var.openai_api_key
     network                   = var.blockchain_network
     blockchain_rpc            = var.blockchain_rpc
     contract_address          = var.blockchain_contract_address
     blockchain_private_key    = var.blockchain_private_key
     blockchain_wallet_address = var.blockchain_wallet_address != "" ? var.blockchain_wallet_address : var.blockchain_contract_address
+    backend_domain            = var.backend_domain
     openai_model              = var.openai_model
     binance_api_key           = var.binance_api_key
     binance_secret_key        = var.binance_secret_key
@@ -208,6 +210,56 @@ resource "aws_eip" "seer" {
   tags = {
     Name        = "seery-testnet-eip"
     Environment = var.environment
+  }
+}
+
+# EventBridge API Destination for HTTP endpoint
+resource "aws_cloudwatch_event_api_destination" "auto_resolve" {
+  name                             = "${var.environment}-seery-auto-resolve-api"
+  description                      = "API destination for auto-resolve endpoint"
+  invocation_endpoint              = "http://${var.allocate_elastic_ip ? aws_eip.seer[0].public_ip : aws_instance.seer.public_ip}:3016/api/staking/auto-resolve"
+  http_method                      = "POST"
+  invocation_rate_limit_per_second = 1
+  connection_arn                  = aws_cloudwatch_event_connection.auto_resolve.arn
+}
+
+# EventBridge Connection for API Destination
+resource "aws_cloudwatch_event_connection" "auto_resolve" {
+  name               = "${var.environment}-seery-auto-resolve-connection"
+  description        = "Connection for auto-resolve API destination"
+  authorization_type = "API_KEY"
+
+  auth_parameters {
+    api_key {
+      key   = "X-API-Key"
+      value = "seery-auto-resolve"
+    }
+  }
+}
+
+# EventBridge Rule for auto-resolving expired stakes
+# Cost: FREE (EventBridge rules are free, only custom events cost $1/million)
+resource "aws_cloudwatch_event_rule" "auto_resolve_stakes" {
+  name                = "${var.environment}-seery-auto-resolve"
+  description         = "Auto-resolve expired stakes every hour"
+  schedule_expression = "rate(1 hour)"
+
+  tags = {
+    Name        = "${var.environment}-seery-auto-resolve"
+    Environment = var.environment
+  }
+}
+
+# EventBridge Target - API Destination
+resource "aws_cloudwatch_event_target" "auto_resolve_target" {
+  rule      = aws_cloudwatch_event_rule.auto_resolve_stakes.name
+  target_id = "AutoResolveStakes"
+  arn       = aws_cloudwatch_event_api_destination.auto_resolve.arn
+
+  http_parameters {
+    header_parameters = {
+      "Content-Type" = "application/json"
+    }
   }
 }
 

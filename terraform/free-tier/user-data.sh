@@ -44,10 +44,11 @@ echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
 # Login to ECR
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
-# Get instance public IP for backend domain
+# Get instance public IP for frontend domain
 INSTANCE_IP=$$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 FRONTEND_DOMAIN="http://$${INSTANCE_IP}"
-BACKEND_DOMAIN="http://$${INSTANCE_IP}/api"
+# Use backend domain from Terraform variable (or fallback to IP-based)
+BACKEND_DOMAIN="$${BACKEND_DOMAIN:-http://$${INSTANCE_IP}/api}"
 
 # Clone repository (if repo_url is provided)
 if [ -n "${repo_url}" ]; then

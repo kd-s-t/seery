@@ -56,7 +56,13 @@ variable "blockchain_rpc" {
 variable "blockchain_contract_address" {
   description = "Deployed PredictionMarket contract address"
   type        = string
-  default     = ""
+  default     = "0x42067558c48f8c74C819461a9105CD47B90B098F"
+}
+
+variable "backend_domain" {
+  description = "Backend API domain URL"
+  type        = string
+  default     = "https://theseery.com/api"
 }
 
 variable "blockchain_private_key" {
