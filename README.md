@@ -300,6 +300,8 @@ Reward = Your Stake + (Your Stake / Total Winners' Stake) × Losers' Pool
 **Deployed Contract Addresses:**
 
 **BNB Smart Chain Mainnet:**
+- `0x950E644d66B4a7f7032217B9AFDE11603B4FD447` (v2.0 - Current - with owner/withdraw functions) ⭐
+- [View on BSCScan](https://bscscan.com/address/0x950E644d66B4a7f7032217B9AFDE11603B4FD447)
 - `0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D` (v1.0 - Legacy - no owner/withdraw functions)
 - [View on BSCScan](https://bscscan.com/address/0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D)
 
