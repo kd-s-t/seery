@@ -219,7 +219,7 @@ cd seery
 
 ### Admin Analytics
 
-1. Connect as admin wallet (configured in backend)
+1. Connect as contract owner wallet (`0x3adf9dAC83A382Bde820e1D15DBD0A57C4B034A6`)
 2. Navigate to the **Analytics** page
 3. View platform-wide metrics:
    - Ongoing stakes count
@@ -228,6 +228,8 @@ cd seery
    - Correct predictions
    - Total amount staked
    - Accuracy rate
+
+**Note:** Analytics access is restricted to the contract owner only. Only the wallet address that deployed the contract can view the analytics dashboard.
 
 ---  
 
