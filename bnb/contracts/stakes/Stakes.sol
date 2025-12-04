@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 contract Stakes {
+    address public owner;
+    
     struct Stake {
         address createdBy;
         uint256 createdAt;
@@ -37,6 +39,10 @@ contract Stakes {
     
     uint256 public constant MIN_STAKE = 0.00001 ether;
     uint256 public constant STAKE_EXPIRY_WINDOW = 24 hours;
+    
+    constructor() {
+        owner = msg.sender;
+    }
     
     event StakePlaced(
         uint256 indexed stakeId,
@@ -200,12 +206,8 @@ contract Stakes {
                 }
             }
         } else {
-            // No winners - return all stakes to stakers (edge case)
-            for (uint256 i = 0; i < stakerIds.length; i++) {
-                Staker storage staker = stakers[stakerIds[i]];
-                (bool success, ) = payable(staker.wallet).call{value: staker.amountInBNB}("");
-                require(success, "Failed to return stake");
-            }
+            // No winners - BNB stays in contract as platform earnings
+            // Owner can withdraw via withdrawPlatformEarnings()
         }
     }
     
@@ -466,5 +468,25 @@ contract Stakes {
         }
         
         return correctStakes;
+    }
+    
+    /**
+     * Withdraw platform earnings (BNB from stakes with no winners)
+     * Only owner can call this function
+     */
+    function withdrawPlatformEarnings() external {
+        require(msg.sender == owner, "Only owner can withdraw");
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No earnings to withdraw");
+        
+        (bool success, ) = payable(owner).call{value: balance}("");
+        require(success, "Failed to withdraw earnings");
+    }
+    
+    /**
+     * Get contract balance (platform earnings)
+     */
+    function getPlatformEarnings() external view returns (uint256) {
+        return address(this).balance;
     }
 }

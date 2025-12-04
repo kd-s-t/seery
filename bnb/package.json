@@ -12,6 +12,11 @@
     "check:address": "hardhat run scripts/checkAddress.js --network bnbTestnet",
     "check:address:local": "hardhat run scripts/checkAddress.js --network localhost",
     "verify:contract": "hardhat run scripts/verifyContract.js --network localhost",
+    "check:owner": "hardhat run scripts/checkOwner.js --network bnbTestnet",
+    "check:owner:mainnet": "hardhat run scripts/checkOwner.js --network bnbMainnet",
+    "withdraw:earnings": "hardhat run scripts/withdrawEarnings.js --network bnbTestnet",
+    "withdraw:earnings:mainnet": "hardhat run scripts/withdrawEarnings.js --network bnbMainnet",
+    "withdraw:earnings:local": "hardhat run scripts/withdrawEarnings.js --network localhost",
     "node": "hardhat node"
   },
   "devDependencies": {
