@@ -255,11 +255,5 @@ resource "aws_cloudwatch_event_target" "auto_resolve_target" {
   rule      = aws_cloudwatch_event_rule.auto_resolve_stakes.name
   target_id = "AutoResolveStakes"
   arn       = aws_cloudwatch_event_api_destination.auto_resolve.arn
-
-  http_parameters {
-    header_parameters = {
-      "Content-Type" = "application/json"
-    }
-  }
 }
 
