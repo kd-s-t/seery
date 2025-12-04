@@ -34,10 +34,10 @@ Set in `.env` (see `.env.example` for template):
 
 ## Networks
 
-- **Testnet:** `npm run deploy` (uses bnbTestnet)
-  - Contract: `0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6` ([BSCScan Testnet](https://testnet.bscscan.com/address/0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6))
+- **Testnet:** `npm run deploy:predictions` (uses bnbTestnet)
+  - Contract: `0x42067558c48f8c74C819461a9105CD47B90B098F` ([BSCScan Testnet](https://testnet.bscscan.com/address/0x42067558c48f8c74C819461a9105CD47B90B098F))
 - **Mainnet:** `npx hardhat run scripts/deployPredictions.js --network bnbMainnet`
-  - Contract: `0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D` ([BSCScan](https://bscscan.com/address/0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D))
+  - Contract: `0x950E644d66B4a7f7032217B9AFDE11603B4FD447` ([BSCScan](https://bscscan.com/address/0x950E644d66B4a7f7032217B9AFDE11603B4FD447))
 - **Local:** `npx hardhat node` (starts local Hardhat network on port 8545)
 
 ## Funding Wallets on Local Network

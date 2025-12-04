@@ -2,7 +2,7 @@ const hre = require("hardhat");
 require("dotenv").config();
 
 async function main() {
-  const CONTRACT_ADDRESS = process.env.MAIN_CONTRACT_ADDRESS || process.env.CONTRACT_ADDRESS || "0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6";
+  const CONTRACT_ADDRESS = process.env.MAIN_CONTRACT_ADDRESS || process.env.CONTRACT_ADDRESS || "0x42067558c48f8c74C819461a9105CD47B90B098F";
   
   console.log("Checking contract owner...\n");
   console.log("Contract address:", CONTRACT_ADDRESS);
