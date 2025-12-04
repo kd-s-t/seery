@@ -62,8 +62,12 @@ Deploys to AWS EC2 free tier:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `OPENAI_API_KEY`
-- `CONTRACT_ADDRESS`
+- `CONTRACT_ADDRESS` (v2.0: `0x42067558c48f8c74C819461a9105CD47B90B098F` for testnet)
 - `EC2_KEY_NAME`
+
+### For Docker Build (Variables, not Secrets):
+- `NEXT_PUBLIC_CONTRACT_ADDRESS` (v2.0: `0x42067558c48f8c74C819461a9105CD47B90B098F` for testnet)
+- `NEXT_PUBLIC_SEERY_BACKEND_DOMAIN`
 
 ### Optional (for tests):
 - `OPENAI_API_KEY` (for running tests that require it)
