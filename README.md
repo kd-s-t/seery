@@ -300,13 +300,13 @@ Reward = Your Stake + (Your Stake / Total Winners' Stake) × Losers' Pool
 **Deployed Contract Addresses:**
 
 **BNB Smart Chain Mainnet:**
-- `0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D` (Legacy - no owner/withdraw functions)
+- `0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D` (v1.0 - Legacy - no owner/withdraw functions)
 - [View on BSCScan](https://bscscan.com/address/0x958dD10DfbF21e8F3c11BC8C005aa879144bBe0D)
 
 **BNB Smart Chain Testnet:**
-- `0x42067558c48f8c74C819461a9105CD47B90B098F` (Current - with owner/withdraw functions) ⭐
+- `0x42067558c48f8c74C819461a9105CD47B90B098F` (v2.0 - Current - with owner/withdraw functions) ⭐
 - [View on BSCScan Testnet](https://testnet.bscscan.com/address/0x42067558c48f8c74C819461a9105CD47B90B098F)
-- `0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6` (Legacy - no owner/withdraw functions)
+- `0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6` (v1.0 - Legacy - no owner/withdraw functions)
 - [View on BSCScan Testnet](https://testnet.bscscan.com/address/0xbB0383E1CE84C278a149AAb84F3aC7DE6687d2d6)
 
 **Note:** The new contract includes platform earnings withdrawal functionality. When all bettors lose a stake, the BNB stays in the contract as platform earnings, which the owner can withdraw using `withdrawPlatformEarnings()`. See [Business Flow Documentation](confluence/BUSINESS_FLOW.md) for details.
