@@ -157,6 +157,7 @@ cd seery
 - **Backend**: See [expressjs/README.md](expressjs/README.md) for detailed setup instructions
 - **Frontend**: See [nextjs/README.md](nextjs/README.md) for detailed setup instructions
 - **Smart Contracts**: See [bnb/README.md](bnb/README.md) for deployment instructions
+- **Business Flow & Revenue Model**: See [confluence/BUSINESS_FLOW.md](confluence/BUSINESS_FLOW.md) for platform earnings and revenue details
 
 ---  
 
