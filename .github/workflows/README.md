@@ -63,7 +63,9 @@ Deploys to AWS EC2 free tier:
 - `AWS_SECRET_ACCESS_KEY`
 - `OPENAI_API_KEY`
 - `EC2_KEY_NAME`
-- Contract address is hardcoded in `deploy-free-tier.yml` as `0x42067558c48f8c74C819461a9105CD47B90B098F` (v2.0 testnet)
+- Contract address and backend domain are passed as Terraform variables:
+  - `TF_VAR_blockchain_contract_address`: `0x42067558c48f8c74C819461a9105CD47B90B098F` (v2.0 testnet)
+  - `TF_VAR_backend_domain`: `https://theseery.com/api`
 
 ### For Docker Build:
 - Contract address and backend domain are hardcoded in `docker-build.yml`
