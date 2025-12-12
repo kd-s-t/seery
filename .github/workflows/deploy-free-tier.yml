@@ -23,7 +23,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  TF_WORKING_DIR: terraform/free-tier
+  TF_WORKING_DIR: terraform
 
 jobs:
   deploy:

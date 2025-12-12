@@ -5,83 +5,124 @@ variable "aws_region" {
 }
 
 variable "environment" {
-  description = "Environment name (e.g., production, staging)"
+  description = "Environment name (e.g., production, staging, dev)"
   type        = string
-  default     = "production"
+  default     = "dev"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
+variable "instance_type" {
+  description = "EC2 instance type - KEEP SMALL (t2.micro, t3.micro, t3.small only) - DO NOT USE LARGE INSTANCES"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "t2.micro"
+  
+  validation {
+    condition = can(regex("^(t2\\.micro|t3\\.micro|t3\\.small)$", var.instance_type))
+    error_message = "Instance type must be t2.micro, t3.micro, or t3.small only. Large instances are not allowed to prevent high costs."
+  }
 }
 
-# Application Configuration
+variable "key_name" {
+  description = "Name of the AWS EC2 Key Pair for SSH access"
+  type        = string
+}
+
+variable "ssh_allowed_cidrs" {
+  description = "CIDR blocks allowed to SSH (restrict to your IP in production)"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "allocate_elastic_ip" {
+  description = "Allocate an Elastic IP for static IP address"
+  type        = bool
+  default     = false
+}
+
 variable "openai_api_key" {
-  description = "OpenAI API key (stored in SSM Parameter Store)"
+  description = "OpenAI API key (optional - leave empty to disable AI features)"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
-variable "network" {
+variable "blockchain_network" {
   description = "BNB Chain network (testnet or mainnet)"
   type        = string
   default     = "testnet"
 }
 
-variable "bnb_testnet_rpc" {
-  description = "BNB Chain testnet RPC URL"
+variable "blockchain_rpc" {
+  description = "BNB Chain RPC URL (use testnet or mainnet RPC)"
   type        = string
   default     = "https://data-seed-prebsc-1-s1.binance.org:8545"
 }
 
-variable "bnb_mainnet_rpc" {
-  description = "BNB Chain mainnet RPC URL"
-  type        = string
-  default     = "https://bsc-dataseed.binance.org/"
-}
-
-variable "contract_address" {
+variable "blockchain_contract_address" {
   description = "Deployed PredictionMarket contract address"
   type        = string
+  default     = "0x42067558c48f8c74C819461a9105CD47B90B098F"
+}
+
+variable "backend_domain" {
+  description = "Backend API domain URL"
+  type        = string
+  default     = "https://theseery.com/api"
+}
+
+variable "blockchain_private_key" {
+  description = "Private key for automated blockchain transactions (optional)"
+  type        = string
+  sensitive   = true
   default     = ""
 }
 
-# Domain Configuration
-variable "domain_name" {
-  description = "Domain name for the application (e.g., seer.example.com)"
+variable "blockchain_wallet_address" {
+  description = "Wallet address for blockchain transactions (optional)"
   type        = string
   default     = ""
 }
 
-variable "certificate_arn" {
-  description = "ARN of ACM certificate for HTTPS (leave empty to create new)"
+variable "openai_model" {
+  description = "OpenAI model to use (e.g., gpt-3.5-turbo, gpt-4-turbo)"
+  type        = string
+  default     = "gpt-3.5-turbo"
+}
+
+variable "binance_api_key" {
+  description = "Binance API key (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "binance_secret_key" {
+  description = "Binance secret key (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "binance_testnet" {
+  description = "Use Binance testnet (true/false)"
+  type        = bool
+  default     = true
+}
+
+variable "thenews_api_key" {
+  description = "TheNewsAPI key for news feed"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "repo_url" {
+  description = "Git repository URL to clone (leave empty to skip)"
   type        = string
   default     = ""
 }
 
-# Container Resources
-variable "expressjs_cpu" {
-  description = "CPU units for Express.js container (1024 = 1 vCPU)"
-  type        = number
-  default     = 512
+variable "repo_branch" {
+  description = "Git branch to checkout"
+  type        = string
+  default     = "main"
 }
-
-variable "expressjs_memory" {
-  description = "Memory for Express.js container (in MB)"
-  type        = number
-  default     = 1024
-}
-
-variable "nextjs_cpu" {
-  description = "CPU units for Next.js container (1024 = 1 vCPU)"
-  type        = number
-  default     = 1024
-}
-
-variable "nextjs_memory" {
-  description = "Memory for Next.js container (in MB)"
-  type        = number
-  default     = 2048
-}
-

@@ -34,15 +34,7 @@ jobs:
       - name: Terraform Init (ECS)
         run: terraform init -backend=false
       
-      - name: Terraform Validate (ECS)
-        run: terraform validate
-      
-      - name: Terraform Init (Free Tier)
-        working-directory: ./terraform/free-tier
-        run: terraform init -backend=false
-      
-      - name: Terraform Validate (Free Tier)
-        working-directory: ./terraform/free-tier
+      - name: Terraform Validate
         run: terraform validate
 
   plan:

@@ -1,50 +1,34 @@
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = module.ecs.alb_dns_name
+output "instance_id" {
+  description = "EC2 instance ID"
+  value       = module.ec2.instance_id
 }
 
-output "alb_zone_id" {
-  description = "Zone ID of the Application Load Balancer"
-  value       = module.ecs.alb_zone_id
+output "public_ip" {
+  description = "Public IP address of the EC2 instance"
+  value       = module.ec2.public_ip
 }
 
-output "expressjs_service_url" {
-  description = "URL for Express.js backend service"
-  value       = module.ecs.expressjs_service_url
+output "public_dns" {
+  description = "Public DNS name of the EC2 instance"
+  value       = module.ec2.public_dns
 }
 
-output "nextjs_service_url" {
-  description = "URL for Next.js frontend service"
-  value       = module.ecs.nextjs_service_url
+output "elastic_ip" {
+  description = "Elastic IP address (if allocated)"
+  value       = module.ec2.elastic_ip
 }
 
-output "expressjs_repository_url" {
-  description = "ECR repository URL for Express.js"
-  value       = module.ecr.expressjs_repository_url
+output "nextjs_url" {
+  description = "URL to access Next.js frontend"
+  value       = "http://${var.allocate_elastic_ip && module.ec2.elastic_ip != null ? module.ec2.elastic_ip : module.ec2.public_ip}:3015"
 }
 
-output "nextjs_repository_url" {
-  description = "ECR repository URL for Next.js"
-  value       = module.ecr.nextjs_repository_url
+output "api_url" {
+  description = "URL to access Express.js API"
+  value       = "http://${var.allocate_elastic_ip && module.ec2.elastic_ip != null ? module.ec2.elastic_ip : module.ec2.public_ip}:3016"
 }
 
-output "vpc_id" {
-  description = "VPC ID"
-  value       = module.security.vpc_id
+output "ssh_command" {
+  description = "SSH command to connect to the instance"
+  value       = "ssh -i <your-key.pem> ec2-user@${var.allocate_elastic_ip && module.ec2.elastic_ip != null ? module.ec2.elastic_ip : module.ec2.public_ip}"
 }
-
-output "cluster_name" {
-  description = "ECS cluster name"
-  value       = module.ecs.cluster_name
-}
-
-output "s3_bucket_name" {
-  description = "S3 bucket name for coin images"
-  value       = module.s3.bucket_name
-}
-
-output "s3_bucket_domain" {
-  description = "S3 bucket domain name for coin images"
-  value       = module.s3.bucket_regional_domain_name
-}
-
