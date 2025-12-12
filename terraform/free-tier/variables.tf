@@ -11,9 +11,14 @@ variable "environment" {
 }
 
 variable "instance_type" {
-  description = "EC2 instance type (use t2.micro for free tier)"
+  description = "EC2 instance type - KEEP SMALL (t2.micro, t3.micro, t3.small only) - DO NOT USE LARGE INSTANCES"
   type        = string
   default     = "t2.micro"
+  
+  validation {
+    condition = can(regex("^(t2\\.micro|t3\\.micro|t3\\.small)$", var.instance_type))
+    error_message = "Instance type must be t2.micro, t3.micro, or t3.small only. Large instances are not allowed to prevent high costs."
+  }
 }
 
 variable "key_name" {

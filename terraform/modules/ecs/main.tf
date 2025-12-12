@@ -98,6 +98,19 @@ resource "aws_lb_target_group" "nextjs" {
 
 # ALB Listener for HTTP
 resource "aws_lb_listener" "http" {
+  count             = var.certificate_arn == "" ? 1 : 0
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nextjs.arn
+  }
+}
+
+resource "aws_lb_listener" "http_redirect" {
+  count             = var.certificate_arn != "" ? 1 : 0
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
@@ -147,7 +160,8 @@ resource "aws_lb_listener_rule" "api" {
 
 # ALB Listener Rule for API routes (HTTP fallback)
 resource "aws_lb_listener_rule" "api_http" {
-  listener_arn = aws_lb_listener.http.arn
+  count        = var.certificate_arn == "" ? 1 : 0
+  listener_arn = aws_lb_listener.http[0].arn
   priority     = 100
 
   action {
@@ -319,6 +333,7 @@ resource "aws_ecs_service" "expressjs" {
 
   depends_on = [
     aws_lb_listener.http,
+    aws_lb_listener.http_redirect,
     aws_lb_target_group.expressjs
   ]
 
@@ -350,6 +365,7 @@ resource "aws_ecs_service" "nextjs" {
 
   depends_on = [
     aws_lb_listener.http,
+    aws_lb_listener.http_redirect,
     aws_lb_target_group.nextjs
   ]
 

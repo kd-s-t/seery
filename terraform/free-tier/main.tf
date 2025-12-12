@@ -146,7 +146,7 @@ resource "aws_security_group" "seer" {
 # EC2 Instance
 resource "aws_instance" "seer" {
   ami                  = data.aws_ami.amazon_linux.id
-  instance_type        = var.instance_type
+  instance_type        = var.instance_type # KEEP SMALL - DO NOT SCALE UP
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2_ecr_profile.name
 

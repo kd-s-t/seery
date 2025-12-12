@@ -1,8 +1,8 @@
 resource "aws_s3_bucket" "coin_images" {
-  bucket = "${var.environment}-seer-coin-images"
+  bucket = "${var.environment}-seer-coin-images-${var.account_id}"
 
   tags = {
-    Name        = "${var.environment}-seer-coin-images"
+    Name        = "${var.environment}-seer-coin-images-${var.account_id}"
     Environment = var.environment
     Project     = "Seer"
   }
@@ -61,6 +61,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "coin_images" {
   rule {
     id     = "delete_old_versions"
     status = "Enabled"
+
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = 30

@@ -37,6 +37,7 @@ module "s3" {
   source = "./modules/s3"
 
   environment = var.environment
+  account_id  = data.aws_caller_identity.current.account_id
 }
 
 # IAM module

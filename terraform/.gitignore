@@ -2,6 +2,12 @@
 *.tfvars
 !terraform.tfvars.example
 
+# Development and production tfvars
+*development*.tfvars
+*production*.tfvars
+development.tfvars
+production.tfvars
+
 # Crash log files
 crash.log
 crash.*.log
