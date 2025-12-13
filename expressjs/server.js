@@ -18,7 +18,9 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some(allowed => origin && origin.includes(allowed.replace(/^https?:\/\//, '')))) {
+    if (!origin) {
+      callback(null, true);
+    } else if (allowedOrigins.includes(origin) || allowedOrigins.some(allowed => origin && origin.includes(allowed.replace(/^https?:\/\//, '')))) {
       callback(null, true);
     } else {
       callback(null, false);
