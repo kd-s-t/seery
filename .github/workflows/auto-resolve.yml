@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call Auto-Resolve Endpoint
+        id: resolve
         run: |
           API_URL="https://seery-expressjs.vercel.app/api/staking/auto-resolve"
           
@@ -23,12 +24,48 @@ jobs:
           body=$(echo "$response" | sed '$d')
           
           echo "HTTP Status: $http_code"
-          echo "Response: $body"
           
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "Auto-resolve completed successfully"
+            echo "$body" | jq '.'
+            
+            resolved=$(echo "$body" | jq -r '.resolved // 0')
+            failed=$(echo "$body" | jq -r '.failed // 0')
+            total=$(echo "$body" | jq -r '.total // 0')
+            message=$(echo "$body" | jq -r '.message // "N/A"')
+            
+            echo ""
+            echo "=========================================="
+            echo "📊 AUTO-RESOLVE SUMMARY"
+            echo "=========================================="
+            echo "✅ Resolved: $resolved"
+            echo "❌ Failed: $failed"
+            echo "📋 Total Expired: $total"
+            echo "💬 Message: $message"
+            echo "=========================================="
+            
+            if [ "$total" -gt 0 ]; then
+              echo ""
+              echo "📝 Detailed Results:"
+              echo "$body" | jq -r '.results[]? | "  Stake \(.stakeId) (\(.cryptoId)): \(.status) - \(.error // .price // "")"'
+            fi
+            
+            echo "::set-output name=resolved::$resolved"
+            echo "::set-output name=failed::$failed"
+            echo "::set-output name=total::$total"
+            
             exit 0
           else
-            echo "Auto-resolve failed with status $http_code"
+            echo "❌ Auto-resolve failed with status $http_code"
+            echo "Response: $body"
             exit 1
           fi
+      
+      - name: Summary
+        run: |
+          echo "### Auto-Resolve Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Resolved | ${{ steps.resolve.outputs.resolved }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | ${{ steps.resolve.outputs.failed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📋 Total Expired | ${{ steps.resolve.outputs.total }} |" >> $GITHUB_STEP_SUMMARY

@@ -320,15 +320,30 @@ const triggerAutoResolve = async (req, res) => {
     const autoResolve = require('../scripts/autoResolve');
     const result = await autoResolve.autoResolveExpiredStakes();
     
-    res.json({
+    const response = {
       success: true,
-      ...result
-    });
+      summary: {
+        resolved: result.resolved || 0,
+        failed: result.failed || 0,
+        total: result.total || 0,
+        message: result.message || (result.total === 0 ? 'No expired stakes to resolve' : `Resolved ${result.resolved} of ${result.total} expired stakes`)
+      },
+      results: result.results || [],
+      timestamp: result.timestamp || new Date().toISOString()
+    };
+    
+    res.json(response);
   } catch (error) {
     console.error('Error triggering auto-resolve:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to trigger auto-resolve',
+      summary: {
+        resolved: 0,
+        failed: 0,
+        total: 0,
+        message: 'Auto-resolve failed: ' + (error.message || 'Unknown error')
+      },
       timestamp: new Date().toISOString()
     });
   }

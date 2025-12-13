@@ -231,11 +231,25 @@ async function autoResolveExpiredStakes() {
     console.log(`   Failed: ${failedCount > 0 ? colors.red : colors.gray}${failedCount}${colors.reset}`);
     console.log(`   Total: ${expiredStakes.length}`);
     
+    let message = '';
+    if (expiredStakes.length === 0) {
+      message = 'No expired stakes to resolve';
+    } else if (resolvedCount === expiredStakes.length && failedCount === 0) {
+      message = `Successfully resolved all ${resolvedCount} expired stake(s)`;
+    } else if (resolvedCount > 0 && failedCount > 0) {
+      message = `Resolved ${resolvedCount} of ${expiredStakes.length} expired stake(s), ${failedCount} failed`;
+    } else if (failedCount === expiredStakes.length) {
+      message = `Failed to resolve all ${failedCount} expired stake(s)`;
+    } else {
+      message = `Processed ${expiredStakes.length} expired stake(s): ${resolvedCount} resolved, ${failedCount} failed`;
+    }
+    
     return {
       resolved: resolvedCount,
       failed: failedCount,
       total: expiredStakes.length,
       results,
+      message,
       timestamp: new Date().toISOString()
     };
     
