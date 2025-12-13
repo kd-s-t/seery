@@ -1,34 +1,19 @@
-output "instance_id" {
-  description = "EC2 instance ID"
-  value       = module.ec2.instance_id
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket"
+  value       = aws_s3_bucket.seery_coin_images.id
 }
 
-output "public_ip" {
-  description = "Public IP address of the EC2 instance"
-  value       = module.ec2.public_ip
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = aws_s3_bucket.seery_coin_images.arn
 }
 
-output "public_dns" {
-  description = "Public DNS name of the EC2 instance"
-  value       = module.ec2.public_dns
+output "s3_bucket_domain_name" {
+  description = "Domain name of the S3 bucket"
+  value       = aws_s3_bucket.seery_coin_images.bucket_domain_name
 }
 
-output "elastic_ip" {
-  description = "Elastic IP address (if allocated)"
-  value       = module.ec2.elastic_ip
-}
-
-output "nextjs_url" {
-  description = "URL to access Next.js frontend"
-  value       = "http://${var.allocate_elastic_ip && module.ec2.elastic_ip != null ? module.ec2.elastic_ip : module.ec2.public_ip}:3015"
-}
-
-output "api_url" {
-  description = "URL to access Express.js API"
-  value       = "http://${var.allocate_elastic_ip && module.ec2.elastic_ip != null ? module.ec2.elastic_ip : module.ec2.public_ip}:3016"
-}
-
-output "ssh_command" {
-  description = "SSH command to connect to the instance"
-  value       = "ssh -i <your-key.pem> ec2-user@${var.allocate_elastic_ip && module.ec2.elastic_ip != null ? module.ec2.elastic_ip : module.ec2.public_ip}"
+output "s3_bucket_regional_domain_name" {
+  description = "Regional domain name of the S3 bucket"
+  value       = aws_s3_bucket.seery_coin_images.bucket_regional_domain_name
 }

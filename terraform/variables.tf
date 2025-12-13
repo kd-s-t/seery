@@ -7,122 +7,45 @@ variable "aws_region" {
 variable "environment" {
   description = "Environment name (e.g., production, staging, dev)"
   type        = string
-  default     = "dev"
+  default     = "production"
 }
 
-variable "instance_type" {
-  description = "EC2 instance type - KEEP SMALL (t2.micro, t3.micro, t3.small only) - DO NOT USE LARGE INSTANCES"
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket for Seery coin images"
   type        = string
-  default     = "t2.micro"
-  
-  validation {
-    condition = can(regex("^(t2\\.micro|t3\\.micro|t3\\.small)$", var.instance_type))
-    error_message = "Instance type must be t2.micro, t3.micro, or t3.small only. Large instances are not allowed to prevent high costs."
-  }
+  default     = "production-seer-coin-images"
 }
 
-variable "key_name" {
-  description = "Name of the AWS EC2 Key Pair for SSH access"
-  type        = string
-}
-
-variable "ssh_allowed_cidrs" {
-  description = "CIDR blocks allowed to SSH (restrict to your IP in production)"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
-variable "allocate_elastic_ip" {
-  description = "Allocate an Elastic IP for static IP address"
+variable "enable_versioning" {
+  description = "Enable versioning on the S3 bucket"
   type        = bool
   default     = false
 }
 
-variable "openai_api_key" {
-  description = "OpenAI API key (optional - leave empty to disable AI features)"
-  type        = string
-  sensitive   = true
-  default     = ""
+variable "allowed_origins" {
+  description = "Allowed CORS origins for the S3 bucket"
+  type        = list(string)
+  default     = [
+    "https://theseery.com",
+    "http://localhost:3015",
+    "https://seery-nextjs-hyxh.vercel.app"
+  ]
 }
 
-variable "blockchain_network" {
-  description = "BNB Chain network (testnet or mainnet)"
-  type        = string
-  default     = "testnet"
+variable "enable_lifecycle_policy" {
+  description = "Enable lifecycle policy to auto-delete old objects (reduces costs)"
+  type        = bool
+  default     = false
 }
 
-variable "blockchain_rpc" {
-  description = "BNB Chain RPC URL (use testnet or mainnet RPC)"
-  type        = string
-  default     = "https://data-seed-prebsc-1-s1.binance.org:8545"
+variable "object_expiration_days" {
+  description = "Number of days after which objects are automatically deleted (only if lifecycle policy is enabled)"
+  type        = number
+  default     = 365
 }
 
-variable "blockchain_contract_address" {
-  description = "Deployed PredictionMarket contract address"
-  type        = string
-  default     = "0x42067558c48f8c74C819461a9105CD47B90B098F"
-}
-
-variable "backend_domain" {
-  description = "Backend API domain URL"
-  type        = string
-  default     = "https://theseery.com/api"
-}
-
-variable "blockchain_private_key" {
-  description = "Private key for automated blockchain transactions (optional)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "blockchain_wallet_address" {
-  description = "Wallet address for blockchain transactions (optional)"
-  type        = string
-  default     = ""
-}
-
-variable "openai_model" {
-  description = "OpenAI model to use (e.g., gpt-3.5-turbo, gpt-4-turbo)"
-  type        = string
-  default     = "gpt-3.5-turbo"
-}
-
-variable "binance_api_key" {
-  description = "Binance API key (optional)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "binance_secret_key" {
-  description = "Binance secret key (optional)"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "binance_testnet" {
-  description = "Use Binance testnet (true/false)"
+variable "enable_intelligent_tiering" {
+  description = "Enable S3 Intelligent-Tiering to automatically optimize storage costs (free tier eligible)"
   type        = bool
   default     = true
-}
-
-variable "thenews_api_key" {
-  description = "TheNewsAPI key for news feed"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "repo_url" {
-  description = "Git repository URL to clone (leave empty to skip)"
-  type        = string
-  default     = ""
-}
-
-variable "repo_branch" {
-  description = "Git branch to checkout"
-  type        = string
-  default     = "main"
 }

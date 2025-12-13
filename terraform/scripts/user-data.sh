@@ -45,15 +45,15 @@ echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
 # Get instance public IP for frontend domain
-INSTANCE_IP=$$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+INSTANCE_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 FRONTEND_DOMAIN="http://$${INSTANCE_IP}"
 # Use backend domain from Terraform variable (or fallback to IP-based)
 BACKEND_DOMAIN="$${BACKEND_DOMAIN:-http://$${INSTANCE_IP}/api}"
 
 # Clone repository (if repo_url is provided)
-if [ -n "${repo_url}" ]; then
+if [ -n "$${repo_url}" ]; then
   cd /home/ec2-user
-  git clone -b ${repo_branch} ${repo_url} seer || echo "Repository clone failed or already exists"
+  git clone -b $${repo_branch} $${repo_url} seer || echo "Repository clone failed or already exists"
   cd seer || exit 1
 else
   # Create directory structure if no repo
@@ -61,8 +61,8 @@ else
   cd /home/ec2-user/seer
 fi
 
-# ECR image URLs (using $$ to escape $ for Terraform template)
-ECR_REGISTRY="$${AWS_ACCOUNT_ID}.dkr.ecr.$${AWS_REGION}.amazonaws.com"
+# ECR image URLs (set as bash variables for use in docker-compose.yml)
+ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 EXPRESSJS_IMAGE="$${ECR_REGISTRY}/production-seer-expressjs:latest"
 NEXTJS_IMAGE="$${ECR_REGISTRY}/production-seer-nextjs:latest"
 
@@ -109,29 +109,29 @@ services:
 EOF
 
 # Create .env file with environment variables (matching expressjs/.env format)
-if [ -n "${openai_api_key}" ]; then
+if [ -n "$${openai_api_key}" ]; then
   cat > .env <<EOF
 # Server (defaults)
 PORT=3016
 SEERY_FRONTEND_DOMAIN=http://localhost:3015
 
 # Blockchain (defaults - add your values when needed)
-BLOCKCHAIN_NETWORK=${network}
-BLOCKCHAIN_RPC=${blockchain_rpc}
-BLOCKCHAIN_WALLET_ADDRESS=${blockchain_wallet_address}
-BLOCKCHAIN_PRIVATE_KEY=${blockchain_private_key}
-BLOCKCHAIN_CONTRACT_ADDRESS=${contract_address}
+BLOCKCHAIN_NETWORK=$${network}
+BLOCKCHAIN_RPC=$${blockchain_rpc}
+BLOCKCHAIN_WALLET_ADDRESS=$${blockchain_wallet_address}
+BLOCKCHAIN_PRIVATE_KEY=$${blockchain_private_key}
+BLOCKCHAIN_CONTRACT_ADDRESS=$${contract_address}
 
 # OpenAI (optional - add when you need AI features)
-OPENAI_API_KEY=${openai_api_key}
-OPENAI_MODEL=${openai_model}
+OPENAI_API_KEY=$${openai_api_key}
+OPENAI_MODEL=$${openai_model}
 
 # Binance Trading (optional - add if you use trading)
-BINANCE_API_KEY=${binance_api_key}
-BINANCE_SECRET_KEY=${binance_secret_key}
-BINANCE_TESTNET=${binance_testnet}
+BINANCE_API_KEY=$${binance_api_key}
+BINANCE_SECRET_KEY=$${binance_secret_key}
+BINANCE_TESTNET=$${binance_testnet}
 
-THENEWS_API_KEY=${thenews_api_key}
+THENEWS_API_KEY=$${thenews_api_key}
 EOF
 else
   cat > .env <<EOF
@@ -140,11 +140,11 @@ PORT=3016
 SEERY_FRONTEND_DOMAIN=http://localhost:3015
 
 # Blockchain (defaults - add your values when needed)
-BLOCKCHAIN_NETWORK=${network}
-BLOCKCHAIN_RPC=${blockchain_rpc}
-BLOCKCHAIN_WALLET_ADDRESS=${contract_address}
-BLOCKCHAIN_PRIVATE_KEY=${blockchain_private_key}
-BLOCKCHAIN_CONTRACT_ADDRESS=${contract_address}
+BLOCKCHAIN_NETWORK=$${network}
+BLOCKCHAIN_RPC=$${blockchain_rpc}
+BLOCKCHAIN_WALLET_ADDRESS=$${contract_address}
+BLOCKCHAIN_PRIVATE_KEY=$${blockchain_private_key}
+BLOCKCHAIN_CONTRACT_ADDRESS=$${contract_address}
 
 # OpenAI (optional - add when you need AI features)
 # OPENAI_API_KEY not set - AI features disabled (app works without it)
