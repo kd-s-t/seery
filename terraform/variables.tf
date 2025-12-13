@@ -44,8 +44,3 @@ variable "object_expiration_days" {
   default     = 365
 }
 
-variable "enable_intelligent_tiering" {
-  description = "Enable S3 Intelligent-Tiering to automatically optimize storage costs (free tier eligible)"
-  type        = bool
-  default     = true
-}

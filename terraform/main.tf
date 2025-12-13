@@ -62,11 +62,14 @@ resource "aws_s3_bucket_cors_configuration" "seery_coin_images" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "seery_coin_images" {
+  count  = var.enable_lifecycle_policy ? 1 : 0
   bucket = aws_s3_bucket.seery_coin_images.id
 
   rule {
-    id     = "delete_old_versions"
-    status = var.enable_lifecycle_policy ? "Enabled" : "Disabled"
+    id     = "delete_old_objects"
+    status = "Enabled"
+
+    filter {}
 
     expiration {
       days = var.object_expiration_days
@@ -75,25 +78,5 @@ resource "aws_s3_bucket_lifecycle_configuration" "seery_coin_images" {
     noncurrent_version_expiration {
       noncurrent_days = 30
     }
-  }
-
-  rule {
-    id     = "transition_to_ia"
-    status = var.enable_intelligent_tiering ? "Enabled" : "Disabled"
-
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
-  }
-}
-
-resource "aws_s3_bucket_intelligent_tiering" "seery_coin_images" {
-  count  = var.enable_intelligent_tiering ? 1 : 0
-  bucket = aws_s3_bucket.seery_coin_images.id
-  name   = "EntireBucket"
-
-  filter {
-    prefix = ""
   }
 }

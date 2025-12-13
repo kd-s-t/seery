@@ -7,9 +7,7 @@ s3_bucket_name   = "production-seer-coin-images"
 enable_versioning = false
 
 # Cost Optimization (AWS Free Tier)
-# Intelligent-Tiering: Automatically moves objects to cheaper storage tiers (FREE to enable)
 # Lifecycle Policy: Auto-deletes old objects after X days (set to false to keep all objects)
-enable_intelligent_tiering = true
 enable_lifecycle_policy    = false
 object_expiration_days     = 365
 
