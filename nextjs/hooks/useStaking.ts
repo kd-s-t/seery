@@ -433,57 +433,34 @@ export function useStakeablePredictions() {
           if (cancelledRef?.current) return
           
           const stake = allStakes[i]
-          const stakeId = i + 1 // Stake IDs start at 1
+          const apiStake = apiData.predictions[i]
+          const stakeId = apiStake?.stakeId || (i + 1) // Use stakeId from API, fallback to index + 1
           const cryptoId = stake.cryptoId
           
-          let totalStakedUp = '0'
-          let totalStakedDown = '0'
+          // Get staker data from API response (already fetched in backend)
+          const stakers = apiStake?.stakers || []
+          const totalStakedUp = apiStake?.totalStakedUp || '0'
+          const totalStakedDown = apiStake?.totalStakedDown || '0'
+          
+          // Calculate user stakes from stakers array
           let userStakeUp = '0'
           let userStakeDown = '0'
           
-          // Get stakers for this stake to calculate totals and user stakes
-          try {
-            // Try to get detailed staker list first (for user stakes)
-            const stakers = await publicClient.readContract({
-              address: predictionStakingAddress as `0x${string}`,
-              abi: PREDICTION_STAKING_ABI,
-              functionName: 'getStakersByStake',
-              args: [BigInt(stakeId)]
-            })
-            
-            if (cancelledRef?.current) return
-            
-            if (stakers && Array.isArray(stakers) && stakers.length > 0) {
-              stakers.forEach((staker: any) => {
-                // Validate staker data
-                if (!staker || !staker.amountInBNB) {
-                  console.warn(`Invalid staker data for stake ${stakeId}:`, staker)
-                  return
-                }
-                
-                // Calculate totals
+          if (stakers && Array.isArray(stakers) && stakers.length > 0) {
+            stakers.forEach((staker: any) => {
+              if (!staker || !staker.amountInBNB) {
+                return
+              }
+              
+              // Track user stakes if user is connected
+              if (userAddress && staker.wallet && staker.wallet.toLowerCase() === userAddress.toLowerCase()) {
                 if (staker.stakeUp) {
-                  totalStakedUp = (BigInt(totalStakedUp) + BigInt(staker.amountInBNB)).toString()
+                  userStakeUp = (BigInt(userStakeUp) + BigInt(staker.amountInBNB || '0')).toString()
                 } else {
-                  totalStakedDown = (BigInt(totalStakedDown) + BigInt(staker.amountInBNB)).toString()
+                  userStakeDown = (BigInt(userStakeDown) + BigInt(staker.amountInBNB || '0')).toString()
                 }
-                
-                // Track user stakes if user is connected
-                if (userAddress && staker.wallet.toLowerCase() === userAddress.toLowerCase()) {
-                  if (staker.stakeUp) {
-                    userStakeUp = (BigInt(userStakeUp) + BigInt(staker.amountInBNB)).toString()
-                  } else {
-                    userStakeDown = (BigInt(userStakeDown) + BigInt(staker.amountInBNB)).toString()
-                  }
-                }
-              })
-            } else {
-              // No stakers found - this is normal for new stakes
-              console.log(`No stakers found for stake ${stakeId} (cryptoId: ${cryptoId})`)
-            }
-          } catch (err: any) {
-            console.error(`Failed to get stakers for stake ${stakeId} (cryptoId: ${cryptoId}):`, err.message || err)
-            // Continue with zero values - stake might be new or contract call failed
+              }
+            })
           }
           
           // Create a separate prediction entry for each stake

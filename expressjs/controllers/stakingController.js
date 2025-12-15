@@ -7,14 +7,6 @@ const getStakeablePredictions = async (req, res) => {
   try {
     const blockchain = require('../lib/blockchain');
     
-    // Auto-resolve expired stakes when getting stakes (since cron doesn't work in production)
-    try {
-      const autoResolve = require('../scripts/autoResolve');
-      await autoResolve.autoResolveExpiredStakes();
-    } catch (resolveError) {
-      console.error('Auto-resolve error (non-fatal):', resolveError.message);
-    }
-    
     // Allow bypassing cache with ?refresh=true query parameter
     const refresh = req.query.refresh === 'true' || req.query.nocache === 'true';
     const result = await blockchain.getAllStakes({ useCache: !refresh, activeOnly: false });

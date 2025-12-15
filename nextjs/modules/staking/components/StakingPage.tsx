@@ -297,6 +297,33 @@ export default function StakingPage() {
     return `${minutes}m`
   }
 
+  const formatCreatedDate = (createdAt: string | number | undefined) => {
+    try {
+      if (!createdAt && createdAt !== 0) return 'Unknown'
+      
+      const createdNum = typeof createdAt === 'string' ? parseInt(createdAt) : createdAt
+      if (isNaN(createdNum) || createdNum === 0) return 'Unknown'
+      
+      // If createdAt is already in milliseconds (large number), use as-is, otherwise convert from seconds
+      const created = createdNum > 1e12 ? createdNum : createdNum * 1000
+      const date = new Date(created)
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'Unknown'
+      
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    } catch {
+      return 'Unknown'
+    }
+  }
+
   if (!mounted || !isConnected) {
     return null
   }
@@ -365,24 +392,17 @@ export default function StakingPage() {
                 <Card
                   key={prediction.predictionId || prediction.stakeId || `prediction-${index}`}
                   sx={{
-                    cursor: 'pointer',
-                    border: selectedPrediction?.predictionId === prediction.predictionId ? 2 : 1,
-                    borderColor: selectedPrediction?.predictionId === prediction.predictionId
-                      ? 'primary.main'
-                      : prediction.rewarded
-                        ? 'success.main'
-                        : 'divider',
+                    border: 1,
+                    borderColor: prediction.rewarded
+                      ? 'success.main'
+                      : 'divider',
                     backgroundColor: prediction.rewarded ? 'action.hover' : '#ffffff',
                     bgcolor: prediction.rewarded ? 'action.hover' : '#ffffff',
                     '& .MuiCardContent-root': {
                       backgroundColor: prediction.rewarded ? 'action.hover' : '#ffffff',
-                    },
-                    '&:hover': {
-                      borderColor: prediction.rewarded ? 'success.dark' : 'primary.main'
                     }
                   }}
                   style={{ backgroundColor: 'white' }}
-                  onClick={() => setSelectedPrediction(prediction)}
                 >
                   <CardContent>
                     <Stack spacing={2}>
@@ -421,6 +441,9 @@ export default function StakingPage() {
                               })()}
                             </Typography>
                           </Tooltip>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                            Created: {formatCreatedDate(prediction.timestamp || prediction.createdAt)}
+                          </Typography>
                         </Box>
                         {(() => {
                           const actualDirection = getActualDirection(prediction.currentPrice, prediction.percentChange, prediction.direction)

@@ -382,20 +382,62 @@ async function getAllStakes(options = {}) {
       });
     }
     
+    // Get stakers for each stake
+    const stakesWithStakers = await Promise.all(filteredStakes.map(async (stake) => {
+      const stakeId = stake.stakeId;
+      let totalStakedUp = BigInt(0);
+      let totalStakedDown = BigInt(0);
+      let stakers = [];
+      
+      try {
+        const stakersResult = await contract.getStakersByStake(stakeId);
+        
+        if (stakersResult && Array.isArray(stakersResult)) {
+          stakers = stakersResult.map(staker => ({
+            id: staker.id?.toString() || '0',
+            wallet: staker.wallet || '',
+            stakeId: staker.stakeId?.toString() || stakeId.toString(),
+            amountInBNB: staker.amountInBNB?.toString() || '0',
+            createdAt: staker.createdAt?.toString() || '0',
+            stakeUp: staker.stakeUp || false,
+            rewarded: staker.rewarded || false
+          }));
+          
+          stakers.forEach((staker) => {
+            const amount = BigInt(staker.amountInBNB || '0');
+            if (staker.stakeUp) {
+              totalStakedUp += amount;
+            } else {
+              totalStakedDown += amount;
+            }
+          });
+        }
+      } catch (err) {
+        console.warn(`Error fetching stakers for stake ${stakeId} (cryptoId: ${stake.cryptoId}):`, err.message || err);
+      }
+      
+      return {
+        ...stake,
+        stakers: stakers,
+        totalStakedUp: totalStakedUp.toString(),
+        totalStakedDown: totalStakedDown.toString()
+      };
+    }));
+    
     // Calculate total amount staked for filtered stakes
     let filteredTotalAmountStaked = BigInt(0);
     if (activeOnly) {
-      // Need to recalculate totalAmountStaked for active stakes only
-      // This is an approximation since we'd need to check stakers for each stake
-      // For now, we'll use the original totalAmountStaked but note it's approximate
-      filteredTotalAmountStaked = BigInt(totalAmountStaked);
+      stakesWithStakers.forEach(stake => {
+        filteredTotalAmountStaked += BigInt(stake.totalStakedUp || '0');
+        filteredTotalAmountStaked += BigInt(stake.totalStakedDown || '0');
+      });
     } else {
       filteredTotalAmountStaked = BigInt(totalAmountStaked);
     }
     
     const response = {
-      stakes: filteredStakes,
-      totalStakes: activeOnly ? filteredStakes.length.toString() : totalStakes.toString(),
+      stakes: stakesWithStakers,
+      totalStakes: activeOnly ? stakesWithStakers.length.toString() : totalStakes.toString(),
       totalAmountStaked: filteredTotalAmountStaked.toString()
     };
     
