@@ -15,7 +15,9 @@ const getStakeablePredictions = async (req, res) => {
       console.error('Auto-resolve error (non-fatal):', resolveError.message);
     }
     
-    const result = await blockchain.getAllStakes({ useCache: true, activeOnly: false }); // Use cache, show all for demo
+    // Allow bypassing cache with ?refresh=true query parameter
+    const refresh = req.query.refresh === 'true' || req.query.nocache === 'true';
+    const result = await blockchain.getAllStakes({ useCache: !refresh, activeOnly: false });
     
     if (result === null) {
       return res.status(500).json({

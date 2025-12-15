@@ -304,7 +304,7 @@ async function getAllLibrariesFromChain() {
  */
 let stakesCache = null;
 let stakesCacheTime = 0;
-const CACHE_TTL = 30000; // 30 seconds cache
+const CACHE_TTL = 10000; // 10 seconds cache
 
 async function getAllStakes(options = {}) {
   try {
