@@ -77,7 +77,21 @@ const COINGECKO_IMAGE_ID_MAP: Record<string, string> = {
   'aster-2': '31124',
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016'
+function getApiBaseUrl(): string {
+  const envValue = process.env.NEXT_PUBLIC_SEERY_BACKEND_DOMAIN || ''
+  
+  if (!envValue) {
+    return 'http://localhost:3016'
+  }
+  
+  if (envValue.endsWith('/api')) {
+    return envValue.slice(0, -4)
+  }
+  
+  return envValue
+}
+
+const API_URL = getApiBaseUrl()
 
 export function getCryptoImageUrl(cryptoId: string, size: 'small' | 'large' | 'thumb' = 'small'): string {
   if (!cryptoId) {
