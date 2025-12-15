@@ -190,8 +190,6 @@ async function autoResolveExpiredStakes() {
         console.log(`${colors.green}   ✅ Resolved stake ${stake.stakeId} with price $${actualPrice} (tx: ${tx.hash})${colors.reset}`);
         results.push({ stakeId: stake.stakeId, cryptoId: stake.cryptoId, status: 'resolved', price: actualPrice, txHash: tx.hash });
         
-        blockchain.invalidateStakesCache();
-        
         // Small delay after successful resolution
         await sleep(1000);
       } catch (error) {
@@ -212,7 +210,6 @@ async function autoResolveExpiredStakes() {
               resolvedCount++;
               console.log(`${colors.green}   ✅ Resolved stake ${stake.stakeId} after retry (tx: ${tx.hash})${colors.reset}`);
               results.push({ stakeId: stake.stakeId, cryptoId: stake.cryptoId, status: 'resolved', price: actualPrice, txHash: tx.hash });
-              blockchain.invalidateStakesCache();
               continue;
             }
           } catch (retryError) {

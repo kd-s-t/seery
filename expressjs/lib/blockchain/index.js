@@ -297,23 +297,13 @@ async function getAllLibrariesFromChain() {
 }
 
 /**
- * Get all stakes with caching support
+ * Get all stakes from blockchain
  * @param {Object} options - Options object
- * @param {boolean} options.useCache - Whether to use cached data (default: true)
  * @param {boolean} options.activeOnly - If true, only return active stakes (not expired and not rewarded) (default: false)
  */
-let stakesCache = null;
-let stakesCacheTime = 0;
-const CACHE_TTL = 10000; // 10 seconds cache
-
 async function getAllStakes(options = {}) {
   try {
-    const { useCache = true, activeOnly = false } = options;
-    
-    // Return cached data if still valid (only if not filtering for active only)
-    if (useCache && !activeOnly && stakesCache && (Date.now() - stakesCacheTime) < CACHE_TTL) {
-      return stakesCache;
-    }
+    const { activeOnly = false } = options;
     
     const contract = getMainContract();
     if (!contract) {
@@ -441,43 +431,14 @@ async function getAllStakes(options = {}) {
       totalAmountStaked: filteredTotalAmountStaked.toString()
     };
     
-    // Update cache only if not filtering (to maintain backward compatibility)
-    if (!activeOnly) {
-      stakesCache = response;
-      stakesCacheTime = Date.now();
-    }
-    
     return response;
   } catch (error) {
     console.error('Error getting all stakes:', error.message || error);
     console.error('Error stack:', error.stack);
-    // Return cached data if available even on error (only if not filtering)
-    if (!activeOnly && stakesCache) {
-      console.log('Returning cached stakes due to error');
-      return stakesCache;
-    }
     return null;
   }
 }
 
-/**
- * Invalidate stakes cache (call after new stake is created)
- */
-function invalidateStakesCache() {
-  stakesCache = null;
-  stakesCacheTime = 0;
-}
-
-/**
- * Get cache info for debugging
- */
-function getStakesCacheInfo() {
-  return {
-    cached: !!stakesCache,
-    age: stakesCache ? Date.now() - stakesCacheTime : 0,
-    ttl: CACHE_TTL
-  };
-}
 
 /**
  * Get stakes by user address (staker)
@@ -803,8 +764,6 @@ module.exports = {
   getUserStats,
   getCorrectPredictionsByCrypto,
   getAnalytics,
-  invalidateStakesCache,
-  getStakesCacheInfo,
   formatBNB,
   parseBNB
 };

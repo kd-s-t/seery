@@ -369,7 +369,7 @@ export function useStakeablePredictions() {
   const { writeContract } = useWriteContract()
   const hasFetchedRef = useRef(false)
 
-  const fetchPredictions = async (cancelledRef?: { current: boolean }) => {
+  const fetchPredictions = async (cancelledRef?: { current: boolean }, forceRefresh = false) => {
       if (!predictionStakingAddress || !publicClient) {
         return
       }
@@ -382,7 +382,8 @@ export function useStakeablePredictions() {
 
         // Get all stakes from backend API
         let stakesResponse
-        const apiData = await getStakeablePredictions()
+        const bypassCache = forceRefresh || cancelledRef === undefined // Bypass cache on manual refetch or force refresh
+        const apiData = await getStakeablePredictions(bypassCache)
         console.log('Response: getStakes API', apiData)
         
         if (!apiData.success || !apiData.predictions) {
@@ -543,8 +544,8 @@ export function useStakeablePredictions() {
       return Promise.resolve()
     }
     
-    // Manual refetch - no cancellation needed, just call fetchPredictions
-    await fetchPredictions()
+    // Manual refetch - bypass cache to get fresh data
+    await fetchPredictions(undefined, true)
   }
 
   return { predictions, loading, error, refetch }

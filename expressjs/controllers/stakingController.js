@@ -7,9 +7,7 @@ const getStakeablePredictions = async (req, res) => {
   try {
     const blockchain = require('../lib/blockchain');
     
-    // Allow bypassing cache with ?refresh=true query parameter
-    const refresh = req.query.refresh === 'true' || req.query.nocache === 'true';
-    const result = await blockchain.getAllStakes({ useCache: !refresh, activeOnly: false });
+    const result = await blockchain.getAllStakes({ activeOnly: false });
     
     if (result === null) {
       return res.status(500).json({
@@ -21,15 +19,13 @@ const getStakeablePredictions = async (req, res) => {
       });
     }
     
-    const cacheInfo = blockchain.getStakesCacheInfo();
-    
     res.json({
       success: true,
       predictions: result.stakes || [],
       count: result.stakes?.length || 0,
       totalStakes: result.totalStakes || '0',
       totalAmountStaked: result.totalAmountStaked || '0',
-      cached: cacheInfo.cached && cacheInfo.age < cacheInfo.ttl,
+      cached: false,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

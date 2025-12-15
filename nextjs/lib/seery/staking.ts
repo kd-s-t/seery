@@ -1,6 +1,10 @@
 import { request } from './api'
 
-export async function getStakeablePredictions() {
+export async function getStakeablePredictions(bypassCache = false) {
+  const endpoint = bypassCache 
+    ? '/api/staking/predictions?refresh=true'
+    : '/api/staking/predictions'
+  
   return request<{
     success: boolean
     predictions: any[]
@@ -9,7 +13,7 @@ export async function getStakeablePredictions() {
     totalAmountStaked: string
     cached?: boolean
     timestamp: string
-  }>('/api/staking/predictions')
+  }>(endpoint)
 }
 
 export async function getUserStats(address: string) {
