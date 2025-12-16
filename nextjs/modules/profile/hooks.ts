@@ -98,6 +98,21 @@ export function useProfile() {
 
         if (!cancelled) {
           setUserStakes(apiData.stakes)
+          
+          // Log debug info for resolved stakes
+          apiData.stakes.forEach((stake: any) => {
+            if (stake.isResolved && stake.debugInfo) {
+              console.log(`[Stake Debug] ${stake.cryptoId} (Stake ${stake.stakeId}):`, {
+                started: stake.currentPrice,
+                result: stake.actualPrice,
+                bet: stake.stakeUp ? 'UP' : 'DOWN',
+                priceWentUp: stake.debugInfo.priceWentUp,
+                shouldWin: stake.debugInfo.shouldWin,
+                rewarded: stake.debugInfo.rewarded,
+                match: stake.debugInfo.match ? '✅ CORRECT' : '❌ MISMATCH'
+              })
+            }
+          })
         }
       } catch (err: any) {
         console.error('Error fetching user stakes:', err)

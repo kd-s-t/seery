@@ -52,16 +52,30 @@ export function getStakeStatus(stake: UserStake): {
   color: 'info' | 'warning' | 'success' | 'error'
 } {
   if (stake.isResolved) {
-    // Use predictionCorrect if available, otherwise fall back to rewarded
+    // Check rewarded first - this indicates if the individual staker won
+    // rewarded is set to true only if the staker's bet direction matched the outcome
+    if (stake.rewarded !== null && stake.rewarded !== undefined) {
+      return stake.rewarded
+        ? { status: 'Won', color: 'success' }
+        : { status: 'Lost', color: 'error' }
+    }
+    // Fallback: calculate based on stakeUp and actualPrice vs currentPrice
+    if (stake.stakeUp !== undefined && stake.actualPrice && stake.currentPrice) {
+      const actualPriceNum = parseFloat(stake.actualPrice)
+      const currentPriceNum = parseFloat(stake.currentPrice)
+      const actualUp = actualPriceNum > currentPriceNum
+      const stakerWon = (actualUp && stake.stakeUp) || (!actualUp && !stake.stakeUp)
+      return stakerWon
+        ? { status: 'Won', color: 'success' }
+        : { status: 'Lost', color: 'error' }
+    }
+    // Last fallback to predictionCorrect (less accurate for individual stakers)
     if (stake.predictionCorrect !== null && stake.predictionCorrect !== undefined) {
       return stake.predictionCorrect
         ? { status: 'Won', color: 'success' }
         : { status: 'Lost', color: 'error' }
     }
-    // Fallback to rewarded if predictionCorrect is not available
-    return stake.rewarded 
-      ? { status: 'Won', color: 'success' }
-      : { status: 'Lost', color: 'error' }
+    return { status: 'Lost', color: 'error' }
   }
   if (stake.isExpired) {
     return { status: 'Expired', color: 'warning' }

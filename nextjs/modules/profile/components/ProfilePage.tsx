@@ -262,12 +262,28 @@ export default function ProfilePage() {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2">
-                            ${formatPrice(stake.predictedPrice)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            ({formatPercent(stake.percentChange)})
-                          </Typography>
+                          {stake.currentPrice ? (
+                            <Box>
+                              <Typography variant="body2">
+                                Started: ${formatPrice(stake.currentPrice)}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Predicted: ${formatPrice(stake.predictedPrice)}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                ({formatPercent(stake.percentChange)})
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <Box>
+                              <Typography variant="body2">
+                                ${formatPrice(stake.predictedPrice)}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                ({formatPercent(stake.percentChange)})
+                              </Typography>
+                            </Box>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -288,10 +304,32 @@ export default function ProfilePage() {
                         <TableCell>
                           {stake.isResolved && stake.actualPrice ? (
                             <Box>
+                              {stake.currentPrice && (
+                                <Typography variant="caption" color="text.secondary" display="block">
+                                  Started: ${parseFloat(stake.currentPrice).toFixed(2)}
+                                </Typography>
+                              )}
                               <Typography variant="body2">
-                                ${parseFloat(stake.actualPrice).toFixed(2)}
+                                Result: ${parseFloat(stake.actualPrice).toFixed(2)}
                               </Typography>
-                              {stake.predictionCorrect !== null && stake.predictionCorrect !== undefined && (
+                              {stake.currentPrice && stake.actualPrice && (
+                                <Typography variant="caption" color="text.secondary" display="block">
+                                  {parseFloat(stake.actualPrice) > parseFloat(stake.currentPrice) ? '↑ Went UP' : '↓ Went DOWN'}
+                                </Typography>
+                              )}
+                              {stake.debugInfo && (
+                                <Tooltip title={
+                                  `Debug: Should Win: ${stake.debugInfo.shouldWin}, Rewarded: ${stake.debugInfo.rewarded}, Match: ${stake.debugInfo.match ? '✅' : '❌'}`
+                                }>
+                                  <Chip
+                                    label={stake.debugInfo.match ? '✅' : '❌'}
+                                    color={stake.debugInfo.match ? 'success' : 'error'}
+                                    size="small"
+                                    sx={{ mt: 0.5, cursor: 'help' }}
+                                  />
+                                </Tooltip>
+                              )}
+                              {!stake.debugInfo && stake.predictionCorrect !== null && stake.predictionCorrect !== undefined && (
                                 <Chip
                                   label={stake.predictionCorrect ? 'Correct' : 'Incorrect'}
                                   color={stake.predictionCorrect ? 'success' : 'error'}

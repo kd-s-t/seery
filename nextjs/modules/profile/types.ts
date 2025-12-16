@@ -15,6 +15,7 @@ export interface UserStake {
   stakeUp?: boolean // User's bet direction (true = UP, false = DOWN)
   amountWei?: string
   amount?: string
+  currentPrice?: string // Starting price when stake was created (used for win/loss comparison)
   predictedPrice: string
   percentChange: number
   createdAt: string
@@ -23,5 +24,14 @@ export interface UserStake {
   rewarded?: boolean
   predictionCorrect?: boolean | null
   actualPrice?: string
+  debugInfo?: {
+    currentPrice: string
+    actualPrice: string
+    priceWentUp: boolean
+    stakerBetUp: boolean
+    shouldWin: boolean
+    rewarded: boolean
+    match: boolean
+  }
 }
 

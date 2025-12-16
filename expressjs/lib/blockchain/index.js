@@ -540,12 +540,62 @@ async function getUserStakesWithDetails(userAddress) {
                   existing.rewarded = staker.rewarded;
                 }
               } else {
+                // Format prices consistently (both in BNB/ETH units, not Wei)
+                const currentPriceFormatted = stake.currentPrice ? ethers.formatEther(stake.currentPrice.toString()) : '0';
+                const predictedPriceFormatted = stake.predictedPrice ? ethers.formatEther(stake.predictedPrice.toString()) : '0';
+                const actualPriceFormatted = hasActualPrice ? ethers.formatEther(stake.actualPrice.toString()) : null;
+                
+                // Debug: Log price comparison for resolved stakes
+                if (isResolved && hasActualPrice && stake.currentPrice && stake.actualPrice) {
+                  const currentPriceNum = parseFloat(currentPriceFormatted);
+                  const actualPriceNum = parseFloat(actualPriceFormatted);
+                  const priceWentUp = actualPriceNum > currentPriceNum;
+                  const stakerBetUp = staker.stakeUp;
+                  const shouldWin = (priceWentUp && stakerBetUp) || (!priceWentUp && !stakerBetUp);
+                  
+                  console.log(`[DEBUG] Stake ${stakeId}, Staker ${staker.id} (${stake.cryptoId}):`, {
+                    currentPrice: currentPriceFormatted,
+                    actualPrice: actualPriceFormatted,
+                    priceWentUp,
+                    stakerBetUp,
+                    shouldWin,
+                    rewarded: staker.rewarded,
+                    match: shouldWin === staker.rewarded ? '✅' : '❌ MISMATCH'
+                  });
+                }
+                
+                // Calculate win/loss logic for debugging
+                let debugInfo = null;
+                if (isResolved && hasActualPrice && stake.currentPrice && stake.actualPrice) {
+                  const currentPriceNum = parseFloat(currentPriceFormatted);
+                  const actualPriceNum = parseFloat(actualPriceFormatted);
+                  const priceWentUp = actualPriceNum > currentPriceNum;
+                  const stakerBetUp = staker.stakeUp;
+                  const shouldWin = (priceWentUp && stakerBetUp) || (!priceWentUp && !stakerBetUp);
+                  
+                  debugInfo = {
+                    currentPrice: currentPriceFormatted,
+                    actualPrice: actualPriceFormatted,
+                    priceWentUp,
+                    stakerBetUp,
+                    shouldWin,
+                    rewarded: staker.rewarded,
+                    match: shouldWin === staker.rewarded
+                  };
+                  
+                  // Log to console for server logs
+                  console.log(`[DEBUG] Stake ${stakeId}, Staker ${staker.id} (${stake.cryptoId}):`, {
+                    ...debugInfo,
+                    match: shouldWin === staker.rewarded ? '✅' : '❌ MISMATCH'
+                  });
+                }
+                
                 userStakesMap.set(key, {
                   stakeId,
                   stakerId: Number(staker.id),
                   cryptoId: stake.cryptoId,
-                  currentPrice: stake.currentPrice,
-                  predictedPrice: stake.predictedPrice,
+                  currentPrice: currentPriceFormatted,
+                  predictedPrice: predictedPriceFormatted,
                   direction: stake.direction,
                   percentChange: Number(stake.percentChange) / 100,
                   amountWei: amountWei.toString(),
@@ -556,8 +606,9 @@ async function getUserStakesWithDetails(userAddress) {
                   isExpired,
                   isResolved,
                   rewarded: staker.rewarded,
-                  actualPrice: hasActualPrice ? ethers.formatEther(stake.actualPrice) : null,
-                  predictionCorrect: stake.predictionCorrect !== undefined ? stake.predictionCorrect : null
+                  actualPrice: actualPriceFormatted,
+                  predictionCorrect: stake.predictionCorrect !== undefined ? stake.predictionCorrect : null,
+                  debugInfo // Include debug info in response
                 });
               }
             }
