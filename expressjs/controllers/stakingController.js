@@ -19,6 +19,10 @@ const getStakeablePredictions = async (req, res) => {
       });
     }
     
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     res.json({
       success: true,
       predictions: result.stakes || [],

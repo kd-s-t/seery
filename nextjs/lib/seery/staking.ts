@@ -13,7 +13,13 @@ export async function getStakeablePredictions(bypassCache = false) {
     totalAmountStaked: string
     cached?: boolean
     timestamp: string
-  }>(endpoint)
+  }>(endpoint, {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache'
+    }
+  })
 }
 
 export async function getUserStats(address: string) {

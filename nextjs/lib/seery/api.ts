@@ -20,7 +20,18 @@ console.log('NEXT_PUBLIC_CONTRACT_ADDRESS:', process.env.NEXT_PUBLIC_CONTRACT_AD
 export async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
   console.log('Fetching URL:', url)
-  const response = await fetch(url, options)
+  
+  const fetchOptions: RequestInit = {
+    ...options,
+    cache: options?.cache || 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      ...options?.headers
+    }
+  }
+  
+  const response = await fetch(url, fetchOptions)
   
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status} ${response.statusText}`)

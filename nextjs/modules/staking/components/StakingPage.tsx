@@ -388,18 +388,23 @@ export default function StakingPage() {
             )}
 
             <Stack spacing={2}>
-              {predictions.map((prediction: any, index: number) => (
+              {predictions.map((prediction: any, index: number) => {
+                const isResolved = prediction.rewarded
+                const isExpired = !prediction.rewarded && getTimeRemaining(prediction.expiresAt) === 'Expired'
+                const isInactive = isResolved || isExpired
+                
+                return (
                 <Card
                   key={prediction.predictionId || prediction.stakeId || `prediction-${index}`}
+                  elevation={isInactive ? 0 : undefined}
                   sx={{
-                    border: 1,
-                    borderColor: prediction.rewarded
-                      ? 'success.main'
-                      : 'divider',
-                    backgroundColor: prediction.rewarded ? 'action.hover' : '#ffffff',
-                    bgcolor: prediction.rewarded ? 'action.hover' : '#ffffff',
+                    border: isInactive ? 0 : 1,
+                    borderColor: isInactive ? 'transparent' : 'rgba(0, 0, 0, 0.12)',
+                    backgroundColor: '#ffffff',
+                    bgcolor: '#ffffff',
+                    boxShadow: isInactive ? 'none !important' : undefined,
                     '& .MuiCardContent-root': {
-                      backgroundColor: prediction.rewarded ? 'action.hover' : '#ffffff',
+                      backgroundColor: '#ffffff',
                     }
                   }}
                   style={{ backgroundColor: 'white' }}
@@ -559,7 +564,8 @@ export default function StakingPage() {
                     </Stack>
                   </CardContent>
                 </Card>
-              ))}
+                )
+              })}
             </Stack>
           </Grid>
 

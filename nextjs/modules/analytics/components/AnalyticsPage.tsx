@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Box,
@@ -12,17 +12,27 @@ import {
   CircularProgress,
   Alert,
   Stack,
-  Divider
+  Divider,
+  Link
 } from '@mui/material'
 import { Assessment, TrendingUp, CheckCircle, People, EmojiEvents } from '@mui/icons-material'
+import { usePublicClient } from 'wagmi'
+import { bscTestnet } from 'wagmi/chains'
 import { useWallet } from '@/hooks'
 import Header from '@/components/Header'
 import { useAnalytics, formatTotalStaked, calculateAccuracyRate } from '../index'
+
+const CONTRACT_ADDRESS = '0x42067558c48f8c74c819461a9105cd47b90b098f' as `0x${string}`
+const BSCSCAN_URL = `https://testnet.bscscan.com/address/${CONTRACT_ADDRESS}`
 
 export default function AnalyticsPage() {
   const router = useRouter()
   const { address, isConnected } = useWallet()
   const { analytics, loading, error, mounted, isAdmin } = useAnalytics()
+  const publicClient = usePublicClient({ chainId: bscTestnet.id })
+  const [contractBalance, setContractBalance] = useState<string | null>(null)
+  const [balanceLoading, setBalanceLoading] = useState(false)
+  const [balanceError, setBalanceError] = useState<string | null>(null)
 
   useEffect(() => {
     if (mounted && !isConnected) {
@@ -35,6 +45,38 @@ export default function AnalyticsPage() {
       return
     }
   }, [mounted, isConnected, isAdmin, router])
+
+  useEffect(() => {
+    const fetchContractBalance = async () => {
+      if (!publicClient) {
+        setBalanceError('Public client not available')
+        setBalanceLoading(false)
+        return
+      }
+
+      setBalanceLoading(true)
+      setBalanceError(null)
+      try {
+        const balance = await publicClient.getBalance({
+          address: CONTRACT_ADDRESS,
+        })
+        const balanceInBNB = (Number(balance) / 1e18).toFixed(6)
+        setContractBalance(balanceInBNB)
+      } catch (err: any) {
+        const errorMessage = err.message || 'Failed to fetch contract balance'
+        setBalanceError(errorMessage)
+        console.error('Error fetching contract balance:', err)
+      } finally {
+        setBalanceLoading(false)
+      }
+    }
+
+    if (mounted && publicClient) {
+      fetchContractBalance()
+      const interval = setInterval(fetchContractBalance, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [mounted, publicClient])
 
   if (!mounted || !isConnected) {
     return null
@@ -169,8 +211,34 @@ export default function AnalyticsPage() {
                         {formatTotalStaked(analytics.totalAmountStaked)} BNB
                       </Typography>
                     </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="body2" color="text.secondary">
+                          Contract Balance
+                        </Typography>
+                        <Link
+                          href={BSCSCAN_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{ textDecoration: 'none', fontSize: '0.875rem' }}
+                        >
+                          (View on BSCScan)
+                        </Link>
+                      </Stack>
+                      {balanceLoading ? (
+                        <CircularProgress size={20} sx={{ mt: 1 }} />
+                      ) : balanceError ? (
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
+                          Error
+                        </Typography>
+                      ) : (
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          {contractBalance ? `${contractBalance} BNB` : '--'}
+                        </Typography>
+                      )}
+                    </Grid>
                     {analytics.resolvedStakes > 0 && (
-                      <Grid item xs={12}>
+                      <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">
                           Accuracy Rate
                         </Typography>
