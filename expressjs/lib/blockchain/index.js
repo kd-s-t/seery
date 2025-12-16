@@ -311,16 +311,6 @@ async function getAllStakes(options = {}) {
       return null;
     }
     
-    console.log('Calling getStakes() on contract:', MAIN_CONTRACT_ADDRESS);
-    
-    // First check stakeCount directly to see if it matches
-    try {
-      const stakeCountValue = await contract.stakeCount();
-      console.log('Contract stakeCount:', stakeCountValue.toString());
-    } catch (err) {
-      console.warn('Could not read stakeCount:', err.message);
-    }
-    
     const result = await contract.getStakes();
     
     if (!result) {
@@ -332,18 +322,6 @@ async function getAllStakes(options = {}) {
     const stakesArray = result.stakes || result[0] || [];
     const totalStakes = result.totalStakes || result[1] || 0;
     const totalAmountStaked = result.totalAmountStaked || result[2] || 0;
-    
-    console.log('getStakes() response:', {
-      stakesArrayLength: stakesArray.length,
-      totalStakes: totalStakes.toString(),
-      totalAmountStaked: totalAmountStaked.toString(),
-      stakesArray: stakesArray.map((s, i) => ({
-        index: i,
-        stakeId: i + 1,
-        cryptoId: Array.isArray(s) ? s[7] : s.cryptoId,
-        createdBy: Array.isArray(s) ? s[0] : s.createdBy
-      }))
-    });
     
     const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
     
