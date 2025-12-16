@@ -11,7 +11,8 @@ export interface UserStake {
   stakeId: string
   stakerId: string
   cryptoId: string
-  direction: 'up' | 'down'
+  direction: 'up' | 'down' // Prediction direction (what the market predicts)
+  stakeUp?: boolean // User's bet direction (true = UP, false = DOWN)
   amountWei?: string
   amount?: string
   predictedPrice: string

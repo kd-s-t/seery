@@ -20,7 +20,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Tooltip
 } from '@mui/material'
 import { TrendingUp, TrendingDown, AccountBalance, EmojiEvents, AttachMoney, CheckCircle, Cancel, Schedule, CurrencyBitcoin } from '@mui/icons-material'
 import { useWallet } from '@/hooks'
@@ -238,12 +239,22 @@ export default function ProfilePage() {
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Chip
-                            label={stake.direction.toUpperCase()}
-                            color={stake.direction === 'up' ? 'success' : 'error'}
-                            size="small"
-                            icon={stake.direction === 'up' ? <TrendingUp /> : <TrendingDown />}
-                          />
+                          {(() => {
+                            // Use stakeUp if available (user's actual bet), otherwise fall back to direction
+                            const userBetDirection = stake.stakeUp !== undefined 
+                              ? (stake.stakeUp ? 'up' : 'down')
+                              : stake.direction
+                            return (
+                              <Tooltip title={`You bet the price will go ${userBetDirection === 'up' ? 'UP ↑' : 'DOWN ↓'}`}>
+                                <Chip
+                                  label={`You bet: ${userBetDirection.toUpperCase()}`}
+                                  color={userBetDirection === 'up' ? 'success' : 'error'}
+                                  size="small"
+                                  icon={userBetDirection === 'up' ? <TrendingUp /> : <TrendingDown />}
+                                />
+                              </Tooltip>
+                            )
+                          })()}
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
